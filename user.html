@@ -160,17 +160,47 @@
         let scanning = false;
         let scanInterval = null;
         
-        // 模擬用戶數據
-        const MOCK_USERS = [
-            { id: 'U001', name: '陳小明', group: 'A組' },
-            { id: 'U002', name: '李美麗', group: 'A組' },
-            { id: 'U003', name: '王大壯', group: 'B組' },
-            { id: 'U004', name: '張小麗', group: 'B組' },
-            { id: 'U005', name: '劉強', group: 'C組' },
-            { id: 'U006', name: '趙麗麗', group: 'C組' },
-            { id: 'U007', name: '黃小軍', group: 'A組' },
-            { id: 'U008', name: '周美華', group: 'B組' }
-        ];
+        // 全局用戶數據
+        let users = [];
+        
+        // 加載用戶數據
+        async function loadUsers() {
+            try {
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('*');
+                
+                if (error) {
+                    console.error('加載用戶數據失敗:', error);
+                    // 如果數據庫加載失敗，使用備用用戶數據
+                    users = [
+                        { id: 'U001', name: '陳小明', group: 'A組' },
+                        { id: 'U002', name: '李美麗', group: 'A組' },
+                        { id: 'U003', name: '王大壯', group: 'B組' },
+                        { id: 'U004', name: '張小麗', group: 'B組' },
+                        { id: 'U005', name: '劉強', group: 'C組' },
+                        { id: 'U006', name: '趙麗麗', group: 'C組' },
+                        { id: 'U007', name: '黃小軍', group: 'A組' },
+                        { id: 'U008', name: '周美華', group: 'B組' }
+                    ];
+                } else {
+                    users = data;
+                }
+            } catch (error) {
+                console.error('加載用戶數據時發生錯誤:', error);
+                // 發生錯誤時使用備用用戶數據
+                users = [
+                    { id: 'U001', name: '陳小明', group: 'A組' },
+                    { id: 'U002', name: '李美麗', group: 'A組' },
+                    { id: 'U003', name: '王大壯', group: 'B組' },
+                    { id: 'U004', name: '張小麗', group: 'B組' },
+                    { id: 'U005', name: '劉強', group: 'C組' },
+                    { id: 'U006', name: '趙麗麗', group: 'C組' },
+                    { id: 'U007', name: '黃小軍', group: 'A組' },
+                    { id: 'U008', name: '周美華', group: 'B組' }
+                ];
+            }
+        }
         
         document.addEventListener('DOMContentLoaded', function() {
             // 初始化
@@ -189,6 +219,9 @@
             if (currentUser) {
                 window.location.href = 'user-dashboard.html';
             }
+            
+            // 加載用戶數據
+            loadUsers();
         }
         
         function bindEvents() {
@@ -251,7 +284,7 @@
             }
             
             // 模擬登入驗證
-            const user = MOCK_USERS.find(u => u.id === userId);
+            const user = users.find(u => u.id === userId);
             if (user) {
                 // 登入成功，保存用戶信息到sessionStorage
                 sessionStorage.setItem('currentUser', JSON.stringify(user));

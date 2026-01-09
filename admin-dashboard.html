@@ -995,7 +995,7 @@
             const form = document.getElementById('gameForm');
             
             if (gameId) {
-                const game = mockGames.find(g => g.id == gameId);
+                const game = games.find(g => g.id == gameId);
                 if (game) {
                     title.textContent = `編輯遊戲: ${game.name}`;
                     document.getElementById('gameId').value = game.id;
@@ -1033,20 +1033,19 @@
             }
             
             if (gameId) {
-                const gameIndex = mockGames.findIndex(g => g.id == gameId);
-                if (gameIndex !== -1) {
-                    mockGames[gameIndex] = {
-                        ...mockGames[gameIndex],
-                        name,
-                        booth_number: boothNumber,
-                        description,
-                        status
-                    };
-                    alert('遊戲信息已更新！');
-                }
+                // 更新遊戲
+                updateGame(gameId, { name, booth_number: boothNumber, description, status })
+                    .then(() => {
+                        alert('遊戲信息已更新！');
+                    })
+                    .catch(error => {
+                        console.error('更新遊戲失敗:', error);
+                        alert('更新遊戲失敗: ' + error.message);
+                    });
             } else {
+                // 添加新遊戲
                 const newGame = {
-                    id: 'G' + String(mockGames.length + 1).padStart(3, '0'),
+                    id: 'G' + String(Date.now()).slice(-6),
                     name,
                     booth_number: boothNumber,
                     description,
@@ -1055,8 +1054,15 @@
                     gifts: 0,
                     created_at: new Date().toISOString()
                 };
-                mockGames.push(newGame);
-                alert('新遊戲已添加！');
+                
+                addGame(newGame)
+                    .then(() => {
+                        alert('新遊戲已添加！');
+                    })
+                    .catch(error => {
+                        console.error('添加遊戲失敗:', error);
+                        alert('添加遊戲失敗: ' + error.message);
+                    });
             }
             
             closeGameModal();
@@ -1068,15 +1074,18 @@
         
         function deleteGame(gameId) {
             if (confirm(`確定要刪除這個遊戲嗎？此操作無法撤銷。`)) {
-                const index = mockGames.findIndex(g => g.id == gameId);
-                if (index !== -1) {
-                    mockGames.splice(index, 1);
-                    loadGames();
-                    loadGameFilter();
-                    updateStatistics();
-                    updateChart(document.getElementById('chartTypeSelect').value);
-                    alert('遊戲已成功刪除！');
-                }
+                deleteGameById(gameId)
+                    .then(() => {
+                        loadGames();
+                        loadGameFilter();
+                        updateStatistics();
+                        updateChart(document.getElementById('chartTypeSelect').value);
+                        alert('遊戲已成功刪除！');
+                    })
+                    .catch(error => {
+                        console.error('刪除遊戲失敗:', error);
+                        alert('刪除遊戲失敗: ' + error.message);
+                    });
             }
         }
         
@@ -1132,17 +1141,17 @@
             }
             
             if (userId) {
-                const userIndex = mockUsers.findIndex(u => u.id == userId);
-                if (userIndex !== -1) {
-                    mockUsers[userIndex] = {
-                        ...mockUsers[userIndex],
-                        name,
-                        group,
-                        plays
-                    };
-                    alert('用戶信息已更新！');
-                }
+                // 更新用戶
+                updateUser(userId, { name, group, plays })
+                    .then(() => {
+                        alert('用戶信息已更新！');
+                    })
+                    .catch(error => {
+                        console.error('更新用戶失敗:', error);
+                        alert('更新用戶失敗: ' + error.message);
+                    });
             } else {
+                // 添加新用戶
                 const newUser = {
                     id: userInputId,
                     name,
@@ -1150,8 +1159,15 @@
                     plays,
                     created_at: new Date().toISOString()
                 };
-                mockUsers.push(newUser);
-                alert('新用戶已添加！');
+                
+                addUser(newUser)
+                    .then(() => {
+                        alert('新用戶已添加！');
+                    })
+                    .catch(error => {
+                        console.error('添加用戶失敗:', error);
+                        alert('添加用戶失敗: ' + error.message);
+                    });
             }
             
             closeUserModal();
@@ -1162,14 +1178,17 @@
         
         function deleteUser(userId) {
             if (confirm(`確定要刪除用戶 ${userId} 嗎？此操作無法撤銷。`)) {
-                const index = mockUsers.findIndex(u => u.id == userId);
-                if (index !== -1) {
-                    mockUsers.splice(index, 1);
-                    loadUsers();
-                    updateStatistics();
-                    updateChart(document.getElementById('chartTypeSelect').value);
-                    alert('用戶已成功刪除！');
-                }
+                deleteUserById(userId)
+                    .then(() => {
+                        loadUsers();
+                        updateStatistics();
+                        updateChart(document.getElementById('chartTypeSelect').value);
+                        alert('用戶已成功刪除！');
+                    })
+                    .catch(error => {
+                        console.error('刪除用戶失敗:', error);
+                        alert('刪除用戶失敗: ' + error.message);
+                    });
             }
         }
         
@@ -1185,7 +1204,7 @@
             const content = document.getElementById('qrCodeContent');
             const title = document.getElementById('qrModalTitle');
             
-            const game = mockGames.find(g => g.id == gameId);
+            const game = games.find(g => g.id == gameId);
             if (game) {
                 title.textContent = `遊戲二維碼: ${game.name}`;
                 const qrData = `game:${gameId}`;
