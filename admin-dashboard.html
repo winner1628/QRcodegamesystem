@@ -569,11 +569,12 @@
                 link.classList.remove('sidebar-active');
             });
             
-            // 添加當前活動狀態
-            const activeLink = document.querySelector(`aside nav ul li a[onclick="navigateTo('${section}')"]`);
-            if (activeLink) {
-                activeLink.classList.add('sidebar-active');
-            }
+            // 添加當前活動狀態 - 使用更可靠的方法
+            navLinks.forEach(link => {
+                if (link.getAttribute('onclick') && link.getAttribute('onclick').includes(`navigateTo('${section}')`)) {
+                    link.classList.add('sidebar-active');
+                }
+            });
             
             // 切換內容區域
             switchSection(section);
