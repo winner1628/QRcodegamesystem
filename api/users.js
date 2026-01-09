@@ -4,6 +4,7 @@
  */
 
 const supabase = require('../utils/supabaseClient');
+const config = require('../config');
 
 module.exports = async (req, res) => {
   // 设置CORS头
