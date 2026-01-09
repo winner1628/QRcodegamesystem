@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR遊戲系統 - 管理員控制台</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#64748b',
+                        success: '#10b981',
+                        danger: '#ef4444',
+                        warning: '#f59e0b',
+                        info: '#06b6d4'
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .transition-all-300 {
+                transition: all 0.3s ease;
+            }
+            .sidebar-active {
+                background-color: #3b82f6;
+                color: white;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="flex h-screen">
+        <!-- 側邊欄 -->
+        <aside class="w-64 bg-gray-800 text-white">
+            <!-- 系統標題 -->
+            <div class="p-4 border-b border-gray-700">
+                <div class="flex items-center space-x-2">
+                    <i class="fa fa-qrcode text-primary text-2xl"></i>
+                    <h1 class="text-xl font-bold">管理控制台</h1>
+                </div>
+            </div>
+            
+            <!-- 導航菜單 -->
+            <nav class="mt-4">
+                <ul>
+                    <li>
+                        <a href="#" class="sidebar-active flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" data-section="dashboard">
+                            <i class="fa fa-dashboard w-6"></i>
+                            <span>數據概覽</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" data-section="games">
+                            <i class="fa fa-gamepad w-6"></i>
+                            <span>遊戲管理</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" data-section="users">
+                            <i class="fa fa-users w-6"></i>
+                            <span>用戶管理</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" data-section="records">
+                            <i class="fa fa-history w-6"></i>
+                            <span>記錄查詢</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" data-section="export">
+                            <i class="fa fa-download w-6"></i>
+                            <span>數據導出</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" data-section="settings">
+                            <i class="fa fa-cog w-6"></i>
+                            <span>系統設置</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <!-- 登出按鈕 -->
+            <div class="absolute bottom-0 w-64 p-4 border-t border-gray-700">
+                <button id="logoutBtn" class="w-full flex items-center justify-center px-4 py-2 bg-danger text-white rounded-md hover:bg-red-600 transition-all-300">
+                    <i class="fa fa-sign-out mr-2"></i> 登出系統
+                </button>
+            </div>
+        </aside>
+        
+        <!-- 主內容區 -->
+        <main class="flex-1 overflow-y-auto">
+            <!-- 頂部導航 -->
+            <header class="bg-white shadow-sm">
+                <div class="flex justify-between items-center px-6 py-4">
+                    <div>
+                        <h2 id="pageTitle" class="text-xl font-semibold text-gray-800">數據概覽</h2>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm text-gray-600">
+                            <i class="fa fa-user-circle mr-1"></i> 管理員
+                        </span>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- 內容區域 -->
+            <div class="p-6">
+                <!-- 數據概覽 -->
+                <section id="dashboard-section" class="space-y-6">
+                    <!-- 統計卡片 -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <div class="flex items-center">
+                                <div class="p-3 bg-blue-100 rounded-full">
+                                    <i class="fa fa-gamepad text-primary text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm text-gray-600">已設置遊戲</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="totalGames">12</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <div class="flex items-center">
+                                <div class="p-3 bg-green-100 rounded-full">
+                                    <i class="fa fa-users text-success text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm text-gray-600">參與用戶</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="totalUsers">284</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <div class="flex items-center">
+                                <div class="p-3 bg-yellow-100 rounded-full">
+                                    <i class="fa fa-play-circle text-warning text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm text-gray-600">今日參與次數</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="todayPlays">1,247</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <div class="flex items-center">
+                                <div class="p-3 bg-red-100 rounded-full">
+                                    <i class="fa fa-gift text-danger text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm text-gray-600">禮品發放</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="totalGifts">532</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 圖表 -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">遊戲參與熱度</h3>
+                            <canvas id="gameHeatChart" width="400" height="200"></canvas>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">今日參與趨勢</h3>
+                            <canvas id="todayTrendChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- 遊戲管理 -->
+                <section id="games-section" class="hidden space-y-6">
+                    <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-semibold text-gray-800">遊戲管理</h3>
+                            <button id="addGameBtn" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
+                                <i class="fa fa-plus mr-1"></i> 添加遊戲
+                            </button>
+                        </div>
+                        
+                        <!-- 遊戲列表 -->
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead>
+                                    <tr>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            遊戲名稱
+                                        </th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            攤位編號
+                                        </th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            參與次數
+                                        </th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            禮品數量
+                                        </th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            狀態
+                                        </th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            操作
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200" id="gamesTableBody">
+                                    <!-- 遊戲數據將動態插入 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- 用戶管理 -->
+                <section id="users-section" class="hidden space-y-6">
+                    <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-semibold text-gray-800">用戶管理</h3>
+                            <div class="flex space-x-4">
+                                <button id="importUsersBtn" class="px-4 py-2 bg-success text-white rounded-md hover:bg-green-600 transition-all-300">
+                                    <i class="fa fa-upload mr-1"></i> 導入用戶
+                                </button>
+                                <button id="addUserBtn" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
+                                    <i class="fa fa-plus mr-1"></i> 添加用戶
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- 搜索框 -->
+                        <div class="mb-6">
+                            <div class="flex">
+                                <input type="text" id="userSearch" placeholder="搜索用戶姓名或ID..."
+                                       class="flex-1 px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary">
+                                <button id="searchUserBtn" class="px-4 py-2 bg-primary text-white rounded-r-md hover:bg-blue-600 transition-all-300">
+                                    <i class="fa fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- 用戶列表 -->
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead>
+                                    <tr>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            用戶ID
+                                        </th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            姓名
+                                        </th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            組別
+                                        </th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            參與次數
+                                        </th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            獲得禮品
+                                        </th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            操作
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200" id="usersTableBody">
+                                    <!-- 用戶數據將動態插入 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- 記錄查詢 -->
+                <section id="records-section" class="hidden space-y-6">
+                    <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-semibold text-gray-800">記錄查詢</h3>
+                        </div>
+                        
+                        <!-- 搜索和篩選 -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <input type="text" id="recordSearch" placeholder="搜索用戶ID或遊戲名稱..."
+                                   class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                            <select id="gameFilter" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                                <option value="">選擇遊戲</option>
+                                <!-- 遊戲選項將動態插入 -->
+                            </select>
+                            <button id="searchRecordBtn" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
+                                <i class="fa fa-search mr-1"></i> 查詢
+                            </button>
+                        </div>
+                        
+                        <!-- 記錄列表 -->
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead>
+                                    <tr>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            時間
+                                        </th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            用戶ID
+                                        </th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            用戶姓名
+                                        </th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            遊戲名稱
+                                        </th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            成績
+                                        </th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            禮品
+                                        </th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            操作員
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200" id="recordsTableBody">
+                                    <!-- 記錄數據將動態插入 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- 數據導出 -->
+                <section id="export-section" class="hidden space-y-6">
+                    <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-6">數據導出</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="border border-gray-200 rounded-lg p-6">
+                                <h4 class="text-md font-semibold text-gray-700 mb-4">
+                                    <i class="fa fa-file-text-o mr-2 text-primary"></i> 參與記錄
+                                </h4>
+                                <p class="text-sm text-gray-600 mb-4">
+                                    導出所有用戶的遊戲參與記錄，包括時間、用戶信息、遊戲名稱、成績等數據。
+                                </p>
+                                <button id="exportRecordsBtn" class="w-full px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
+                                    <i class="fa fa-download mr-1"></i> 導出CSV
+                                </button>
+                            </div>
+                            
+                            <div class="border border-gray-200 rounded-lg p-6">
+                                <h4 class="text-md font-semibold text-gray-700 mb-4">
+                                    <i class="fa fa-users mr-2 text-success"></i> 用戶數據
+                                </h4>
+                                <p class="text-sm text-gray-600 mb-4">
+                                    導出所有用戶信息，包括用戶ID、姓名、組別、參與次數、獲得禮品數量等。
+                                </p>
+                                <button id="exportUsersBtn" class="w-full px-4 py-2 bg-success text-white rounded-md hover:bg-green-600 transition-all-300">
+                                    <i class="fa fa-download mr-1"></i> 導出CSV
+                                </button>
+                            </div>
+                            
+                            <div class="border border-gray-200 rounded-lg p-6">
+                                <h4 class="text-md font-semibold text-gray-700 mb-4">
+                                    <i class="fa fa-gamepad mr-2 text-warning"></i> 遊戲統計
+                                </h4>
+                                <p class="text-sm text-gray-600 mb-4">
+                                    導出各遊戲的參與統計數據，包括參與次數、平均成績、禮品發放情況等。
+                                </p>
+                                <button id="exportStatsBtn" class="w-full px-4 py-2 bg-warning text-white rounded-md hover:bg-yellow-600 transition-all-300">
+                                    <i class="fa fa-download mr-1"></i> 導出CSV
+                                </button>
+                            </div>
+                            
+                            <div class="border border-gray-200 rounded-lg p-6">
+                                <h4 class="text-md font-semibold text-gray-700 mb-4">
+                                    <i class="fa fa-gift mr-2 text-danger"></i> 禮品發放
+                                </h4>
+                                <p class="text-sm text-gray-600 mb-4">
+                                    導出禮品發放記錄，包括時間、用戶信息、禮品名稱、數量等詳細信息。
+                                </p>
+                                <button id="exportGiftsBtn" class="w-full px-4 py-2 bg-danger text-white rounded-md hover:bg-red-600 transition-all-300">
+                                    <i class="fa fa-download mr-1"></i> 導出CSV
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- 系統設置 -->
+                <section id="settings-section" class="hidden space-y-6">
+                    <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-6">系統設置</h3>
+                        
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="text-md font-semibold text-gray-700 mb-4">基本設置</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            系統名稱
+                                        </label>
+                                        <input type="text" value="QR遊戲系統"
+                                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            活動日期
+                                        </label>
+                                        <input type="date" value="2025-01-15"
+                                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="text-md font-semibold text-gray-700 mb-4">遊戲設置</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            最大遊戲數量
+                                        </label>
+                                        <input type="number" value="30" min="2" max="30"
+                                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            最大用戶數量
+                                        </label>
+                                        <input type="number" value="300" min="10" max="500"
+                                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="text-md font-semibold text-gray-700 mb-4">二維碼設置</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            二維碼大小
+                                        </label>
+                                        <select class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                                            <option value="200">200x200</option>
+                                            <option value="300" selected>300x300</option>
+                                            <option value="400">400x400</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            二維碼顏色
+                                        </label>
+                                        <input type="color" value="#000000"
+                                               class="w-full h-10 border border-gray-300 rounded-md cursor-pointer">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-end space-x-4">
+                                <button id="cancelSettingsBtn" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-all-300">
+                                    取消
+                                </button>
+                                <button id="saveSettingsBtn" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
+                                    <i class="fa fa-save mr-1"></i> 保存設置
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- 配置文件 -->
+    <script src="config.js"></script>
+    
+    <script>
+        // 模擬數據
+        const mockGames = [
+            { id: 1, name: '投籃挑戰', boothNumber: 'A01', plays: 156, gifts: 89, status: 'active' },
+            { id: 2, name: '套圈圈', boothNumber: 'A02', plays: 203, gifts: 124, status: 'active' },
+            { id: 3, name: '射擊遊戲', boothNumber: 'A03', plays: 187, gifts: 95, status: 'active' },
+            { id: 4, name: '闖關挑戰', boothNumber: 'A04', plays: 134, gifts: 67, status: 'maintenance' },
+            { id: 5, name: '幸運抽獎', boothNumber: 'A05', plays: 245, gifts: 156, status: 'active' },
+            { id: 6, name: '智力謎題', boothNumber: 'A06', plays: 112, gifts: 45, status: 'active' },
+            { id: 7, name: '釣魚遊戲', boothNumber: 'A07', plays: 178, gifts: 89, status: 'active' },
+            { id: 8, name: '擊鼓傳花', boothNumber: 'A08', plays: 145, gifts: 67, status: 'active' },
+            { id: 9, name: '猜謎比賽', boothNumber: 'A09', plays: 167, gifts: 78, status: 'active' },
+            { id: 10, name: '記憶挑戰', boothNumber: 'A10', plays: 123, gifts: 54, status: 'active' },
+            { id: 11, name: '氣球爆破', boothNumber: 'A11', plays: 198, gifts: 102, status: 'active' },
+            { id: 12, name: '籃球投準', boothNumber: 'A12', plays: 156, gifts: 78, status: 'active' }
+        ];
+        
+        const mockUsers = [
+            { id: 'U001', name: '陳小明', group: 'A組', plays: 15, gifts: 8 },
+            { id: 'U002', name: '李美麗', group: 'A組', plays: 12, gifts: 6 },
+            { id: 'U003', name: '王大壯', group: 'B組', plays: 18, gifts: 10 },
+            { id: 'U004', name: '張小麗', group: 'B組', plays: 14, gifts: 7 },
+            { id: 'U005', name: '劉強', group: 'C組', plays: 16, gifts: 9 },
+            { id: 'U006', name: '趙麗麗', group: 'C組', plays: 13, gifts: 5 },
+            { id: 'U007', name: '黃小軍', group: 'A組', plays: 17, gifts: 8 },
+            { id: 'U008', name: '周美華', group: 'B組', plays: 15, gifts: 7 }
+        ];
+        
+        const mockRecords = [
+            { time: '2025-01-15 10:30:25', userId: 'U001', userName: '陳小明', gameName: '投籃挑戰', score: '85', gift: '小熊玩偶', operator: '管理員A' },
+            { time: '2025-01-15 10:32:18', userId: 'U002', userName: '李美麗', gameName: '套圈圈', score: '90', gift: '精美文具', operator: '管理員B' },
+            { time: '2025-01-15 10:35:42', userId: 'U003', userName: '王大壯', gameName: '射擊遊戲', score: '95', gift: '遙控汽車', operator: '管理員A' },
+            { time: '2025-01-15 10:38:15', userId: 'U004', userName: '張小麗', gameName: '幸運抽獎', score: '中獎', gift: '大娃娃', operator: '管理員C' },
+            { time: '2025-01-15 10:40:33', userId: 'U005', userName: '劉強', gameName: '智力謎題', score: '88', gift: '益智玩具', operator: '管理員B' }
+        ];
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化頁面
+            initializeDashboard();
+            
+            // 側邊欄導航
+            const navLinks = document.querySelectorAll('nav a');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // 移除所有活動狀態
+                    navLinks.forEach(l => l.classList.remove('sidebar-active'));
+                    
+                    // 添加當前活動狀態
+                    this.classList.add('sidebar-active');
+                    
+                    // 切換內容區域
+                    const section = this.getAttribute('data-section');
+                    switchSection(section);
+                });
+            });
+            
+            // 登出按鈕
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                if (confirm('確定要登出系統嗎？')) {
+                    window.location.href = 'admin.html';
+                }
+            });
+            
+            // 按鈕事件綁定
+            bindButtonEvents();
+            
+            // 初始化圖表
+            initializeCharts();
+        });
+        
+        function initializeDashboard() {
+            // 加載遊戲數據
+            loadGames();
+            
+            // 加載用戶數據
+            loadUsers();
+            
+            // 加載記錄數據
+            loadRecords();
+            
+            // 加載遊戲篩選器
+            loadGameFilter();
+        }
+        
+        function switchSection(section) {
+            // 隱藏所有區域
+            const sections = ['dashboard', 'games', 'users', 'records', 'export', 'settings'];
+            sections.forEach(s => {
+                document.getElementById(`${s}-section`).classList.add('hidden');
+            });
+            
+            // 顯示當前區域
+            document.getElementById(`${section}-section`).classList.remove('hidden');
+            
+            // 更新頁面標題
+            const titles = {
+                'dashboard': '數據概覽',
+                'games': '遊戲管理',
+                'users': '用戶管理',
+                'records': '記錄查詢',
+                'export': '數據導出',
+                'settings': '系統設置'
+            };
+            document.getElementById('pageTitle').textContent = titles[section];
+        }
+        
+        function bindButtonEvents() {
+            // 遊戲管理按鈕
+            document.getElementById('addGameBtn').addEventListener('click', function() {
+                alert('添加遊戲功能將在後續版本中開放');
+            });
+            
+            // 用戶管理按鈕
+            document.getElementById('addUserBtn').addEventListener('click', function() {
+                alert('添加用戶功能將在後續版本中開放');
+            });
+            
+            document.getElementById('importUsersBtn').addEventListener('click', function() {
+                alert('用戶導入功能將在後續版本中開放');
+            });
+            
+            document.getElementById('searchUserBtn').addEventListener('click', function() {
+                const searchTerm = document.getElementById('userSearch').value.trim();
+                searchUsers(searchTerm);
+            });
+            
+            // 記錄查詢按鈕
+            document.getElementById('searchRecordBtn').addEventListener('click', function() {
+                const searchTerm = document.getElementById('recordSearch').value.trim();
+                const gameFilter = document.getElementById('gameFilter').value;
+                searchRecords(searchTerm, gameFilter);
+            });
+            
+            // 數據導出按鈕
+            document.getElementById('exportRecordsBtn').addEventListener('click', exportRecords);
+            document.getElementById('exportUsersBtn').addEventListener('click', exportUsers);
+            document.getElementById('exportStatsBtn').addEventListener('click', exportStats);
+            document.getElementById('exportGiftsBtn').addEventListener('click', exportGifts);
+            
+            // 系統設置按鈕
+            document.getElementById('saveSettingsBtn').addEventListener('click', function() {
+                alert('設置已保存！');
+            });
+            
+            document.getElementById('cancelSettingsBtn').addEventListener('click', function() {
+                alert('已取消設置更改');
+            });
+        }
+        
+        function loadGames() {
+            const tbody = document.getElementById('gamesTableBody');
+            tbody.innerHTML = '';
+            
+            mockGames.forEach(game => {
+                const row = document.createElement('tr');
+                
+                // 狀態標籤
+                let statusBadge = '';
+                if (game.status === 'active') {
+                    statusBadge = '<span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">正常</span>';
+                } else if (game.status === 'maintenance') {
+                    statusBadge = '<span class="px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-100 rounded-full">維護中</span>';
+                } else {
+                    statusBadge = '<span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">停用</span>';
+                }
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">${game.name}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${game.boothNumber}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${game.plays}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${game.gifts}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${statusBadge}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button class="text-primary hover:text-blue-800 mr-3 edit-game" data-id="${game.id}">
+                            <i class="fa fa-edit"></i>
+                        </button>
+                        <button class="text-danger hover:text-red-800 delete-game" data-id="${game.id}">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                        <button class="text-success hover:text-green-800 ml-3 view-qr" data-id="${game.id}">
+                            <i class="fa fa-qrcode"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+            
+            // 綁定遊戲操作按鈕事件
+            document.querySelectorAll('.edit-game').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const gameId = this.getAttribute('data-id');
+                    alert(`編輯遊戲 ID: ${gameId}`);
+                });
+            });
+            
+            document.querySelectorAll('.delete-game').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const gameId = this.getAttribute('data-id');
+                    if (confirm('確定要刪除此遊戲嗎？')) {
+                        alert(`刪除遊戲 ID: ${gameId}`);
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.view-qr').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const gameId = this.getAttribute('data-id');
+                    const game = mockGames.find(g => g.id == gameId);
+                    if (game) {
+                        alert(`顯示 ${game.name} 的二維碼`);
+                    }
+                });
+            });
+        }
+        
+        function loadUsers() {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
+            
+            mockUsers.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">${user.id}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${user.name}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${user.group}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${user.plays}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${user.gifts}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button class="text-primary hover:text-blue-800 mr-3 edit-user" data-id="${user.id}">
+                            <i class="fa fa-edit"></i>
+                        </button>
+                        <button class="text-danger hover:text-red-800 delete-user" data-id="${user.id}">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                        <button class="text-info hover:text-blue-800 ml-3 view-record" data-id="${user.id}">
+                            <i class="fa fa-eye"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+            
+            // 綁定用戶操作按鈕事件
+            document.querySelectorAll('.edit-user').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const userId = this.getAttribute('data-id');
+                    alert(`編輯用戶 ID: ${userId}`);
+                });
+            });
+            
+            document.querySelectorAll('.delete-user').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const userId = this.getAttribute('data-id');
+                    if (confirm('確定要刪除此用戶嗎？')) {
+                        alert(`刪除用戶 ID: ${userId}`);
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.view-record').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const userId = this.getAttribute('data-id');
+                    // 切換到記錄查詢頁面
+                    switchSection('records');
+                    // 設置搜索條件
+                    document.getElementById('recordSearch').value = userId;
+                    // 觸發搜索
+                    document.getElementById('searchRecordBtn').click();
+                });
+            });
+        }
+        
+        function loadRecords() {
+            const tbody = document.getElementById('recordsTableBody');
+            tbody.innerHTML = '';
+            
+            mockRecords.forEach(record => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${record.time}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${record.userId}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${record.userName}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${record.gameName}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${record.score}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${record.gift}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${record.operator}</div>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        function loadGameFilter() {
+            const select = document.getElementById('gameFilter');
+            select.innerHTML = '<option value="">選擇遊戲</option>';
+            
+            mockGames.forEach(game => {
+                const option = document.createElement('option');
+                option.value = game.name;
+                option.textContent = game.name;
+                select.appendChild(option);
+            });
+        }
+        
+        function searchUsers(searchTerm) {
+            if (!searchTerm) {
+                loadUsers();
+                return;
+            }
+            
+            const filteredUsers = mockUsers.filter(user => 
+                user.name.includes(searchTerm) || user.id.includes(searchTerm)
+            );
+            
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
+            
+            filteredUsers.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">${user.id}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${user.name}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${user.group}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${user.plays}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${user.gifts}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button class="text-primary hover:text-blue-800 mr-3 edit-user" data-id="${user.id}">
+                            <i class="fa fa-edit"></i>
+                        </button>
+                        <button class="text-danger hover:text-red-800 delete-user" data-id="${user.id}">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                        <button class="text-info hover:text-blue-800 ml-3 view-record" data-id="${user.id}">
+                            <i class="fa fa-eye"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        function searchRecords(searchTerm, gameFilter) {
+            let filteredRecords = [...mockRecords];
+            
+            if (searchTerm) {
+                filteredRecords = filteredRecords.filter(record => 
+                    record.userId.includes(searchTerm) || 
+                    record.userName.includes(searchTerm) ||
+                    record.gameName.includes(searchTerm)
+                );
+            }
+            
+            if (gameFilter) {
+                filteredRecords = filteredRecords.filter(record => 
+                    record.gameName === gameFilter
+                );
+            }
+            
+            const tbody = document.getElementById('recordsTableBody');
+            tbody.innerHTML = '';
+            
+            filteredRecords.forEach(record => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${record.time}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${record.userId}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${record.userName}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${record.gameName}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${record.score}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${record.gift}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${record.operator}</div>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        function exportRecords() {
+            alert('記錄數據已導出為 CSV 格式');
+        }
+        
+        function exportUsers() {
+            alert('用戶數據已導出為 CSV 格式');
+        }
+        
+        function exportStats() {
+            alert('統計數據已導出為 CSV 格式');
+        }
+        
+        function exportGifts() {
+            alert('禮品記錄已導出為 CSV 格式');
+        }
+        
+        function initializeCharts() {
+            // 遊戲參與熱度圖
+            const gameHeatCtx = document.getElementById('gameHeatChart').getContext('2d');
+            const gameHeatChart = new Chart(gameHeatCtx, {
+                type: 'bar',
+                data: {
+                    labels: mockGames.slice(0, 8).map(game => game.name),
+                    datasets: [{
+                        label: '參與次數',
+                        data: mockGames.slice(0, 8).map(game => game.plays),
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // 今日參與趨勢圖
+            const todayTrendCtx = document.getElementById('todayTrendChart').getContext('2d');
+            const todayTrendChart = new Chart(todayTrendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'],
+                    datasets: [{
+                        label: '參與人數',
+                        data: [120, 190, 250, 180, 220, 280, 310, 290, 240],
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
