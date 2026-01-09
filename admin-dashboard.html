@@ -132,7 +132,7 @@
                                 </div>
                                 <div class="ml-4">
                                     <p class="text-sm text-gray-600">已設置遊戲</p>
-                                    <p class="text-2xl font-bold text-gray-800" id="totalGames">6</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="totalGames">0</p>
                                 </div>
                             </div>
                         </div>
@@ -144,7 +144,7 @@
                                 </div>
                                 <div class="ml-4">
                                     <p class="text-sm text-gray-600">參與用戶</p>
-                                    <p class="text-2xl font-bold text-gray-800" id="totalUsers">8</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="totalUsers">0</p>
                                 </div>
                             </div>
                         </div>
@@ -156,7 +156,7 @@
                                 </div>
                                 <div class="ml-4">
                                     <p class="text-sm text-gray-600">今日參與次數</p>
-                                    <p class="text-2xl font-bold text-gray-800" id="todayPlays">720</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="todayPlays">0</p>
                                 </div>
                             </div>
                         </div>
@@ -168,7 +168,7 @@
                                 </div>
                                 <div class="ml-4">
                                     <p class="text-sm text-gray-600">禮品發放</p>
-                                    <p class="text-2xl font-bold text-gray-800" id="totalGifts">475</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="totalGifts">0</p>
                                 </div>
                             </div>
                         </div>
@@ -232,7 +232,11 @@
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200" id="gamesTableBody">
-                                    <!-- 遊戲數據將動態插入 -->
+                                    <tr>
+                                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                            <i class="fa fa-info-circle mr-2"></i>正在加載遊戲數據...
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -291,7 +295,11 @@
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200" id="usersTableBody">
-                                    <!-- 用戶數據將動態插入 -->
+                                    <tr>
+                                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                            <i class="fa fa-info-circle mr-2"></i>正在加載用戶數據...
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -302,23 +310,25 @@
                 <section id="records-section" class="hidden space-y-6">
                     <div class="bg-white p-6 rounded-lg shadow-sm">
                         <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-lg font-semibold text-gray-800">參與記錄查詢</h3>
+                            <h3 class="text-lg font-semibold text-gray-800">記錄查詢</h3>
                         </div>
                         
                         <!-- 搜索和篩選 -->
-                        <div class="flex flex-col md:flex-row gap-4 mb-6">
-                            <div class="flex-1">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div>
                                 <input type="text" id="recordSearch" placeholder="搜索用戶ID、姓名或遊戲名稱..."
                                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
                             </div>
-                            <div class="w-full md:w-48">
+                            <div>
                                 <select id="gameFilter" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                                    <option value="all">全部遊戲</option>
+                                    <option value="all">所有遊戲</option>
                                 </select>
                             </div>
-                            <button onclick="searchRecords()" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
-                                <i class="fa fa-search mr-2"></i> 查詢
-                            </button>
+                            <div>
+                                <button onclick="searchRecords()" class="w-full px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
+                                    <i class="fa fa-search mr-2"></i> 查詢
+                                </button>
+                            </div>
                         </div>
                         
                         <!-- 記錄列表 -->
@@ -333,24 +343,25 @@
                                             用戶ID
                                         </th>
                                         <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            姓名
+                                            用戶姓名
                                         </th>
                                         <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             遊戲名稱
                                         </th>
                                         <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            成績
+                                            參與結果
                                         </th>
                                         <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            獎品
-                                        </th>
-                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            操作員
+                                            獎勵
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200" id="recordsTableBody">
-                                    <!-- 記錄數據將動態插入 -->
+                                    <tr>
+                                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                            <i class="fa fa-info-circle mr-2"></i>正在加載記錄數據...
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -363,63 +374,47 @@
                         <h3 class="text-lg font-semibold text-gray-800 mb-6">數據導出</h3>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-all-300">
-                                <div class="flex items-center mb-4">
-                                    <div class="p-3 bg-blue-100 rounded-full">
-                                        <i class="fa fa-history text-primary text-xl"></i>
-                                    </div>
-                                    <div class="ml-4">
-                                        <h4 class="text-lg font-medium text-gray-800">參與記錄</h4>
-                                        <p class="text-sm text-gray-600">導出所有用戶的參與記錄數據</p>
-                                    </div>
-                                </div>
-                                <button onclick="exportRecords()" class="w-full px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
+                            <!-- 遊戲數據導出 -->
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="text-md font-medium text-gray-700 mb-4">
+                                    <i class="fa fa-gamepad text-primary mr-2"></i> 遊戲數據
+                                </h4>
+                                <p class="text-sm text-gray-600 mb-4">導出所有遊戲的基本信息和統計數據</p>
+                                <button onclick="exportGamesData()" class="w-full px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
                                     <i class="fa fa-download mr-2"></i> 導出CSV
                                 </button>
                             </div>
                             
-                            <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-all-300">
-                                <div class="flex items-center mb-4">
-                                    <div class="p-3 bg-green-100 rounded-full">
-                                        <i class="fa fa-users text-success text-xl"></i>
-                                    </div>
-                                    <div class="ml-4">
-                                        <h4 class="text-lg font-medium text-gray-800">用戶數據</h4>
-                                        <p class="text-sm text-gray-600">導出所有用戶的基本信息和統計數據</p>
-                                    </div>
-                                </div>
-                                <button onclick="exportUsers()" class="w-full px-4 py-2 bg-success text-white rounded-md hover:bg-green-600 transition-all-300">
+                            <!-- 用戶數據導出 -->
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="text-md font-medium text-gray-700 mb-4">
+                                    <i class="fa fa-users text-success mr-2"></i> 用戶數據
+                                </h4>
+                                <p class="text-sm text-gray-600 mb-4">導出所有用戶的基本信息和參與記錄</p>
+                                <button onclick="exportUsersData()" class="w-full px-4 py-2 bg-success text-white rounded-md hover:bg-green-600 transition-all-300">
                                     <i class="fa fa-download mr-2"></i> 導出CSV
                                 </button>
                             </div>
                             
-                            <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-all-300">
-                                <div class="flex items-center mb-4">
-                                    <div class="p-3 bg-yellow-100 rounded-full">
-                                        <i class="fa fa-bar-chart text-warning text-xl"></i>
-                                    </div>
-                                    <div class="ml-4">
-                                        <h4 class="text-lg font-medium text-gray-800">遊戲統計</h4>
-                                        <p class="text-sm text-gray-600">導出各遊戲的參與次數和成功率統計</p>
-                                    </div>
-                                </div>
-                                <button onclick="exportStats()" class="w-full px-4 py-2 bg-warning text-white rounded-md hover:bg-yellow-600 transition-all-300">
+                            <!-- 參與記錄導出 -->
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="text-md font-medium text-gray-700 mb-4">
+                                    <i class="fa fa-history text-warning mr-2"></i> 參與記錄
+                                </h4>
+                                <p class="text-sm text-gray-600 mb-4">導出所有用戶的遊戲參與記錄</p>
+                                <button onclick="exportRecordsData()" class="w-full px-4 py-2 bg-warning text-white rounded-md hover:bg-yellow-600 transition-all-300">
                                     <i class="fa fa-download mr-2"></i> 導出CSV
                                 </button>
                             </div>
                             
-                            <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-all-300">
-                                <div class="flex items-center mb-4">
-                                    <div class="p-3 bg-red-100 rounded-full">
-                                        <i class="fa fa-gift text-danger text-xl"></i>
-                                    </div>
-                                    <div class="ml-4">
-                                        <h4 class="text-lg font-medium text-gray-800">禮品發放</h4>
-                                        <p class="text-sm text-gray-600">導出所有禮品的發放記錄和統計</p>
-                                    </div>
-                                </div>
-                                <button onclick="exportGifts()" class="w-full px-4 py-2 bg-danger text-white rounded-md hover:bg-red-600 transition-all-300">
-                                    <i class="fa fa-download mr-2"></i> 導出CSV
+                            <!-- 完整數據包導出 -->
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="text-md font-medium text-gray-700 mb-4">
+                                    <i class="fa fa-archive text-info mr-2"></i> 完整數據包
+                                </h4>
+                                <p class="text-sm text-gray-600 mb-4">導出包含所有數據的完整數據包</p>
+                                <button onclick="exportAllData()" class="w-full px-4 py-2 bg-info text-white rounded-md hover:bg-blue-600 transition-all-300">
+                                    <i class="fa fa-download mr-2"></i> 導出全部
                                 </button>
                             </div>
                         </div>
@@ -431,57 +426,53 @@
                     <div class="bg-white p-6 rounded-lg shadow-sm">
                         <h3 class="text-lg font-semibold text-gray-800 mb-6">系統設置</h3>
                         
-                        <div class="space-y-6">
-                            <div>
-                                <h4 class="text-md font-medium text-gray-800 mb-4">基本設置</h4>
-                                <div class="space-y-4">
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">系統名稱</label>
-                                            <input type="text" id="systemName" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" value="QR遊戲系統">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">最大參與次數</label>
-                                            <input type="number" id="maxPlays" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" value="10">
-                                        </div>
-                                    </div>
+                        <form id="settingsForm" onsubmit="saveSettings(event)">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">系統名稱</label>
+                                    <input type="text" id="systemName" value="QR遊戲系統" 
+                                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">最大遊戲數量</label>
+                                    <input type="number" id="maxGames" value="30" min="2" max="100"
+                                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">最大用戶數量</label>
+                                    <input type="number" id="maxUsers" value="300" min="10" max="1000"
+                                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">數據刷新間隔（秒）</label>
+                                    <input type="number" id="refreshInterval" value="30" min="5" max="300"
+                                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
                                 </div>
                             </div>
                             
-                            <div>
-                                <h4 class="text-md font-medium text-gray-800 mb-4">高級設置</h4>
-                                <div class="space-y-4">
-                                    <div>
-                                        <label class="flex items-center">
-                                            <input type="checkbox" id="autoSave" class="w-4 h-4 text-primary focus:ring-primary border-gray-300 rounded" checked>
-                                            <span class="ml-2 text-sm text-gray-700">啟用自動保存</span>
-                                        </label>
-                                    </div>
-                                    <div>
-                                        <label class="flex items-center">
-                                            <input type="checkbox" id="autoBackup" class="w-4 h-4 text-primary focus:ring-primary border-gray-300 rounded" checked>
-                                            <span class="ml-2 text-sm text-gray-700">啟用數據備份</span>
-                                        </label>
-                                    </div>
-                                </div>
+                            <div class="mt-6">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">系統說明</label>
+                                <textarea id="systemDescription" rows="3" 
+                                          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+QR遊戲系統是一個用於管理攤位遊戲的綜合平台，支持用戶通過二維碼參與各種遊戲活動。
+                                </textarea>
                             </div>
                             
-                            <div class="flex space-x-4">
-                                <button onclick="saveSettings()" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
+                            <div class="flex justify-end mt-6">
+                                <button type="submit" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
                                     <i class="fa fa-save mr-2"></i> 保存設置
                                 </button>
-                                <button onclick="cancelSettings()" class="px-6 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-all-300">
-                                    <i class="fa fa-times mr-2"></i> 取消
-                                </button>
                             </div>
-                        </div>
+                        </form>
                     </div>
                 </section>
             </div>
         </main>
     </div>
-
-    <!-- 模态框 -->
+    
     <!-- 游戏管理模态框 -->
     <div id="gameModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg p-6 w-full max-w-md">
@@ -625,10 +616,34 @@
     <script>
         // 全局變量
         let mainChart = null;
+        let supabase = null;
+        let games = [];
+        let users = [];
+        let records = [];
+        
+        // 初始化Supabase
+        function initializeSupabase() {
+            try {
+                supabase = createClient(config.supabase.url, config.supabase.anonKey);
+                console.log('Supabase初始化成功！');
+                return true;
+            } catch (error) {
+                console.error('Supabase初始化失敗:', error);
+                alert('無法連接到數據庫，請檢查配置文件中的連接信息。');
+                return false;
+            }
+        }
         
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
             console.log('管理員控制台初始化中...');
+            
+            // 初始化Supabase
+            const supabaseInitialized = initializeSupabase();
+            if (!supabaseInitialized) {
+                console.error('Supabase初始化失敗，無法繼續加載數據');
+                return;
+            }
             
             // 初始化導航
             initNavigation();
@@ -697,169 +712,250 @@
         
         // 更新統計數據
         function updateStatistics() {
-            document.getElementById('totalGames').textContent = mockGames.length;
-            document.getElementById('totalUsers').textContent = mockUsers.length;
+            const gamesCount = games ? games.length : 0;
+            const usersCount = users ? users.length : 0;
             
-            const totalPlays = mockGames.reduce((sum, game) => sum + (game.plays || 0), 0);
-            const totalGifts = mockGames.reduce((sum, game) => sum + (game.gifts || 0), 0);
+            document.getElementById('totalGames').textContent = gamesCount;
+            document.getElementById('totalUsers').textContent = usersCount;
+            
+            const totalPlays = games ? games.reduce((sum, game) => sum + (game.plays || 0), 0) : 0;
+            const totalGifts = games ? games.reduce((sum, game) => sum + (game.gifts || 0), 0) : 0;
             
             document.getElementById('todayPlays').textContent = totalPlays;
             document.getElementById('totalGifts').textContent = totalGifts;
         }
         
         // 加載遊戲數據
-        function loadGames() {
-            const tbody = document.getElementById('gamesTableBody');
-            tbody.innerHTML = '';
-            
-            mockGames.forEach(game => {
-                const statusBadge = game.status === 'active' 
-                    ? '<span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">正常</span>'
-                    : '<span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">維護中</span>';
+        async function loadGames() {
+            try {
+                const { data, error } = await supabase.from('games').select('*');
                 
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-gray-900">${game.name}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${game.booth_number}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${game.plays || 0}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${game.gifts || 0}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        ${statusBadge}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button onclick="showGameModal('${game.id}')" class="text-primary hover:text-blue-800 mr-3">
-                            <i class="fa fa-edit"></i> 編輯
-                        </button>
-                        <button onclick="deleteGame('${game.id}')" class="text-danger hover:text-red-800 mr-3">
-                            <i class="fa fa-trash"></i> 刪除
-                        </button>
-                        <button onclick="showQrCodeModal('${game.id}')" class="text-success hover:text-green-800">
-                            <i class="fa fa-qrcode"></i> 二維碼
-                        </button>
-                    </td>
+                if (error) {
+                    console.error('加載遊戲數據失敗:', error);
+                    games = [];
+                } else {
+                    games = data || [];
+                }
+                
+                const tbody = document.getElementById('gamesTableBody');
+                tbody.innerHTML = '';
+                
+                if (games.length === 0) {
+                    const emptyRow = document.createElement('tr');
+                    emptyRow.innerHTML = `
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                            <i class="fa fa-info-circle mr-2"></i>暫無遊戲數據
+                        </td>
+                    `;
+                    tbody.appendChild(emptyRow);
+                } else {
+                    games.forEach(game => {
+                        const statusBadge = game.status === 'active' 
+                            ? '<span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">正常</span>'
+                            : '<span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">維護中</span>';
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">${game.name}</div>
+                                <div class="text-xs text-gray-500">${game.description || '無描述'}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">${game.booth_number}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">${game.plays || 0}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">${game.gifts || 0}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                ${statusBadge}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button onclick="showGameModal('${game.id}')" class="text-primary hover:text-blue-800 mr-3">
+                                    <i class="fa fa-edit"></i> 編輯
+                                </button>
+                                <button onclick="deleteGame('${game.id}')" class="text-danger hover:text-red-800 mr-3">
+                                    <i class="fa fa-trash"></i> 刪除
+                                </button>
+                                <button onclick="showQrCodeModal('${game.id}')" class="text-success hover:text-green-800">
+                                    <i class="fa fa-qrcode"></i> 二維碼
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                console.error('加載遊戲數據時發生錯誤:', error);
+                const tbody = document.getElementById('gamesTableBody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-red-500">
+                            <i class="fa fa-exclamation-circle mr-2"></i>加載數據時發生錯誤
+                        </td>
+                    </tr>
                 `;
-                tbody.appendChild(row);
-            });
+            }
         }
         
         // 加載用戶數據
-        function loadUsers(searchTerm = '') {
-            const tbody = document.getElementById('usersTableBody');
-            tbody.innerHTML = '';
-            
-            let filteredUsers = mockUsers;
-            if (searchTerm) {
-                filteredUsers = mockUsers.filter(user => 
-                    user.id.includes(searchTerm) || 
-                    user.name.includes(searchTerm) || 
-                    user.group.includes(searchTerm)
-                );
-            }
-            
-            filteredUsers.forEach(user => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-gray-900">${user.id}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${user.name}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${user.group}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${user.plays || 0}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${Math.floor((user.plays || 0) / 2)}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button onclick="showUserModal('${user.id}')" class="text-primary hover:text-blue-800 mr-3">
-                            <i class="fa fa-edit"></i> 編輯
-                        </button>
-                        <button onclick="deleteUser('${user.id}')" class="text-danger hover:text-red-800 mr-3">
-                            <i class="fa fa-trash"></i> 刪除
-                        </button>
-                        <button onclick="viewUserRecords('${user.id}')" class="text-info hover:text-blue-800">
-                            <i class="fa fa-eye"></i> 查看記錄
-                        </button>
-                    </td>
+        async function loadUsers(searchTerm = '') {
+            try {
+                let query = supabase.from('users').select('*');
+                
+                if (searchTerm) {
+                    query = query.or(`id.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%,group.ilike.%${searchTerm}%`);
+                }
+                
+                const { data, error } = await query;
+                
+                if (error) {
+                    console.error('加載用戶數據失敗:', error);
+                    users = [];
+                } else {
+                    users = data || [];
+                }
+                
+                const tbody = document.getElementById('usersTableBody');
+                tbody.innerHTML = '';
+                
+                if (users.length === 0) {
+                    const emptyRow = document.createElement('tr');
+                    emptyRow.innerHTML = `
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                            <i class="fa fa-info-circle mr-2"></i>${searchTerm ? '未找到匹配的用戶' : '暫無用戶數據'}
+                        </td>
+                    `;
+                    tbody.appendChild(emptyRow);
+                } else {
+                    users.forEach(user => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">${user.id}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">${user.name}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">${user.group || '無組別'}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">${user.plays || 0}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">${Math.floor((user.plays || 0) / 2)}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button onclick="showUserModal('${user.id}')" class="text-primary hover:text-blue-800 mr-3">
+                                    <i class="fa fa-edit"></i> 編輯
+                                </button>
+                                <button onclick="deleteUser('${user.id}')" class="text-danger hover:text-red-800 mr-3">
+                                    <i class="fa fa-trash"></i> 刪除
+                                </button>
+                                <button onclick="viewUserRecords('${user.id}')" class="text-info hover:text-blue-800">
+                                    <i class="fa fa-eye"></i> 查看記錄
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                console.error('加載用戶數據時發生錯誤:', error);
+                const tbody = document.getElementById('usersTableBody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-red-500">
+                            <i class="fa fa-exclamation-circle mr-2"></i>加載數據時發生錯誤
+                        </td>
+                    </tr>
                 `;
-                tbody.appendChild(row);
-            });
-            
-            if (filteredUsers.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">未找到匹配的用戶</td></tr>';
             }
         }
         
         // 加載記錄數據
-        function loadRecords(searchTerm = '', gameFilter = 'all') {
-            const tbody = document.getElementById('recordsTableBody');
-            tbody.innerHTML = '';
-            
-            let filteredRecords = mockRecords;
-            
-            if (searchTerm) {
-                filteredRecords = filteredRecords.filter(record => 
-                    record.userId.includes(searchTerm) || 
-                    record.userName.includes(searchTerm) || 
-                    record.gameName.includes(searchTerm)
-                );
-            }
-            
-            if (gameFilter && gameFilter !== 'all') {
-                filteredRecords = filteredRecords.filter(record => record.gameName === gameFilter);
-            }
-            
-            filteredRecords.forEach(record => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${record.time}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${record.userId}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${record.userName}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${record.gameName}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${record.score}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${record.gift}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${record.operator}</div>
-                    </td>
+        async function loadRecords(searchTerm = '', gameFilter = 'all') {
+            try {
+                let query = supabase.from('records').select('*').order('created_at', { ascending: false });
+                
+                if (searchTerm) {
+                    query = query.or(`user_id.ilike.%${searchTerm}%,user_name.ilike.%${searchTerm}%,game_name.ilike.%${searchTerm}%`);
+                }
+                
+                if (gameFilter && gameFilter !== 'all') {
+                    query = query.eq('game_name', gameFilter);
+                }
+                
+                const { data, error } = await query;
+                
+                if (error) {
+                    console.error('加載記錄數據失敗:', error);
+                    records = [];
+                } else {
+                    records = data || [];
+                }
+                
+                const tbody = document.getElementById('recordsTableBody');
+                tbody.innerHTML = '';
+                
+                if (records.length === 0) {
+                    const emptyRow = document.createElement('tr');
+                    emptyRow.innerHTML = `
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                            <i class="fa fa-info-circle mr-2"></i>暫無記錄數據
+                        </td>
+                    `;
+                    tbody.appendChild(emptyRow);
+                } else {
+                    records.forEach(record => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">${new Date(record.created_at).toLocaleString('zh-TW')}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">${record.user_id}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">${record.user_name}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">${record.game_name}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">
+                                    成功
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">${record.points || 0} 點</div>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                console.error('加載記錄數據時發生錯誤:', error);
+                const tbody = document.getElementById('recordsTableBody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-red-500">
+                            <i class="fa fa-exclamation-circle mr-2"></i>加載數據時發生錯誤
+                        </td>
+                    </tr>
                 `;
-                tbody.appendChild(row);
-            });
-            
-            if (filteredRecords.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-500">未找到匹配的記錄</td></tr>';
             }
         }
         
-        // 加載遊戲過濾器
+        // 加載遊戲篩選器
         function loadGameFilter() {
             const select = document.getElementById('gameFilter');
-            select.innerHTML = '<option value="all">全部遊戲</option>';
+            select.innerHTML = '<option value="all">所有遊戲</option>';
             
-            mockGames.forEach(game => {
+            games.forEach(game => {
                 const option = document.createElement('option');
                 option.value = game.name;
                 option.textContent = game.name;
@@ -905,10 +1001,10 @@
             switch (chartType) {
                 case 'gameHeat':
                     chartData = {
-                        labels: mockGames.map(g => g.name),
+                        labels: games ? games.map(g => g.name) : [],
                         datasets: [{
                             label: '參與次數',
-                            data: mockGames.map(g => g.plays),
+                            data: games ? games.map(g => g.plays || 0) : [],
                             backgroundColor: 'rgba(59, 130, 246, 0.5)',
                             borderColor: 'rgba(59, 130, 246, 1)',
                             borderWidth: 1
@@ -932,17 +1028,17 @@
                     
                 case 'gameComparison':
                     chartData = {
-                        labels: mockGames.map(g => g.name),
+                        labels: games ? games.map(g => g.name) : [],
                         datasets: [{
                             label: '參與次數',
-                            data: mockGames.map(g => g.plays),
+                            data: games ? games.map(g => g.plays || 0) : [],
                             backgroundColor: 'rgba(59, 130, 246, 0.5)',
                             borderColor: 'rgba(59, 130, 246, 1)',
                             borderWidth: 1,
                             yAxisID: 'y'
                         }, {
                             label: '獲獎次數',
-                            data: mockGames.map(g => g.gifts),
+                            data: games ? games.map(g => g.gifts || 0) : [],
                             backgroundColor: 'rgba(239, 68, 68, 0.5)',
                             borderColor: 'rgba(239, 68, 68, 1)',
                             borderWidth: 1,
@@ -958,10 +1054,10 @@
                     
                 case 'userActivity':
                     chartData = {
-                        labels: mockUsers.slice(0, 8).map(u => u.name),
+                        labels: users && users.length > 0 ? users.slice(0, 8).map(u => u.name) : [],
                         datasets: [{
                             label: '參與次數',
-                            data: mockUsers.slice(0, 8).map(u => u.plays),
+                            data: users && users.length > 0 ? users.slice(0, 8).map(u => u.plays || 0) : [],
                             backgroundColor: 'rgba(245, 158, 11, 0.5)',
                             borderColor: 'rgba(245, 158, 11, 1)',
                             borderWidth: 1
@@ -1018,7 +1114,7 @@
             document.getElementById('gameModal').classList.add('hidden');
         }
         
-        function saveGame(event) {
+        async function saveGame(event) {
             event.preventDefault();
             
             const gameId = document.getElementById('gameId').value;
@@ -1032,60 +1128,75 @@
                 return;
             }
             
-            if (gameId) {
-                // 更新遊戲
-                updateGame(gameId, { name, booth_number: boothNumber, description, status })
-                    .then(() => {
-                        alert('遊戲信息已更新！');
-                    })
-                    .catch(error => {
-                        console.error('更新遊戲失敗:', error);
-                        alert('更新遊戲失敗: ' + error.message);
-                    });
-            } else {
-                // 添加新遊戲
-                const newGame = {
-                    id: 'G' + String(Date.now()).slice(-6),
-                    name,
-                    booth_number: boothNumber,
-                    description,
-                    status,
-                    plays: 0,
-                    gifts: 0,
-                    created_at: new Date().toISOString()
-                };
+            try {
+                if (gameId) {
+                    // 更新遊戲
+                    const { error } = await supabase
+                        .from('games')
+                        .update({ name, booth_number: boothNumber, description, status })
+                        .eq('id', gameId);
+                    
+                    if (error) {
+                        throw error;
+                    }
+                    
+                    alert('遊戲信息已更新！');
+                } else {
+                    // 添加新遊戲
+                    const newGame = {
+                        id: 'G' + String(Date.now()).slice(-6),
+                        name,
+                        booth_number: boothNumber,
+                        description,
+                        status,
+                        plays: 0,
+                        gifts: 0,
+                        created_at: new Date().toISOString()
+                    };
+                    
+                    const { error } = await supabase
+                        .from('games')
+                        .insert(newGame);
+                    
+                    if (error) {
+                        throw error;
+                    }
+                    
+                    alert('新遊戲已添加！');
+                }
                 
-                addGame(newGame)
-                    .then(() => {
-                        alert('新遊戲已添加！');
-                    })
-                    .catch(error => {
-                        console.error('添加遊戲失敗:', error);
-                        alert('添加遊戲失敗: ' + error.message);
-                    });
+                closeGameModal();
+                loadGames();
+                loadGameFilter();
+                updateStatistics();
+                updateChart(document.getElementById('chartTypeSelect').value);
+            } catch (error) {
+                console.error('保存遊戲失敗:', error);
+                alert('保存遊戲失敗: ' + error.message);
             }
-            
-            closeGameModal();
-            loadGames();
-            loadGameFilter();
-            updateStatistics();
-            updateChart(document.getElementById('chartTypeSelect').value);
         }
         
-        function deleteGame(gameId) {
+        async function deleteGame(gameId) {
             if (confirm(`確定要刪除這個遊戲嗎？此操作無法撤銷。`)) {
-                deleteGameById(gameId)
-                    .then(() => {
-                        loadGames();
-                        loadGameFilter();
-                        updateStatistics();
-                        updateChart(document.getElementById('chartTypeSelect').value);
-                        alert('遊戲已成功刪除！');
-                    })
-                    .catch(error => {
-                        console.error('刪除遊戲失敗:', error);
-                        alert('刪除遊戲失敗: ' + error.message);
-                    });
+                try {
+                    const { error } = await supabase
+                        .from('games')
+                        .delete()
+                        .eq('id', gameId);
+                    
+                    if (error) {
+                        throw error;
+                    }
+                    
+                    loadGames();
+                    loadGameFilter();
+                    updateStatistics();
+                    updateChart(document.getElementById('chartTypeSelect').value);
+                    alert('遊戲已成功刪除！');
+                } catch (error) {
+                    console.error('刪除遊戲失敗:', error);
+                    alert('刪除遊戲失敗: ' + error.message);
+                }
             }
         }
         
@@ -1096,7 +1207,7 @@
             const form = document.getElementById('userForm');
             
             if (userId) {
-                const user = mockUsers.find(u => u.id == userId);
+                const user = users.find(u => u.id == userId);
                 if (user) {
                     title.textContent = `編輯用戶: ${user.name}`;
                     document.getElementById('userId').value = user.id;
@@ -1121,7 +1232,7 @@
             document.getElementById('userModal').classList.add('hidden');
         }
         
-        function saveUser(event) {
+        async function saveUser(event) {
             event.preventDefault();
             
             const userId = document.getElementById('userId').value;
@@ -1144,55 +1255,70 @@
                 }
             }
             
-            if (userId) {
-                // 更新用戶
-                updateUser(userId, { name, group, plays })
-                    .then(() => {
-                        alert('用戶信息已更新！');
-                    })
-                    .catch(error => {
-                        console.error('更新用戶失敗:', error);
-                        alert('更新用戶失敗: ' + error.message);
-                    });
-            } else {
-                // 添加新用戶
-                const newUser = {
-                    id: userInputId,
-                    name,
-                    group,
-                    plays,
-                    created_at: new Date().toISOString()
-                };
+            try {
+                if (userId) {
+                    // 更新用戶
+                    const { error } = await supabase
+                        .from('users')
+                        .update({ name, group, plays })
+                        .eq('id', userId);
+                    
+                    if (error) {
+                        throw error;
+                    }
+                    
+                    alert('用戶信息已更新！');
+                } else {
+                    // 添加新用戶
+                    const newUser = {
+                        id: userInputId,
+                        name,
+                        group,
+                        plays,
+                        created_at: new Date().toISOString()
+                    };
+                    
+                    const { error } = await supabase
+                        .from('users')
+                        .insert(newUser);
+                    
+                    if (error) {
+                        throw error;
+                    }
+                    
+                    alert('新用戶已添加！');
+                }
                 
-                addUser(newUser)
-                    .then(() => {
-                        alert('新用戶已添加！');
-                    })
-                    .catch(error => {
-                        console.error('添加用戶失敗:', error);
-                        alert('添加用戶失敗: ' + error.message);
-                    });
+                closeUserModal();
+                loadUsers();
+                updateStatistics();
+                updateChart(document.getElementById('chartTypeSelect').value);
+            } catch (error) {
+                console.error('保存用戶失敗:', error);
+                alert('保存用戶失敗: ' + error.message);
             }
-            
-            closeUserModal();
-            loadUsers();
-            updateStatistics();
-            updateChart(document.getElementById('chartTypeSelect').value);
         }
         
-        function deleteUser(userId) {
+        async function deleteUser(userId) {
             if (confirm(`確定要刪除用戶 ${userId} 嗎？此操作無法撤銷。`)) {
-                deleteUserById(userId)
-                    .then(() => {
-                        loadUsers();
-                        updateStatistics();
-                        updateChart(document.getElementById('chartTypeSelect').value);
-                        alert('用戶已成功刪除！');
-                    })
-                    .catch(error => {
-                        console.error('刪除用戶失敗:', error);
-                        alert('刪除用戶失敗: ' + error.message);
-                    });
+                try {
+                    const { error } = await supabase
+                        .from('users')
+                        .delete()
+                        .eq('id', userId);
+                    
+                    if (error) {
+                        throw error;
+                    }
+                    
+                    loadUsers();
+                    updateStatistics();
+                    updateChart(document.getElementById('chartTypeSelect').value);
+                    alert('用戶已成功刪除！');
+                } catch (error) {
+                    console.error('刪除用戶失敗:', error);
+                    alert('刪除用戶失敗: ' + error.message);
+                }
             }
         }
         
@@ -1240,10 +1366,9 @@
         
         function closeImportUsersModal() {
             document.getElementById('importUsersModal').classList.add('hidden');
-            document.getElementById('csvFile').value = '';
         }
         
-        function importUsers() {
+        async function importUsers() {
             const fileInput = document.getElementById('csvFile');
             const file = fileInput.files[0];
             
@@ -1252,171 +1377,172 @@
                 return;
             }
             
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const csvData = e.target.result;
-                const lines = csvData.split('\n').filter(line => line.trim());
+            try {
+                const text = await file.text();
+                const lines = text.split('\n').filter(line => line.trim());
+                const headers = lines[0].split(',');
                 
-                if (lines.length < 2) {
-                    alert('CSV文件格式不正確！');
+                if (headers.length < 2) {
+                    alert('CSV格式不正確，請參考示例格式！');
                     return;
                 }
                 
-                const importedUsers = [];
-                let successCount = 0;
-                let errorCount = 0;
-                
+                const usersToImport = [];
                 for (let i = 1; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (!line) continue;
-                    
-                    const [userId, name, group, plays] = line.split(',').map(field => field.trim());
-                    
-                    if (userId && name) {
-                        if (!mockUsers.some(u => u.id === userId)) {
-                            importedUsers.push({
-                                id: userId,
-                                name,
-                                group: group || '',
-                                plays: parseInt(plays) || 0,
-                                created_at: new Date().toISOString()
-                            });
-                            successCount++;
-                        } else {
-                            errorCount++;
-                        }
-                    } else {
-                        errorCount++;
+                    const values = lines[i].split(',');
+                    if (values.length >= 2) {
+                        usersToImport.push({
+                            id: values[0].trim(),
+                            name: values[1].trim(),
+                            group: values[2] ? values[2].trim() : '',
+                            plays: values[3] ? parseInt(values[3]) : 0,
+                            created_at: new Date().toISOString()
+                        });
                     }
                 }
                 
-                mockUsers.push(...importedUsers);
+                if (usersToImport.length === 0) {
+                    alert('CSV文件中沒有有效的用戶數據！');
+                    return;
+                }
                 
+                // 批量插入用戶
+                const { error } = await supabase
+                    .from('users')
+                    .insert(usersToImport);
+                
+                if (error) {
+                    throw error;
+                }
+                
+                alert(`成功導入 ${usersToImport.length} 個用戶！`);
+                closeImportUsersModal();
                 loadUsers();
                 updateStatistics();
-                
-                closeImportUsersModal();
-                alert(`用戶導入完成！\n成功: ${successCount} 個用戶\n跳過: ${errorCount} 個用戶（ID已存在）`);
-            };
-            
-            reader.readAsText(file);
+            } catch (error) {
+                console.error('導入用戶失敗:', error);
+                alert('導入用戶失敗: ' + error.message);
+            }
         }
         
         // 数据导出功能
-        function exportToCSV(data, filename, headers) {
+        function exportGamesData() {
+            if (games.length === 0) {
+                alert('沒有遊戲數據可導出！');
+                return;
+            }
+            
+            const headers = ['id', 'name', 'booth_number', 'description', 'status', 'plays', 'gifts', 'created_at'];
             const csvContent = [
                 headers.join(','),
-                ...data.map(row => headers.map(header => {
-                    const value = row[header] || '';
-                    return `"${value.toString().replace(/"/g, '""')}"`;
-                }).join(','))
+                ...games.map(game => headers.map(header => `"${game[header] || ''}"`).join(','))
             ].join('\n');
             
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            downloadCSV(csvContent, 'games_data.csv');
+        }
+        
+        function exportUsersData() {
+            if (users.length === 0) {
+                alert('沒有用戶數據可導出！');
+                return;
+            }
+            
+            const headers = ['id', 'name', 'group', 'plays', 'created_at'];
+            const csvContent = [
+                headers.join(','),
+                ...users.map(user => headers.map(header => `"${user[header] || ''}"`).join(','))
+            ].join('\n');
+            
+            downloadCSV(csvContent, 'users_data.csv');
+        }
+        
+        function exportRecordsData() {
+            if (records.length === 0) {
+                alert('沒有記錄數據可導出！');
+                return;
+            }
+            
+            const headers = ['id', 'user_id', 'user_name', 'game_id', 'game_name', 'points', 'created_at'];
+            const csvContent = [
+                headers.join(','),
+                ...records.map(record => headers.map(header => `"${record[header] || ''}"`).join(','))
+            ].join('\n');
+            
+            downloadCSV(csvContent, 'records_data.csv');
+        }
+        
+        function exportAllData() {
+            const allData = {
+                games,
+                users,
+                records,
+                export_time: new Date().toISOString()
+            };
+            
+            const jsonContent = JSON.stringify(allData, null, 2);
+            const blob = new Blob([jsonContent], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
-            
             link.href = url;
-            link.download = filename;
-            link.style.display = 'none';
-            
+            link.download = `qr_game_system_backup_${new Date().toISOString().split('T')[0]}.json`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
             URL.revokeObjectURL(url);
         }
         
-        function exportRecords() {
-            const headers = ['時間', '用戶ID', '姓名', '遊戲名稱', '成績', '獎品', '操作員'];
-            const data = mockRecords.map(record => ({
-                '時間': record.time,
-                '用戶ID': record.userId,
-                '姓名': record.userName,
-                '遊戲名稱': record.gameName,
-                '成績': record.score,
-                '獎品': record.gift,
-                '操作員': record.operator
-            }));
-            
-            exportToCSV(data, `參與記錄_${new Date().toISOString().split('T')[0]}.csv`, headers);
-        }
-        
-        function exportUsers() {
-            const headers = ['用戶ID', '姓名', '組別', '參與次數', '獲得禮品'];
-            const data = mockUsers.map(user => ({
-                '用戶ID': user.id,
-                '姓名': user.name,
-                '組別': user.group || '',
-                '參與次數': user.plays || 0,
-                '獲得禮品': Math.floor((user.plays || 0) / 2)
-            }));
-            
-            exportToCSV(data, `用戶數據_${new Date().toISOString().split('T')[0]}.csv`, headers);
-        }
-        
-        function exportStats() {
-            const headers = ['遊戲名稱', '攤位編號', '參與次數', '獲獎次數', '成功率'];
-            const data = mockGames.map(game => ({
-                '遊戲名稱': game.name,
-                '攤位編號': game.booth_number,
-                '參與次數': game.plays || 0,
-                '獲獎次數': game.gifts || 0,
-                '成功率': ((game.gifts || 0) / (game.plays || 1) * 100).toFixed(1) + '%'
-            }));
-            
-            exportToCSV(data, `遊戲統計_${new Date().toISOString().split('T')[0]}.csv`, headers);
-        }
-        
-        function exportGifts() {
-            const headers = ['時間', '用戶ID', '姓名', '遊戲名稱', '獎品名稱'];
-            const giftRecords = mockRecords.filter(record => record.gift && record.gift !== '無');
-            const data = giftRecords.map(record => ({
-                '時間': record.time,
-                '用戶ID': record.userId,
-                '姓名': record.userName,
-                '遊戲名稱': record.gameName,
-                '獎品名稱': record.gift
-            }));
-            
-            exportToCSV(data, `禮品發放_${new Date().toISOString().split('T')[0]}.csv`, headers);
+        function downloadCSV(content, filename) {
+            const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         }
         
         // 系统设置功能
-        function saveSettings() {
-            const systemName = document.getElementById('systemName').value;
-            const maxPlays = document.getElementById('maxPlays').value;
-            const autoSave = document.getElementById('autoSave').checked;
-            const autoBackup = document.getElementById('autoBackup').checked;
+        async function saveSettings(event) {
+            event.preventDefault();
+            
+            const systemName = document.getElementById('systemName').value.trim();
+            const maxGames = parseInt(document.getElementById('maxGames').value);
+            const maxUsers = parseInt(document.getElementById('maxUsers').value);
+            const refreshInterval = parseInt(document.getElementById('refreshInterval').value);
+            const systemDescription = document.getElementById('systemDescription').value.trim();
             
             const settings = {
-                systemName,
-                maxPlays: parseInt(maxPlays),
-                autoSave,
-                autoBackup,
-                updatedAt: new Date().toISOString()
+                system_name: systemName,
+                max_games: maxGames,
+                max_users: maxUsers,
+                refresh_interval: refreshInterval,
+                system_description: systemDescription,
+                updated_at: new Date().toISOString()
             };
             
-            localStorage.setItem('qrGameSystemSettings', JSON.stringify(settings));
-            
-            alert(`系統設置已保存！
-系統名稱: ${systemName}
-最大參與次數: ${maxPlays}
-自動保存: ${autoSave ? '開啟' : '關閉'}
-數據備份: ${autoBackup ? '開啟' : '關閉'}`);
+            try {
+                // 保存設置到數據庫
+                const { error } = await supabase
+                    .from('settings')
+                    .upsert(settings, { onConflict: 'system_name' });
+                
+                if (error) {
+                    throw error;
+                }
+                
+                alert('系統設置已保存！');
+            } catch (error) {
+                console.error('保存設置失敗:', error);
+                alert('保存設置失敗: ' + error.message);
+            }
         }
         
-        function cancelSettings() {
-            document.getElementById('systemName').value = 'QR遊戲系統';
-            document.getElementById('maxPlays').value = '10';
-            document.getElementById('autoSave').checked = true;
-            document.getElementById('autoBackup').checked = true;
-            
-            alert('已取消設置更改，恢復默認值！');
-        }
-        
+        // 登出功能
         function logout() {
             if (confirm('確定要登出系統嗎？')) {
+                sessionStorage.removeItem('adminLoggedIn');
                 window.location.href = 'admin.html';
             }
         }
