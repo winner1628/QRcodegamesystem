@@ -125,7 +125,6 @@
                 <section id="dashboard-section" class="space-y-6">
                     <!-- 統計卡片 -->
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <!-- 已設置遊戲 -->
                         <div class="bg-white p-6 rounded-lg shadow-sm">
                             <div class="flex items-center">
                                 <div class="p-3 bg-blue-100 rounded-full">
@@ -364,7 +363,6 @@
                         <h3 class="text-lg font-semibold text-gray-800 mb-6">數據導出</h3>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- 參與記錄導出 -->
                             <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-all-300">
                                 <div class="flex items-center mb-4">
                                     <div class="p-3 bg-blue-100 rounded-full">
@@ -380,7 +378,6 @@
                                 </button>
                             </div>
                             
-                            <!-- 用戶數據導出 -->
                             <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-all-300">
                                 <div class="flex items-center mb-4">
                                     <div class="p-3 bg-green-100 rounded-full">
@@ -396,7 +393,6 @@
                                 </button>
                             </div>
                             
-                            <!-- 遊戲統計導出 -->
                             <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-all-300">
                                 <div class="flex items-center mb-4">
                                     <div class="p-3 bg-yellow-100 rounded-full">
@@ -412,7 +408,6 @@
                                 </button>
                             </div>
                             
-                            <!-- 禮品發放記錄 -->
                             <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-all-300">
                                 <div class="flex items-center mb-4">
                                     <div class="p-3 bg-red-100 rounded-full">
@@ -437,7 +432,6 @@
                         <h3 class="text-lg font-semibold text-gray-800 mb-6">系統設置</h3>
                         
                         <div class="space-y-6">
-                            <!-- 基本設置 -->
                             <div>
                                 <h4 class="text-md font-medium text-gray-800 mb-4">基本設置</h4>
                                 <div class="space-y-4">
@@ -454,7 +448,6 @@
                                 </div>
                             </div>
                             
-                            <!-- 高級設置 -->
                             <div>
                                 <h4 class="text-md font-medium text-gray-800 mb-4">高級設置</h4>
                                 <div class="space-y-4">
@@ -473,7 +466,6 @@
                                 </div>
                             </div>
                             
-                            <!-- 按鈕 -->
                             <div class="flex space-x-4">
                                 <button onclick="saveSettings()" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
                                     <i class="fa fa-save mr-2"></i> 保存設置
@@ -489,9 +481,6 @@
         </main>
     </div>
 
-    <!-- 配置文件 -->
-    <script src="config.js"></script>
-    
     <!-- 模态框 -->
     <!-- 游戏管理模态框 -->
     <div id="gameModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
@@ -628,6 +617,9 @@
             </div>
         </div>
     </div>
+
+    <!-- 配置文件 -->
+    <script src="config.js"></script>
     
     <!-- 主要JavaScript -->
     <script>
@@ -655,7 +647,6 @@
         
         // 初始化導航
         function initNavigation() {
-            // 為所有導航按鈕添加點擊事件
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const section = this.getAttribute('data-section');
@@ -666,7 +657,6 @@
         
         // 顯示指定區域
         function showSection(sectionName) {
-            // 隱藏所有區域
             ['dashboard', 'games', 'users', 'records', 'export', 'settings'].forEach(section => {
                 const element = document.getElementById(`${section}-section`);
                 if (element) {
@@ -674,13 +664,11 @@
                 }
             });
             
-            // 顯示選定的區域
             const targetSection = document.getElementById(`${sectionName}-section`);
             if (targetSection) {
                 targetSection.classList.remove('hidden');
             }
             
-            // 更新導航按鈕狀態
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('sidebar-active');
                 if (btn.getAttribute('data-section') === sectionName) {
@@ -688,7 +676,6 @@
                 }
             });
             
-            // 更新頁面標題
             document.getElementById('pageTitle').textContent = {
                 'dashboard': '數據概覽',
                 'games': '遊戲管理',
@@ -822,7 +809,6 @@
             
             let filteredRecords = mockRecords;
             
-            // 應用搜索過濾
             if (searchTerm) {
                 filteredRecords = filteredRecords.filter(record => 
                     record.userId.includes(searchTerm) || 
@@ -831,7 +817,6 @@
                 );
             }
             
-            // 應用遊戲過濾
             if (gameFilter && gameFilter !== 'all') {
                 filteredRecords = filteredRecords.filter(record => record.gameName === gameFilter);
             }
@@ -897,14 +882,11 @@
         // 初始化圖表
         function initializeCharts() {
             const ctx = document.getElementById('mainChart').getContext('2d');
-            
-            // 默認顯示遊戲熱度圖
             updateChart('gameHeat');
         }
         
         // 更新圖表
         function updateChart(chartType) {
-            // 銷毀現有圖表
             if (mainChart) {
                 mainChart.destroy();
             }
@@ -988,7 +970,6 @@
                     break;
             }
             
-            // 創建新圖表
             mainChart = new Chart(ctx, {
                 type: chartType === 'todayTrend' ? 'line' : 'bar',
                 data: chartData,
@@ -1014,7 +995,6 @@
             const form = document.getElementById('gameForm');
             
             if (gameId) {
-                // 编辑模式
                 const game = mockGames.find(g => g.id == gameId);
                 if (game) {
                     title.textContent = `編輯遊戲: ${game.name}`;
@@ -1025,7 +1005,6 @@
                     document.getElementById('gameStatus').value = game.status;
                 }
             } else {
-                // 添加模式
                 title.textContent = '添加新遊戲';
                 form.reset();
                 document.getElementById('gameId').value = '';
@@ -1048,14 +1027,12 @@
             const description = document.getElementById('gameDescription').value.trim();
             const status = document.getElementById('gameStatus').value;
             
-            // 验证输入
             if (!name || !boothNumber) {
                 alert('請填寫必填字段！');
                 return;
             }
             
             if (gameId) {
-                // 更新现有游戏
                 const gameIndex = mockGames.findIndex(g => g.id == gameId);
                 if (gameIndex !== -1) {
                     mockGames[gameIndex] = {
@@ -1068,7 +1045,6 @@
                     alert('遊戲信息已更新！');
                 }
             } else {
-                // 添加新游戏
                 const newGame = {
                     id: 'G' + String(mockGames.length + 1).padStart(3, '0'),
                     name,
@@ -1111,19 +1087,17 @@
             const form = document.getElementById('userForm');
             
             if (userId) {
-                // 编辑模式
                 const user = mockUsers.find(u => u.id == userId);
                 if (user) {
                     title.textContent = `編輯用戶: ${user.name}`;
                     document.getElementById('userId').value = user.id;
                     document.getElementById('userInputId').value = user.id;
-                    document.getElementById('userInputId').disabled = true; // 不允许修改ID
+                    document.getElementById('userInputId').disabled = true;
                     document.getElementById('userName').value = user.name;
                     document.getElementById('userGroup').value = user.group || '';
                     document.getElementById('userPlays').value = user.plays || 0;
                 }
             } else {
-                // 添加模式
                 title.textContent = '添加新用戶';
                 form.reset();
                 document.getElementById('userId').value = '';
@@ -1147,20 +1121,17 @@
             const group = document.getElementById('userGroup').value.trim();
             const plays = parseInt(document.getElementById('userPlays').value) || 0;
             
-            // 验证输入
             if (!userInputId || !name) {
                 alert('請填寫必填字段！');
                 return;
             }
             
-            // 检查ID是否已存在（添加模式）
             if (!userId && mockUsers.some(u => u.id === userInputId)) {
                 alert('用戶ID已存在！');
                 return;
             }
             
             if (userId) {
-                // 更新现有用户
                 const userIndex = mockUsers.findIndex(u => u.id == userId);
                 if (userIndex !== -1) {
                     mockUsers[userIndex] = {
@@ -1172,7 +1143,6 @@
                     alert('用戶信息已更新！');
                 }
             } else {
-                // 添加新用户
                 const newUser = {
                     id: userInputId,
                     name,
@@ -1220,7 +1190,6 @@
                 title.textContent = `遊戲二維碼: ${game.name}`;
                 const qrData = `game:${gameId}`;
                 
-                // 创建二维码显示
                 content.innerHTML = `
                     <div class="text-center">
                         <div class="bg-white p-4 inline-block rounded-lg border-2 border-dashed border-gray-300">
@@ -1270,7 +1239,6 @@
                     return;
                 }
                 
-                // 跳过标题行
                 const importedUsers = [];
                 let successCount = 0;
                 let errorCount = 0;
@@ -1299,10 +1267,8 @@
                     }
                 }
                 
-                // 添加导入的用户
                 mockUsers.push(...importedUsers);
                 
-                // 更新界面
                 loadUsers();
                 updateStatistics();
                 
@@ -1324,16 +1290,18 @@
             ].join('\n');
             
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
             
-            link.setAttribute('href', url);
-            link.setAttribute('download', filename);
-            link.style.visibility = 'hidden';
+            link.href = url;
+            link.download = filename;
+            link.style.display = 'none';
             
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            
+            URL.revokeObjectURL(url);
         }
         
         function exportRecords() {
@@ -1398,7 +1366,6 @@
             const autoSave = document.getElementById('autoSave').checked;
             const autoBackup = document.getElementById('autoBackup').checked;
             
-            // 保存设置到localStorage
             const settings = {
                 systemName,
                 maxPlays: parseInt(maxPlays),
@@ -1417,7 +1384,6 @@
         }
         
         function cancelSettings() {
-            // 重置表單值
             document.getElementById('systemName').value = 'QR遊戲系統';
             document.getElementById('maxPlays').value = '10';
             document.getElementById('autoSave').checked = true;
