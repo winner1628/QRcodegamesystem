@@ -55,37 +55,37 @@
             <nav class="mt-4">
                 <ul>
                     <li>
-                        <a href="#" class="sidebar-active flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" data-section="dashboard">
+                        <a href="#" class="sidebar-active flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" onclick="navigateTo('dashboard')">
                             <i class="fa fa-dashboard w-6"></i>
                             <span>數據概覽</span>
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" data-section="games">
+                        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" onclick="navigateTo('games')">
                             <i class="fa fa-gamepad w-6"></i>
                             <span>遊戲管理</span>
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" data-section="users">
+                        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" onclick="navigateTo('users')">
                             <i class="fa fa-users w-6"></i>
                             <span>用戶管理</span>
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" data-section="records">
+                        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" onclick="navigateTo('records')">
                             <i class="fa fa-history w-6"></i>
                             <span>記錄查詢</span>
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" data-section="export">
+                        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" onclick="navigateTo('export')">
                             <i class="fa fa-download w-6"></i>
                             <span>數據導出</span>
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" data-section="settings">
+                        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" onclick="navigateTo('settings')">
                             <i class="fa fa-cog w-6"></i>
                             <span>系統設置</span>
                         </a>
@@ -95,7 +95,7 @@
             
             <!-- 登出按鈕 -->
             <div class="absolute bottom-0 w-64 p-4 border-t border-gray-700">
-                <button id="logoutBtn" class="w-full flex items-center justify-center px-4 py-2 bg-danger text-white rounded-md hover:bg-red-600 transition-all-300">
+                <button onclick="logout()" class="w-full flex items-center justify-center px-4 py-2 bg-danger text-white rounded-md hover:bg-red-600 transition-all-300">
                     <i class="fa fa-sign-out mr-2"></i> 登出系統
                 </button>
             </div>
@@ -132,14 +132,14 @@
                                     </div>
                                     <div class="ml-4">
                                         <p class="text-sm text-gray-600">數據管理</p>
-                                        <button class="text-danger hover:text-red-700 text-sm font-medium"
-                                                onclick="showDeleteAllDataConfirm()">
+                                        <button onclick="showDeleteAllDataConfirm()" class="text-danger hover:text-red-700 text-sm font-medium">
                                             清空所有數據
                                         </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        
                         <div class="bg-white p-6 rounded-lg shadow-sm">
                             <div class="flex items-center">
                                 <div class="p-3 bg-blue-100 rounded-full">
@@ -200,7 +200,7 @@
                                     <option value="gameComparison">遊戲對比</option>
                                     <option value="userActivity">用戶活躍度</option>
                                 </select>
-                                <button id="refreshChartBtn" class="px-3 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300 text-sm">
+                                <button onclick="updateChart(document.getElementById('chartTypeSelect').value)" class="px-3 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300 text-sm">
                                     <i class="fa fa-refresh"></i>
                                 </button>
                             </div>
@@ -216,7 +216,7 @@
                     <div class="bg-white p-6 rounded-lg shadow-sm">
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-lg font-semibold text-gray-800">遊戲管理</h3>
-                            <button id="addGameBtn" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
+                            <button onclick="showGameModal()" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
                                 <i class="fa fa-plus mr-1"></i> 添加遊戲
                             </button>
                         </div>
@@ -260,10 +260,10 @@
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-lg font-semibold text-gray-800">用戶管理</h3>
                             <div class="flex space-x-4">
-                                <button id="importUsersBtn" class="px-4 py-2 bg-success text-white rounded-md hover:bg-green-600 transition-all-300">
+                                <button onclick="showImportUsersModal()" class="px-4 py-2 bg-success text-white rounded-md hover:bg-green-600 transition-all-300">
                                     <i class="fa fa-upload mr-1"></i> 導入用戶
                                 </button>
-                                <button id="addUserBtn" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
+                                <button onclick="showUserModal()" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
                                     <i class="fa fa-plus mr-1"></i> 添加用戶
                                 </button>
                             </div>
@@ -274,7 +274,7 @@
                             <div class="flex">
                                 <input type="text" id="userSearch" placeholder="搜索用戶姓名或ID..."
                                        class="flex-1 px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary">
-                                <button id="searchUserBtn" class="px-4 py-2 bg-primary text-white rounded-r-md hover:bg-blue-600 transition-all-300">
+                                <button onclick="searchUsers()" class="px-4 py-2 bg-primary text-white rounded-r-md hover:bg-blue-600 transition-all-300">
                                     <i class="fa fa-search"></i>
                                 </button>
                             </div>
@@ -317,19 +317,22 @@
                 <section id="records-section" class="hidden space-y-6">
                     <div class="bg-white p-6 rounded-lg shadow-sm">
                         <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-lg font-semibold text-gray-800">記錄查詢</h3>
+                            <h3 class="text-lg font-semibold text-gray-800">參與記錄查詢</h3>
                         </div>
                         
                         <!-- 搜索和篩選 -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                            <input type="text" id="recordSearch" placeholder="搜索用戶ID或遊戲名稱..."
-                                   class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                            <select id="gameFilter" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                                <option value="">選擇遊戲</option>
-                                <!-- 遊戲選項將動態插入 -->
-                            </select>
-                            <button id="searchRecordBtn" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
-                                <i class="fa fa-search mr-1"></i> 查詢
+                        <div class="flex flex-col md:flex-row gap-4 mb-6">
+                            <div class="flex-1">
+                                <input type="text" id="recordSearch" placeholder="搜索用戶ID、姓名或遊戲名稱..."
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                            </div>
+                            <div class="w-full md:w-48">
+                                <select id="gameFilter" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                                    <option value="">選擇遊戲</option>
+                                </select>
+                            </div>
+                            <button onclick="searchRecords()" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
+                                <i class="fa fa-search mr-2"></i> 查詢
                             </button>
                         </div>
                         
@@ -345,7 +348,7 @@
                                             用戶ID
                                         </th>
                                         <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            用戶姓名
+                                            姓名
                                         </th>
                                         <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             遊戲名稱
@@ -354,7 +357,7 @@
                                             成績
                                         </th>
                                         <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            禮品
+                                            獎品
                                         </th>
                                         <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             操作員
@@ -375,51 +378,67 @@
                         <h3 class="text-lg font-semibold text-gray-800 mb-6">數據導出</h3>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="border border-gray-200 rounded-lg p-6">
-                                <h4 class="text-md font-semibold text-gray-700 mb-4">
-                                    <i class="fa fa-file-text-o mr-2 text-primary"></i> 參與記錄
-                                </h4>
-                                <p class="text-sm text-gray-600 mb-4">
-                                    導出所有用戶的遊戲參與記錄，包括時間、用戶信息、遊戲名稱、成績等數據。
-                                </p>
-                                <button id="exportRecordsBtn" class="w-full px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
-                                    <i class="fa fa-download mr-1"></i> 導出CSV
+                            <!-- 參與記錄導出 -->
+                            <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-all-300">
+                                <div class="flex items-center mb-4">
+                                    <div class="p-3 bg-blue-100 rounded-full">
+                                        <i class="fa fa-history text-primary text-xl"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h4 class="text-lg font-medium text-gray-800">參與記錄</h4>
+                                        <p class="text-sm text-gray-600">導出所有用戶的參與記錄數據</p>
+                                    </div>
+                                </div>
+                                <button onclick="exportRecords()" class="w-full px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
+                                    <i class="fa fa-download mr-2"></i> 導出CSV
                                 </button>
                             </div>
                             
-                            <div class="border border-gray-200 rounded-lg p-6">
-                                <h4 class="text-md font-semibold text-gray-700 mb-4">
-                                    <i class="fa fa-users mr-2 text-success"></i> 用戶數據
-                                </h4>
-                                <p class="text-sm text-gray-600 mb-4">
-                                    導出所有用戶信息，包括用戶ID、姓名、組別、參與次數、獲得禮品數量等。
-                                </p>
-                                <button id="exportUsersBtn" class="w-full px-4 py-2 bg-success text-white rounded-md hover:bg-green-600 transition-all-300">
-                                    <i class="fa fa-download mr-1"></i> 導出CSV
+                            <!-- 用戶數據導出 -->
+                            <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-all-300">
+                                <div class="flex items-center mb-4">
+                                    <div class="p-3 bg-green-100 rounded-full">
+                                        <i class="fa fa-users text-success text-xl"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h4 class="text-lg font-medium text-gray-800">用戶數據</h4>
+                                        <p class="text-sm text-gray-600">導出所有用戶的基本信息和統計數據</p>
+                                    </div>
+                                </div>
+                                <button onclick="exportUsers()" class="w-full px-4 py-2 bg-success text-white rounded-md hover:bg-green-600 transition-all-300">
+                                    <i class="fa fa-download mr-2"></i> 導出CSV
                                 </button>
                             </div>
                             
-                            <div class="border border-gray-200 rounded-lg p-6">
-                                <h4 class="text-md font-semibold text-gray-700 mb-4">
-                                    <i class="fa fa-gamepad mr-2 text-warning"></i> 遊戲統計
-                                </h4>
-                                <p class="text-sm text-gray-600 mb-4">
-                                    導出各遊戲的參與統計數據，包括參與次數、平均成績、禮品發放情況等。
-                                </p>
-                                <button id="exportStatsBtn" class="w-full px-4 py-2 bg-warning text-white rounded-md hover:bg-yellow-600 transition-all-300">
-                                    <i class="fa fa-download mr-1"></i> 導出CSV
+                            <!-- 遊戲統計導出 -->
+                            <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-all-300">
+                                <div class="flex items-center mb-4">
+                                    <div class="p-3 bg-yellow-100 rounded-full">
+                                        <i class="fa fa-bar-chart text-warning text-xl"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h4 class="text-lg font-medium text-gray-800">遊戲統計</h4>
+                                        <p class="text-sm text-gray-600">導出各遊戲的參與次數和成功率統計</p>
+                                    </div>
+                                </div>
+                                <button onclick="exportStats()" class="w-full px-4 py-2 bg-warning text-white rounded-md hover:bg-yellow-600 transition-all-300">
+                                    <i class="fa fa-download mr-2"></i> 導出CSV
                                 </button>
                             </div>
                             
-                            <div class="border border-gray-200 rounded-lg p-6">
-                                <h4 class="text-md font-semibold text-gray-700 mb-4">
-                                    <i class="fa fa-gift mr-2 text-danger"></i> 禮品發放
-                                </h4>
-                                <p class="text-sm text-gray-600 mb-4">
-                                    導出禮品發放記錄，包括時間、用戶信息、禮品名稱、數量等詳細信息。
-                                </p>
-                                <button id="exportGiftsBtn" class="w-full px-4 py-2 bg-danger text-white rounded-md hover:bg-red-600 transition-all-300">
-                                    <i class="fa fa-download mr-1"></i> 導出CSV
+                            <!-- 禮品發放記錄 -->
+                            <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-all-300">
+                                <div class="flex items-center mb-4">
+                                    <div class="p-3 bg-red-100 rounded-full">
+                                        <i class="fa fa-gift text-danger text-xl"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h4 class="text-lg font-medium text-gray-800">禮品發放</h4>
+                                        <p class="text-sm text-gray-600">導出所有禮品的發放記錄和統計</p>
+                                    </div>
+                                </div>
+                                <button onclick="exportGifts()" class="w-full px-4 py-2 bg-danger text-white rounded-md hover:bg-red-600 transition-all-300">
+                                    <i class="fa fa-download mr-2"></i> 導出CSV
                                 </button>
                             </div>
                         </div>
@@ -432,75 +451,49 @@
                         <h3 class="text-lg font-semibold text-gray-800 mb-6">系統設置</h3>
                         
                         <div class="space-y-6">
+                            <!-- 基本設置 -->
                             <div>
-                                <h4 class="text-md font-semibold text-gray-700 mb-4">基本設置</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                                            系統名稱
-                                        </label>
-                                        <input type="text" value="QR遊戲系統"
-                                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                                            活動日期
-                                        </label>
-                                        <input type="date" value="2025-01-15"
-                                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                                <h4 class="text-md font-medium text-gray-800 mb-4">基本設置</h4>
+                                <div class="space-y-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">系統名稱</label>
+                                            <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" value="QR遊戲系統">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">最大參與次數</label>
+                                            <input type="number" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" value="10">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             
+                            <!-- 高級設置 -->
                             <div>
-                                <h4 class="text-md font-semibold text-gray-700 mb-4">遊戲設置</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <h4 class="text-md font-medium text-gray-800 mb-4">高級設置</h4>
+                                <div class="space-y-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                                            最大遊戲數量
+                                        <label class="flex items-center">
+                                            <input type="checkbox" class="w-4 h-4 text-primary focus:ring-primary border-gray-300 rounded" checked>
+                                            <span class="ml-2 text-sm text-gray-700">啟用自動保存</span>
                                         </label>
-                                        <input type="number" value="30" min="2" max="30"
-                                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                                            最大用戶數量
+                                        <label class="flex items-center">
+                                            <input type="checkbox" class="w-4 h-4 text-primary focus:ring-primary border-gray-300 rounded" checked>
+                                            <span class="ml-2 text-sm text-gray-700">啟用數據備份</span>
                                         </label>
-                                        <input type="number" value="300" min="10" max="500"
-                                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
                                     </div>
                                 </div>
                             </div>
                             
-                            <div>
-                                <h4 class="text-md font-semibold text-gray-700 mb-4">二維碼設置</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                                            二維碼大小
-                                        </label>
-                                        <select class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                                            <option value="200">200x200</option>
-                                            <option value="300" selected>300x300</option>
-                                            <option value="400">400x400</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                                            二維碼顏色
-                                        </label>
-                                        <input type="color" value="#000000"
-                                               class="w-full h-10 border border-gray-300 rounded-md cursor-pointer">
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="flex justify-end space-x-4">
-                                <button id="cancelSettingsBtn" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-all-300">
-                                    取消
+                            <!-- 按鈕 -->
+                            <div class="flex space-x-4">
+                                <button onclick="saveSettings()" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
+                                    <i class="fa fa-save mr-2"></i> 保存設置
                                 </button>
-                                <button id="saveSettingsBtn" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
-                                    <i class="fa fa-save mr-1"></i> 保存設置
+                                <button onclick="cancelSettings()" class="px-6 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-all-300">
+                                    <i class="fa fa-times mr-2"></i> 取消
                                 </button>
                             </div>
                         </div>
@@ -513,255 +506,16 @@
     <!-- 配置文件 -->
     <script src="config.js"></script>
     
-    <!-- 遊戲管理模態框 -->
-    <div id="gameModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg p-8 max-w-lg w-full">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-gray-800" id="gameModalTitle">添加遊戲</h3>
-                <button id="closeGameModal" class="text-gray-500 hover:text-gray-700">
-                    <i class="fa fa-times text-xl"></i>
-                </button>
-            </div>
-            <form id="gameForm" class="space-y-4">
-                <input type="hidden" id="gameId">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">遊戲名稱 *</label>
-                    <input type="text" id="gameName" required class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">攤位編號 *</label>
-                    <input type="text" id="boothNumber" required class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">遊戲描述</label>
-                    <textarea id="gameDescription" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">狀態</label>
-                    <select id="gameStatus" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                        <option value="active">正常</option>
-                        <option value="maintenance">維護中</option>
-                        <option value="inactive">停用</option>
-                    </select>
-                </div>
-                <div class="flex justify-end space-x-4 pt-4">
-                    <button type="button" id="cancelGameBtn" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-all-300">
-                        取消
-                    </button>
-                    <button type="submit" id="saveGameBtn" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
-                        保存
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- 用戶管理模態框 -->
-    <div id="userModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg p-8 max-w-lg w-full">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-gray-800" id="userModalTitle">添加用戶</h3>
-                <button id="closeUserModal" class="text-gray-500 hover:text-gray-700">
-                    <i class="fa fa-times text-xl"></i>
-                </button>
-            </div>
-            <form id="userForm" class="space-y-4">
-                <input type="hidden" id="userId">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">用戶ID *</label>
-                    <input type="text" id="userFormId" required class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">姓名 *</label>
-                    <input type="text" id="userFormName" required class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">組別</label>
-                    <select id="userFormGroup" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                        <option value="A組">A組</option>
-                        <option value="B組">B組</option>
-                        <option value="C組">C組</option>
-                        <option value="D組">D組</option>
-                        <option value="E組">E組</option>
-                    </select>
-                </div>
-                <div class="flex justify-end space-x-4 pt-4">
-                    <button type="button" id="cancelUserBtn" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-all-300">
-                        取消
-                    </button>
-                    <button type="submit" id="saveUserBtn" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
-                        保存
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- 用戶導入模態框 -->
-    <div id="importUsersModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg p-8 max-w-lg w-full">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-gray-800">導入用戶</h3>
-                <button id="closeImportUsersModal" class="text-gray-500 hover:text-gray-700">
-                    <i class="fa fa-times text-xl"></i>
-                </button>
-            </div>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">上傳CSV文件</label>
-                    <input type="file" id="usersFile" accept=".csv" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                    <p class="text-xs text-gray-500 mt-1">文件格式：用戶ID,姓名,組別</p>
-                </div>
-                <div class="p-4 bg-blue-50 rounded-md">
-                    <h4 class="font-semibold text-blue-700 mb-2">範例格式：</h4>
-                    <pre class="text-xs text-gray-600">U001,陳小明,A組
-U002,李美麗,A組
-U003,王大壯,B組</pre>
-                </div>
-                <div class="flex justify-end space-x-4 pt-4">
-                    <button type="button" id="cancelImportBtn" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-all-300">
-                        取消
-                    </button>
-                    <button type="button" id="importBtn" class="px-6 py-2 bg-success text-white rounded-md hover:bg-green-600 transition-all-300">
-                        導入
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 二維碼顯示模態框 -->
-    <div id="qrCodeModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg p-8 max-w-md w-full text-center">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-gray-800" id="qrCodeModalTitle">遊戲二維碼</h3>
-                <button id="closeQrCodeModal" class="text-gray-500 hover:text-gray-700">
-                    <i class="fa fa-times text-xl"></i>
-                </button>
-            </div>
-            <div id="qrCodeContainer" class="p-4 bg-white inline-block rounded-lg shadow-sm mb-4">
-                <!-- 二維碼將在此顯示 -->
-            </div>
-            <p class="text-gray-600 mb-4" id="qrCodeGameName"></p>
-            <div class="flex justify-center space-x-4">
-                <button id="downloadQrCodeBtn" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
-                    <i class="fa fa-download mr-2"></i> 下載二維碼
-                </button>
-                <button id="printQrCodeBtn" class="px-6 py-2 border border-primary text-primary rounded-md hover:bg-primary hover:text-white transition-all-300">
-                    <i class="fa fa-print mr-2"></i> 打印
-                </button>
-            </div>
-        </div>
-    </div>
-
+    <!-- 主要JavaScript -->
     <script>
         // 全局變量
         let mainChart = null;
         
-        // 從localStorage獲取或初始化數據
-        function initializeData() {
-            // 初始化遊戲數據
-            const storedGames = localStorage.getItem('qrGameSystem_games');
-            if (storedGames) {
-                try {
-                    return JSON.parse(storedGames);
-                } catch (e) {
-                    console.error('Failed to parse stored games:', e);
-                }
-            }
-            
-            // 默認遊戲數據
-            const defaultGames = [
-                { id: 1, name: '投籃挑戰', boothNumber: 'A01', plays: 156, gifts: 89, status: 'active' },
-                { id: 2, name: '套圈圈', boothNumber: 'A02', plays: 203, gifts: 124, status: 'active' },
-                { id: 3, name: '射擊遊戲', boothNumber: 'A03', plays: 187, gifts: 95, status: 'active' },
-                { id: 4, name: '闖關挑戰', boothNumber: 'A04', plays: 134, gifts: 67, status: 'maintenance' },
-                { id: 5, name: '幸運抽獎', boothNumber: 'A05', plays: 245, gifts: 156, status: 'active' },
-                { id: 6, name: '智力謎題', boothNumber: 'A06', plays: 112, gifts: 45, status: 'active' },
-                { id: 7, name: '釣魚遊戲', boothNumber: 'A07', plays: 178, gifts: 89, status: 'active' },
-                { id: 8, name: '擊鼓傳花', boothNumber: 'A08', plays: 145, gifts: 67, status: 'active' },
-                { id: 9, name: '猜謎比賽', boothNumber: 'A09', plays: 167, gifts: 78, status: 'active' },
-                { id: 10, name: '記憶挑戰', boothNumber: 'A10', plays: 123, gifts: 54, status: 'active' },
-                { id: 11, name: '氣球爆破', boothNumber: 'A11', plays: 198, gifts: 102, status: 'active' },
-                { id: 12, name: '籃球投準', boothNumber: 'A12', plays: 156, gifts: 78, status: 'active' }
-            ];
-            
-            // 保存到localStorage
-            localStorage.setItem('qrGameSystem_games', JSON.stringify(defaultGames));
-            return defaultGames;
-        }
-        
-        const mockGames = initializeData();
-        
-        // 保存遊戲數據到localStorage
-        function saveGamesToStorage() {
-            localStorage.setItem('qrGameSystem_games', JSON.stringify(mockGames));
-        }
-        
-        // 更新統計數據
-        function updateStatistics() {
-            console.log('Updating statistics...');
-            
-            try {
-                // 計算統計數據
-                const totalGames = mockGames.length;
-                const totalUsers = mockUsers.length;
-                const totalPlays = mockGames.reduce((sum, game) => sum + (game.plays || 0), 0);
-                const totalGifts = mockGames.reduce((sum, game) => sum + (game.gifts || 0), 0);
-                
-                // 更新UI
-                const elements = {
-                    totalGames: document.getElementById('totalGames'),
-                    totalUsers: document.getElementById('totalUsers'),
-                    todayPlays: document.getElementById('todayPlays'),
-                    totalGifts: document.getElementById('totalGifts')
-                };
-                
-                if (elements.totalGames) elements.totalGames.textContent = totalGames;
-                if (elements.totalUsers) elements.totalUsers.textContent = totalUsers;
-                if (elements.todayPlays) elements.todayPlays.textContent = totalPlays.toLocaleString();
-                if (elements.totalGifts) elements.totalGifts.textContent = totalGifts.toLocaleString();
-                
-                console.log('Statistics updated successfully');
-                
-            } catch (error) {
-                console.error('Error updating statistics:', error);
-            }
-        }
-        
-        // 清空所有數據
-        function showDeleteAllDataConfirm() {
-            if (confirm('警告：此操作將清空所有數據，包括遊戲設置、參與記錄等，且不可撤銷！確定要繼續嗎？')) {
-                if (confirm('再次確認：所有數據將被永久刪除，此操作不可撤銷！')) {
-                    deleteAllData();
-                }
-            }
-        }
-        
-        function deleteAllData() {
-            try {
-                // 清空localStorage中的所有數據
-                localStorage.removeItem('qrGameSystem_games');
-                localStorage.removeItem('qrGameSystem_records');
-                localStorage.removeItem('qrGameSystem_users');
-                
-                // 重新初始化數據
-                mockGames = initializeData();
-                
-                // 重新加載頁面數據
-                loadGames();
-                loadGameFilter();
-                loadUsers();
-                loadRecords();
-                updateChart(document.getElementById('chartTypeSelect').value);
-                updateStatistics();
-                
-                alert('所有數據已成功清空！');
-            } catch (error) {
-                console.error('Error deleting data:', error);
-                alert('清空數據時發生錯誤，請重試。');
-            }
-        }
+        // 模擬數據
+        const mockGames = [
+            { id: 1, name: '投籃挑戰', boothNumber: 'A01', plays: 156, gifts: 89, status: 'active' },
+            { id: 2, name: '套圈圈', boothNumber: 'A02', plays: 203, gifts: 124, status: 'active' },
+            { id: 3, name: '射擊遊戲', boothNumber: 'A03', plays: 187, gifts: 95, status: 'active' },
             { id: 4, name: '闖關挑戰', boothNumber: 'A04', plays: 134, gifts: 67, status: 'maintenance' },
             { id: 5, name: '幸運抽獎', boothNumber: 'A05', plays: 245, gifts: 156, status: 'active' },
             { id: 6, name: '智力謎題', boothNumber: 'A06', plays: 112, gifts: 45, status: 'active' },
@@ -774,9 +528,9 @@ U003,王大壯,B組</pre>
         ];
         
         const mockUsers = [
-            { id: 'U001', name: '陳小明', group: 'A組', plays: 15, gifts: 8 },
-            { id: 'U002', name: '李美麗', group: 'A組', plays: 12, gifts: 6 },
-            { id: 'U003', name: '王大壯', group: 'B組', plays: 18, gifts: 10 },
+            { id: 'U001', name: '陳小明', group: 'A組', plays: 12, gifts: 6 },
+            { id: 'U002', name: '李美麗', group: 'A組', plays: 15, gifts: 8 },
+            { id: 'U003', name: '王大壯', group: 'B組', plays: 10, gifts: 5 },
             { id: 'U004', name: '張小麗', group: 'B組', plays: 14, gifts: 7 },
             { id: 'U005', name: '劉強', group: 'C組', plays: 16, gifts: 9 },
             { id: 'U006', name: '趙麗麗', group: 'C組', plays: 13, gifts: 5 },
@@ -792,212 +546,126 @@ U003,王大壯,B組</pre>
             { time: '2025-01-15 10:40:33', userId: 'U005', userName: '劉強', gameName: '智力謎題', score: '88', gift: '益智玩具', operator: '管理員B' }
         ];
         
+        // 初始化
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, initializing dashboard...');
+            console.log('管理員控制台初始化中...');
             
-            try {
-                // 初始化頁面
-                initializeDashboard();
-                
-                // 側邊欄導航 - 單獨處理以確保正確綁定
-                console.log('Binding sidebar navigation events...');
-                const navLinks = document.querySelectorAll('aside nav ul li a');
-                console.log(`Found ${navLinks.length} navigation links`);
-                
-                navLinks.forEach((link, index) => {
-                    console.log(`Binding link ${index + 1}: ${link.textContent.trim()} (${link.getAttribute('data-section')})`);
-                    
-                    // 先移除可能存在的事件監聽器
-                    const newLink = link.cloneNode(true);
-                    link.parentNode.replaceChild(newLink, link);
-                    
-                    // 重新綁定事件
-                    newLink.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        console.log(`Navigation link clicked: ${this.textContent.trim()}`);
-                        
-                        try {
-                            // 移除所有活動狀態
-                            document.querySelectorAll('aside nav ul li a').forEach(l => {
-                                l.classList.remove('sidebar-active');
-                            });
-                            
-                            // 添加當前活動狀態
-                            this.classList.add('sidebar-active');
-                            
-                            // 切換內容區域
-                            const section = this.getAttribute('data-section');
-                            console.log(`Switching to section: ${section}`);
-                            switchSection(section);
-                            
-                        } catch (error) {
-                            console.error('Error in navigation click handler:', error);
-                        }
-                    });
-                });
-                
-                // 登出按鈕
-                const logoutBtn = document.getElementById('logoutBtn');
-                if (logoutBtn) {
-                    logoutBtn.addEventListener('click', function() {
-                        if (confirm('確定要登出系統嗎？')) {
-                            window.location.href = 'admin.html';
-                        }
-                    });
-                }
-                
-                // 按鈕事件綁定
-                bindButtonEvents();
-                
-                // 初始化圖表
-                initializeCharts();
-                
-                console.log('Dashboard initialization completed successfully');
-            } catch (error) {
-                console.error('Error during dashboard initialization:', error);
-                alert('頁面初始化時發生錯誤，請刷新頁面重試。');
-            }
+            // 初始化頁面
+            initializeDashboard();
+            
+            // 初始化圖表
+            initializeCharts();
+            
+            console.log('管理員控制台初始化完成！');
         });
         
-        function initializeDashboard() {
-            // 加載遊戲數據
-            loadGames();
+        // 導航功能
+        function navigateTo(section) {
+            console.log(`導航到：${section}`);
             
-            // 加載用戶數據
-            loadUsers();
+            // 移除所有活動狀態
+            const navLinks = document.querySelectorAll('aside nav ul li a');
+            navLinks.forEach(link => {
+                link.classList.remove('sidebar-active');
+            });
             
-            // 加載記錄數據
-            loadRecords();
-            
-            // 加載遊戲篩選器
-            loadGameFilter();
-        }
-        
-        function switchSection(section) {
-            console.log(`Switching to section: ${section}`);
-            
-            try {
-                // 隱藏所有區域
-                const sections = ['dashboard', 'games', 'users', 'records', 'export', 'settings'];
-                sections.forEach(s => {
-                    const element = document.getElementById(`${s}-section`);
-                    if (element) {
-                        element.classList.add('hidden');
-                        console.log(`  Hidden section: ${s}`);
-                    } else {
-                        console.warn(`  Section element not found: ${s}-section`);
-                    }
-                });
-                
-                // 顯示當前區域
-                const targetSection = document.getElementById(`${section}-section`);
-                if (targetSection) {
-                    targetSection.classList.remove('hidden');
-                    console.log(`  Shown section: ${section}`);
-                } else {
-                    console.error(`  Target section element not found: ${section}-section`);
-                    alert(`無法找到${section}頁面元素，切換失敗！`);
-                    return;
-                }
-                
-                // 更新頁面標題
-                const titles = {
-                    'dashboard': '數據概覽',
-                    'games': '遊戲管理',
-                    'users': '用戶管理',
-                    'records': '記錄查詢',
-                    'export': '數據導出',
-                    'settings': '系統設置'
-                };
-                
-                const pageTitle = document.getElementById('pageTitle');
-                if (pageTitle) {
-                    pageTitle.textContent = titles[section] || section;
-                    console.log(`  Updated page title: ${titles[section] || section}`);
-                } else {
-                    console.warn('  Page title element not found');
-                }
-                
-                // 重新加載對應數據
-                if (section === 'games') {
-                    loadGames();
-                } else if (section === 'users') {
-                    loadUsers();
-                } else if (section === 'records') {
-                    loadRecords();
-                } else if (section === 'dashboard') {
-                    updateStatistics();
-                    updateChart(document.getElementById('chartTypeSelect')?.value || 'gameActivity');
-                }
-                
-                console.log(`Section switch to ${section} completed successfully`);
-                
-            } catch (error) {
-                console.error('Error in switchSection function:', error);
-                alert(`切換頁面時發生錯誤: ${error.message}`);
+            // 添加當前活動狀態
+            const activeLink = document.querySelector(`aside nav ul li a[onclick="navigateTo('${section}')"]`);
+            if (activeLink) {
+                activeLink.classList.add('sidebar-active');
             }
+            
+            // 切換內容區域
+            switchSection(section);
         }
         
-        function bindButtonEvents() {
-            console.log('Binding button events...');
+        // 切換頁面
+        function switchSection(section) {
+            console.log(`切換到頁面：${section}`);
             
-            const buttonBindings = [
-                // 遊戲管理按鈕
-                { id: 'addGameBtn', event: 'click', handler: () => showGameModal() },
-                
-                // 用戶管理按鈕
-                { id: 'addUserBtn', event: 'click', handler: () => showUserModal() },
-                { id: 'importUsersBtn', event: 'click', handler: () => showImportUsersModal() },
-                
-                // 圖表控制
-                { id: 'chartTypeSelect', event: 'change', handler: function() { updateChart(this.value); } },
-                { id: 'refreshChartBtn', event: 'click', handler: () => {
-                    const chartType = document.getElementById('chartTypeSelect').value;
-                    updateChart(chartType);
-                }},
-                
-                // 用戶搜索
-                { id: 'searchUserBtn', event: 'click', handler: () => {
-                    const searchTerm = document.getElementById('userSearch').value.trim();
-                    searchUsers(searchTerm);
-                }},
-                
-                // 記錄查詢按鈕
-                { id: 'searchRecordBtn', event: 'click', handler: () => {
-                    const searchTerm = document.getElementById('recordSearch').value.trim();
-                    const gameFilter = document.getElementById('gameFilter').value;
-                    searchRecords(searchTerm, gameFilter);
-                }},
-                
-                // 數據導出按鈕
-                { id: 'exportRecordsBtn', event: 'click', handler: exportRecords },
-                { id: 'exportUsersBtn', event: 'click', handler: exportUsers },
-                { id: 'exportStatsBtn', event: 'click', handler: exportStats },
-                { id: 'exportGiftsBtn', event: 'click', handler: exportGifts },
-                
-                // 系統設置按鈕
-                { id: 'saveSettingsBtn', event: 'click', handler: () => alert('設置已保存！') },
-                { id: 'cancelSettingsBtn', event: 'click', handler: () => alert('已取消設置更改') },
-                
-                // 清空數據按鈕
-                { id: 'deleteAllDataBtn', event: 'click', handler: showDeleteAllDataConfirm }
-            ];
-            
-            buttonBindings.forEach(binding => {
-                const element = document.getElementById(binding.id);
+            // 隱藏所有區域
+            const sections = ['dashboard', 'games', 'users', 'records', 'export', 'settings'];
+            sections.forEach(s => {
+                const element = document.getElementById(`${s}-section`);
                 if (element) {
-                    element.addEventListener(binding.event, binding.handler);
-                    console.log(`Bound ${binding.event} event to ${binding.id}`);
-                } else {
-                    console.warn(`Element ${binding.id} not found, skipping event binding`);
+                    element.classList.add('hidden');
                 }
             });
             
-            console.log('Button event binding completed');
+            // 顯示當前區域
+            const targetSection = document.getElementById(`${section}-section`);
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+            } else {
+                console.error(`找不到頁面元素：${section}-section`);
+                alert(`找不到${section}頁面！`);
+                return;
+            }
+            
+            // 更新頁面標題
+            const titles = {
+                'dashboard': '數據概覽',
+                'games': '遊戲管理',
+                'users': '用戶管理',
+                'records': '記錄查詢',
+                'export': '數據導出',
+                'settings': '系統設置'
+            };
+            
+            const pageTitle = document.getElementById('pageTitle');
+            if (pageTitle && titles[section]) {
+                pageTitle.textContent = titles[section];
+            }
+            
+            // 重新加載對應數據
+            if (section === 'games') {
+                loadGames();
+            } else if (section === 'users') {
+                loadUsers();
+            } else if (section === 'records') {
+                loadRecords();
+                loadGameFilter();
+            } else if (section === 'dashboard') {
+                updateStatistics();
+                updateChart(document.getElementById('chartTypeSelect').value);
+            }
         }
         
+        // 初始化控制台
+        function initializeDashboard() {
+            console.log('初始化控制台數據...');
+            
+            // 加載初始數據
+            loadGames();
+            loadUsers();
+            loadRecords();
+            loadGameFilter();
+            updateStatistics();
+        }
+        
+        // 更新統計數據
+        function updateStatistics() {
+            console.log('更新統計數據...');
+            
+            const totalGames = mockGames.length;
+            const totalUsers = mockUsers.length;
+            const totalPlays = mockGames.reduce((sum, game) => sum + (game.plays || 0), 0);
+            const totalGifts = mockGames.reduce((sum, game) => sum + (game.gifts || 0), 0);
+            
+            // 更新UI
+            document.getElementById('totalGames').textContent = totalGames;
+            document.getElementById('totalUsers').textContent = totalUsers;
+            document.getElementById('todayPlays').textContent = totalPlays.toLocaleString();
+            document.getElementById('totalGifts').textContent = totalGifts.toLocaleString();
+        }
+        
+        // 加載遊戲數據
         function loadGames() {
+            console.log('加載遊戲數據...');
+            
             const tbody = document.getElementById('gamesTableBody');
+            if (!tbody) return;
+            
             tbody.innerHTML = '';
             
             mockGames.forEach(game => {
@@ -1034,13 +702,13 @@ U003,王大壯,B組</pre>
                         ${statusBadge}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button class="text-primary hover:text-blue-800 mr-3 edit-game" data-id="${game.id}">
+                        <button onclick="showGameModal(${game.id})" class="text-primary hover:text-blue-800 mr-3">
                             <i class="fa fa-edit"></i>
                         </button>
-                        <button class="text-danger hover:text-red-800 delete-game" data-id="${game.id}">
+                        <button onclick="deleteGame(${game.id})" class="text-danger hover:text-red-800">
                             <i class="fa fa-trash"></i>
                         </button>
-                        <button class="text-success hover:text-green-800 ml-3 view-qr" data-id="${game.id}">
+                        <button onclick="showQrCodeModal(${game.id})" class="text-success hover:text-green-800 ml-3">
                             <i class="fa fa-qrcode"></i>
                         </button>
                     </td>
@@ -1048,42 +716,15 @@ U003,王大壯,B組</pre>
                 
                 tbody.appendChild(row);
             });
-            
-            // 綁定遊戲操作按鈕事件
-            document.querySelectorAll('.edit-game').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const gameId = this.getAttribute('data-id');
-                    showGameModal(gameId);
-                });
-            });
-            
-            document.querySelectorAll('.delete-game').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const gameId = this.getAttribute('data-id');
-                    if (confirm('確定要刪除此遊戲嗎？')) {
-                        const gameIndex = mockGames.findIndex(g => g.id == gameId);
-                        if (gameIndex !== -1) {
-                            mockGames.splice(gameIndex, 1);
-                            saveGamesToStorage();
-                            alert('遊戲已成功刪除！');
-                            loadGames();
-                            loadGameFilter();
-                            updateChart(document.getElementById('chartTypeSelect').value);
-                        }
-                    }
-                });
-            });
-            
-            document.querySelectorAll('.view-qr').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const gameId = this.getAttribute('data-id');
-                    showQrCodeModal(gameId);
-                });
-            });
         }
         
+        // 加載用戶數據
         function loadUsers() {
+            console.log('加載用戶數據...');
+            
             const tbody = document.getElementById('usersTableBody');
+            if (!tbody) return;
+            
             tbody.innerHTML = '';
             
             mockUsers.forEach(user => {
@@ -1105,13 +746,13 @@ U003,王大壯,B組</pre>
                         <div class="text-sm text-gray-900">${user.gifts}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button class="text-primary hover:text-blue-800 mr-3 edit-user" data-id="${user.id}">
+                        <button onclick="showUserModal('${user.id}')" class="text-primary hover:text-blue-800 mr-3">
                             <i class="fa fa-edit"></i>
                         </button>
-                        <button class="text-danger hover:text-red-800 delete-user" data-id="${user.id}">
+                        <button onclick="deleteUser('${user.id}')" class="text-danger hover:text-red-800">
                             <i class="fa fa-trash"></i>
                         </button>
-                        <button class="text-info hover:text-blue-800 ml-3 view-record" data-id="${user.id}">
+                        <button onclick="viewUserRecords('${user.id}')" class="text-info hover:text-blue-800 ml-3">
                             <i class="fa fa-eye"></i>
                         </button>
                     </td>
@@ -1119,44 +760,15 @@ U003,王大壯,B組</pre>
                 
                 tbody.appendChild(row);
             });
-            
-            // 綁定用戶操作按鈕事件
-            document.querySelectorAll('.edit-user').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const userId = this.getAttribute('data-id');
-                    showUserModal(userId);
-                });
-            });
-            
-            document.querySelectorAll('.delete-user').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const userId = this.getAttribute('data-id');
-                    if (confirm('確定要刪除此用戶嗎？')) {
-                        const userIndex = mockUsers.findIndex(u => u.id == userId);
-                        if (userIndex !== -1) {
-                            mockUsers.splice(userIndex, 1);
-                            alert('用戶已成功刪除！');
-                            loadUsers();
-                        }
-                    }
-                });
-            });
-            
-            document.querySelectorAll('.view-record').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const userId = this.getAttribute('data-id');
-                    // 切換到記錄查詢頁面
-                    switchSection('records');
-                    // 設置搜索條件
-                    document.getElementById('recordSearch').value = userId;
-                    // 觸發搜索
-                    document.getElementById('searchRecordBtn').click();
-                });
-            });
         }
         
+        // 加載記錄數據
         function loadRecords() {
+            console.log('加載記錄數據...');
+            
             const tbody = document.getElementById('recordsTableBody');
+            if (!tbody) return;
+            
             tbody.innerHTML = '';
             
             mockRecords.forEach(record => {
@@ -1189,8 +801,13 @@ U003,王大壯,B組</pre>
             });
         }
         
+        // 加載遊戲篩選器
         function loadGameFilter() {
+            console.log('加載遊戲篩選器...');
+            
             const select = document.getElementById('gameFilter');
+            if (!select) return;
+            
             select.innerHTML = '<option value="">選擇遊戲</option>';
             
             mockGames.forEach(game => {
@@ -1201,18 +818,21 @@ U003,王大壯,B組</pre>
             });
         }
         
-        function searchUsers(searchTerm) {
-            if (!searchTerm) {
-                loadUsers();
-                return;
-            }
-            
-            const filteredUsers = mockUsers.filter(user => 
-                user.name.includes(searchTerm) || user.id.includes(searchTerm)
-            );
+        // 搜索用戶
+        function searchUsers() {
+            const searchTerm = document.getElementById('userSearch').value.trim().toLowerCase();
+            console.log(`搜索用戶：${searchTerm}`);
             
             const tbody = document.getElementById('usersTableBody');
+            if (!tbody) return;
+            
             tbody.innerHTML = '';
+            
+            const filteredUsers = mockUsers.filter(user => 
+                user.id.toLowerCase().includes(searchTerm) || 
+                user.name.toLowerCase().includes(searchTerm) ||
+                user.group.toLowerCase().includes(searchTerm)
+            );
             
             filteredUsers.forEach(user => {
                 const row = document.createElement('tr');
@@ -1233,13 +853,13 @@ U003,王大壯,B組</pre>
                         <div class="text-sm text-gray-900">${user.gifts}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button class="text-primary hover:text-blue-800 mr-3 edit-user" data-id="${user.id}">
+                        <button onclick="showUserModal('${user.id}')" class="text-primary hover:text-blue-800 mr-3">
                             <i class="fa fa-edit"></i>
                         </button>
-                        <button class="text-danger hover:text-red-800 delete-user" data-id="${user.id}">
+                        <button onclick="deleteUser('${user.id}')" class="text-danger hover:text-red-800">
                             <i class="fa fa-trash"></i>
                         </button>
-                        <button class="text-info hover:text-blue-800 ml-3 view-record" data-id="${user.id}">
+                        <button onclick="viewUserRecords('${user.id}')" class="text-info hover:text-blue-800 ml-3">
                             <i class="fa fa-eye"></i>
                         </button>
                     </td>
@@ -1249,25 +869,35 @@ U003,王大壯,B組</pre>
             });
         }
         
-        function searchRecords(searchTerm, gameFilter) {
-            let filteredRecords = [...mockRecords];
+        // 搜索記錄
+        function searchRecords() {
+            const searchTerm = document.getElementById('recordSearch').value.trim().toLowerCase();
+            const gameFilter = document.getElementById('gameFilter').value;
             
+            console.log(`搜索記錄：${searchTerm}，遊戲：${gameFilter}`);
+            
+            const tbody = document.getElementById('recordsTableBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            let filteredRecords = mockRecords;
+            
+            // 按搜索詞篩選
             if (searchTerm) {
                 filteredRecords = filteredRecords.filter(record => 
-                    record.userId.includes(searchTerm) || 
-                    record.userName.includes(searchTerm) ||
-                    record.gameName.includes(searchTerm)
+                    record.userId.toLowerCase().includes(searchTerm) ||
+                    record.userName.toLowerCase().includes(searchTerm) ||
+                    record.gameName.toLowerCase().includes(searchTerm)
                 );
             }
             
+            // 按遊戲篩選
             if (gameFilter) {
                 filteredRecords = filteredRecords.filter(record => 
                     record.gameName === gameFilter
                 );
             }
-            
-            const tbody = document.getElementById('recordsTableBody');
-            tbody.innerHTML = '';
             
             filteredRecords.forEach(record => {
                 const row = document.createElement('tr');
@@ -1299,567 +929,262 @@ U003,王大壯,B組</pre>
             });
         }
         
-        function exportRecords() {
-            const csvContent = convertToCSV(mockRecords);
-            downloadCSV(csvContent, 'game_records.csv');
-        }
-        
-        function exportUsers() {
-            const csvContent = convertToCSV(mockUsers);
-            downloadCSV(csvContent, 'users_data.csv');
-        }
-        
-        function exportStats() {
-            const stats = mockGames.map(game => ({
-                遊戲名稱: game.name,
-                攤位編號: game.boothNumber,
-                參與次數: game.plays,
-                禮品數量: game.gifts,
-                參與率: Math.round(game.plays / mockUsers.length * 100) + '%',
-                狀態: game.status === 'active' ? '正常' : '維護中'
-            }));
-            const csvContent = convertToCSV(stats);
-            downloadCSV(csvContent, 'game_statistics.csv');
-        }
-        
-        function exportGifts() {
-            const giftsData = mockRecords
-                .filter(record => record.gift)
-                .map(record => ({
-                    時間: record.time,
-                    用戶ID: record.userId,
-                    用戶姓名: record.userName,
-                    遊戲名稱: record.gameName,
-                    禮品名稱: record.gift,
-                    操作員: record.operator
-                }));
-            const csvContent = convertToCSV(giftsData);
-            downloadCSV(csvContent, 'gift_records.csv');
-        }
-        
-        function convertToCSV(data) {
-            if (!data || data.length === 0) return '';
+        // 初始化圖表
+        function initializeCharts() {
+            console.log('初始化圖表...');
             
-            const headers = Object.keys(data[0]);
-            const csvRows = [];
-            
-            // 添加標題行
-            csvRows.push(headers.join(','));
-            
-            // 添加數據行
-            for (const row of data) {
-                const values = headers.map(header => {
-                    const value = row[header] || '';
-                    // 處理包含逗號、引號或換行符的值
-                    return `"${value.toString().replace(/"/g, '""')}"`;
-                });
-                csvRows.push(values.join(','));
+            const ctx = document.getElementById('mainChart');
+            if (!ctx) {
+                console.error('找不到圖表元素');
+                return;
             }
             
-            return csvRows.join('\n');
-        }
-        
-        function downloadCSV(content, filename) {
-            const blob = new Blob(['\ufeff' + content], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            
-            link.setAttribute('href', url);
-            link.setAttribute('download', filename);
-            link.style.visibility = 'hidden';
-            
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-        
-        function initializeCharts() {
-            // 初始化主圖表
-            const ctx = document.getElementById('mainChart').getContext('2d');
-            mainChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: [],
-                    datasets: []
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        }
-                    }
-                }
-            });
-            
-            // 默認顯示遊戲參與熱度圖
             updateChart('gameHeat');
-            
-            // 綁定模態框事件
-            bindModalEvents();
         }
         
+        // 更新圖表
         function updateChart(chartType) {
-            if (!mainChart) return;
+            console.log(`更新圖表：${chartType}`);
+            
+            const ctx = document.getElementById('mainChart');
+            if (!ctx) return;
+            
+            // 銷毀現有圖表
+            if (mainChart) {
+                mainChart.destroy();
+            }
+            
+            let chartData = {};
             
             switch (chartType) {
                 case 'gameHeat':
-                    updateGameHeatChart();
+                    chartData = {
+                        labels: mockGames.map(g => g.name),
+                        datasets: [{
+                            label: '參與次數',
+                            data: mockGames.map(g => g.plays),
+                            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1
+                        }]
+                    };
                     break;
+                    
                 case 'todayTrend':
-                    updateTodayTrendChart();
+                    chartData = {
+                        labels: ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'],
+                        datasets: [{
+                            label: '參與人數',
+                            data: [120, 190, 250, 180, 150, 220, 280, 310],
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    };
                     break;
+                    
                 case 'gameComparison':
-                    updateGameComparisonChart();
+                    chartData = {
+                        labels: mockGames.map(g => g.name),
+                        datasets: [{
+                            label: '參與次數',
+                            data: mockGames.map(g => g.plays),
+                            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1,
+                            yAxisID: 'y'
+                        }, {
+                            label: '獲獎次數',
+                            data: mockGames.map(g => g.gifts),
+                            backgroundColor: 'rgba(239, 68, 68, 0.5)',
+                            borderColor: 'rgba(239, 68, 68, 1)',
+                            borderWidth: 1,
+                            yAxisID: 'y1'
+                        }]
+                    };
                     break;
+                    
                 case 'userActivity':
-                    updateUserActivityChart();
+                    chartData = {
+                        labels: mockUsers.slice(0, 8).map(u => u.name),
+                        datasets: [{
+                            label: '參與次數',
+                            data: mockUsers.slice(0, 8).map(u => u.plays),
+                            backgroundColor: 'rgba(245, 158, 11, 0.5)',
+                            borderColor: 'rgba(245, 158, 11, 1)',
+                            borderWidth: 1
+                        }]
+                    };
                     break;
             }
-        }
-        
-        function updateGameHeatChart() {
-            const topGames = mockGames.slice(0, 8);
-            mainChart.data.labels = topGames.map(game => game.name);
-            mainChart.data.datasets = [{
-                label: '參與次數',
-                data: topGames.map(game => game.plays),
-                backgroundColor: 'rgba(59, 130, 246, 0.8)',
-                borderColor: 'rgba(59, 130, 246, 1)',
-                borderWidth: 1
-            }];
-            mainChart.config.type = 'bar';
-            mainChart.options.scales = {
-                y: {
-                    beginAtZero: true,
+            
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
                     title: {
                         display: true,
-                        text: '參與次數'
+                        text: getChartTitle(chartType)
                     }
                 }
             };
-            mainChart.update();
-        }
-        
-        function updateTodayTrendChart() {
-            mainChart.data.labels = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
-            mainChart.data.datasets = [{
-                label: '參與人數',
-                data: [120, 190, 250, 180, 220, 280, 310, 290, 240],
-                borderColor: 'rgba(16, 185, 129, 1)',
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                borderWidth: 2,
-                fill: true,
-                tension: 0.4
-            }];
-            mainChart.config.type = 'line';
-            mainChart.options.scales = {
-                y: {
-                    beginAtZero: true,
-                    title: {
+            
+            // 特殊配置
+            if (chartType === 'gameComparison') {
+                chartOptions.scales = {
+                    y: {
+                        type: 'linear',
                         display: true,
-                        text: '參與人數'
-                    }
-                }
-            };
-            mainChart.update();
-        }
-        
-        function updateGameComparisonChart() {
-            const top5Games = mockGames.slice(0, 5);
-            mainChart.data.labels = top5Games.map(game => game.name);
-            mainChart.data.datasets = [
-                {
-                    label: '參與次數',
-                    data: top5Games.map(game => game.plays),
-                    backgroundColor: 'rgba(59, 130, 246, 0.8)',
-                    borderColor: 'rgba(59, 130, 246, 1)',
-                    borderWidth: 1,
-                    yAxisID: 'y'
-                },
-                {
-                    label: '禮品數量',
-                    data: top5Games.map(game => game.gifts),
-                    backgroundColor: 'rgba(239, 68, 68, 0.8)',
-                    borderColor: 'rgba(239, 68, 68, 1)',
-                    borderWidth: 1,
-                    yAxisID: 'y'
-                }
-            ];
-            mainChart.config.type = 'bar';
-            mainChart.options.scales = {
-                y: {
-                    beginAtZero: true,
-                    title: {
+                        position: 'left',
+                    },
+                    y1: {
+                        type: 'linear',
                         display: true,
-                        text: '數量'
+                        position: 'right',
+                        grid: {
+                            drawOnChartArea: false,
+                        },
                     }
-                }
-            };
-            mainChart.update();
-        }
-        
-        function updateUserActivityChart() {
-            // 模擬用戶活躍度數據
-            const userActivityData = {
-                'A組': Math.floor(Math.random() * 50) + 30,
-                'B組': Math.floor(Math.random() * 50) + 30,
-                'C組': Math.floor(Math.random() * 50) + 30,
-                'D組': Math.floor(Math.random() * 40) + 20,
-                'E組': Math.floor(Math.random() * 40) + 20
-            };
-            
-            mainChart.data.labels = Object.keys(userActivityData);
-            mainChart.data.datasets = [{
-                label: '活躍用戶數',
-                data: Object.values(userActivityData),
-                backgroundColor: [
-                    'rgba(59, 130, 246, 0.8)',
-                    'rgba(16, 185, 129, 0.8)',
-                    'rgba(245, 158, 11, 0.8)',
-                    'rgba(239, 68, 68, 0.8)',
-                    'rgba(139, 92, 246, 0.8)'
-                ],
-                borderColor: [
-                    'rgba(59, 130, 246, 1)',
-                    'rgba(16, 185, 129, 1)',
-                    'rgba(245, 158, 11, 1)',
-                    'rgba(239, 68, 68, 1)',
-                    'rgba(139, 92, 246, 1)'
-                ],
-                borderWidth: 1
-            }];
-            mainChart.config.type = 'doughnut';
-            mainChart.options.scales = {};
-            mainChart.update();
-        }
-        
-        // 模態框控制函數
-        function showGameModal(gameId = null) {
-            const modal = document.getElementById('gameModal');
-            const title = document.getElementById('gameModalTitle');
-            const form = document.getElementById('gameForm');
-            
-            // 重置表單
-            form.reset();
-            document.getElementById('gameId').value = '';
-            
-            if (gameId) {
-                // 編輯模式
-                const game = mockGames.find(g => g.id == gameId);
-                if (game) {
-                    title.textContent = '編輯遊戲';
-                    document.getElementById('gameId').value = game.id;
-                    document.getElementById('gameName').value = game.name;
-                    document.getElementById('boothNumber').value = game.boothNumber;
-                    document.getElementById('gameDescription').value = game.description || '';
-                    document.getElementById('gameStatus').value = game.status;
-                }
-            } else {
-                // 添加模式
-                title.textContent = '添加遊戲';
+                };
             }
             
-            modal.classList.remove('hidden');
-        }
-        
-        function hideGameModal() {
-            document.getElementById('gameModal').classList.add('hidden');
-        }
-        
-        function showUserModal(userId = null) {
-            const modal = document.getElementById('userModal');
-            const title = document.getElementById('userModalTitle');
-            const form = document.getElementById('userForm');
-            
-            // 重置表單
-            form.reset();
-            document.getElementById('userId').value = '';
-            
-            if (userId) {
-                // 編輯模式
-                const user = mockUsers.find(u => u.id == userId);
-                if (user) {
-                    title.textContent = '編輯用戶';
-                    document.getElementById('userId').value = user.id;
-                    document.getElementById('userFormId').value = user.id;
-                    document.getElementById('userFormName').value = user.name;
-                    document.getElementById('userFormGroup').value = user.group;
-                }
-            } else {
-                // 添加模式
-                title.textContent = '添加用戶';
+            if (chartType === 'todayTrend') {
+                chartOptions.type = 'line';
             }
             
-            modal.classList.remove('hidden');
+            mainChart = new Chart(ctx, {
+                type: chartType === 'todayTrend' ? 'line' : 'bar',
+                data: chartData,
+                options: chartOptions
+            });
         }
         
-        function hideUserModal() {
-            document.getElementById('userModal').classList.add('hidden');
+        // 獲取圖表標題
+        function getChartTitle(chartType) {
+            const titles = {
+                'gameHeat': '各遊戲參與熱度統計',
+                'todayTrend': '今日參與趨勢圖',
+                'gameComparison': '遊戲參與與獲獎對比',
+                'userActivity': '用戶參與活躍度'
+            };
+            return titles[chartType] || '數據統計';
         }
         
-        function showImportUsersModal() {
-            document.getElementById('importUsersModal').classList.remove('hidden');
+        // 數據導出功能
+        function exportRecords() {
+            console.log('導出參與記錄...');
+            alert('參與記錄導出功能已點擊！');
         }
         
-        function hideImportUsersModal() {
-            document.getElementById('importUsersModal').classList.add('hidden');
+        function exportUsers() {
+            console.log('導出用戶數據...');
+            alert('用戶數據導出功能已點擊！');
+        }
+        
+        function exportStats() {
+            console.log('導出遊戲統計...');
+            alert('遊戲統計導出功能已點擊！');
+        }
+        
+        function exportGifts() {
+            console.log('導出禮品發放記錄...');
+            alert('禮品發放記錄導出功能已點擊！');
+        }
+        
+        // 系統設置功能
+        function saveSettings() {
+            console.log('保存系統設置...');
+            alert('系統設置已保存！');
+        }
+        
+        function cancelSettings() {
+            console.log('取消設置更改...');
+            alert('已取消設置更改！');
+        }
+        
+        // 遊戲管理功能
+        function showGameModal(gameId) {
+            console.log(`顯示遊戲編輯框：${gameId || '新增'}`);
+            alert(`遊戲管理功能：${gameId ? '編輯' : '新增'}遊戲`);
+        }
+        
+        function deleteGame(gameId) {
+            console.log(`刪除遊戲：${gameId}`);
+            if (confirm('確定要刪除此遊戲嗎？')) {
+                alert(`遊戲 ${gameId} 將被刪除！`);
+            }
         }
         
         function showQrCodeModal(gameId) {
-            const game = mockGames.find(g => g.id == gameId);
-            if (!game) return;
-            
-            const modal = document.getElementById('qrCodeModal');
-            const title = document.getElementById('qrCodeModalTitle');
-            const gameName = document.getElementById('qrCodeGameName');
-            const container = document.getElementById('qrCodeContainer');
-            
-            title.textContent = `${game.name} 二維碼`;
-            gameName.textContent = `攤位編號：${game.boothNumber}`;
-            
-            // 生成二維碼（使用簡單的圖片代替）
-            const qrCodeData = `game:${game.id}`;
-            const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrCodeData)}`;
-            
-            container.innerHTML = `<img src="${qrCodeUrl}" alt="${game.name} QR Code" class="w-48 h-48">`;
-            
-            modal.classList.remove('hidden');
+            console.log(`顯示二維碼：${gameId}`);
+            alert(`顯示遊戲 ${gameId} 的二維碼！`);
         }
         
-        function hideQrCodeModal() {
-            document.getElementById('qrCodeModal').classList.add('hidden');
+        // 用戶管理功能
+        function showUserModal(userId) {
+            console.log(`顯示用戶編輯框：${userId || '新增'}`);
+            alert(`用戶管理功能：${userId ? '編輯' : '新增'}用戶`);
         }
         
-        function bindModalEvents() {
-            // 遊戲模態框事件
-            document.getElementById('closeGameModal').addEventListener('click', hideGameModal);
-            document.getElementById('cancelGameBtn').addEventListener('click', hideGameModal);
-            document.getElementById('gameForm').addEventListener('submit', function(e) {
+        function deleteUser(userId) {
+            console.log(`刪除用戶：${userId}`);
+            if (confirm('確定要刪除此用戶嗎？')) {
+                alert(`用戶 ${userId} 將被刪除！`);
+            }
+        }
+        
+        function viewUserRecords(userId) {
+            console.log(`查看用戶記錄：${userId}`);
+            // 切換到記錄頁面
+            navigateTo('records');
+            // 設置搜索條件
+            document.getElementById('recordSearch').value = userId;
+            // 執行搜索
+            searchRecords();
+        }
+        
+        function showImportUsersModal() {
+            console.log('顯示用戶導入框');
+            alert('用戶導入功能已點擊！');
+        }
+        
+        // 清空數據功能
+        function showDeleteAllDataConfirm() {
+            console.log('顯示清空數據確認框');
+            
+            if (confirm('警告：此操作將清空所有數據，包括遊戲設置、參與記錄等，且不可撤銷！確定要繼續嗎？')) {
+                if (confirm('再次確認：所有數據將被永久刪除，此操作不可撤銷！')) {
+                    deleteAllData();
+                }
+            }
+        }
+        
+        function deleteAllData() {
+            console.log('清空所有數據...');
+            alert('所有數據已清空！（模擬操作）');
+        }
+        
+        // 登出功能
+        function logout() {
+            console.log('用戶登出');
+            
+            if (confirm('確定要登出系統嗎？')) {
+                window.location.href = 'admin.html';
+            }
+        }
+        
+        // 防止默認點擊行為
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'A' && e.target.getAttribute('href') === '#') {
                 e.preventDefault();
-                saveGame();
-            });
-            
-            // 用戶模態框事件
-            document.getElementById('closeUserModal').addEventListener('click', hideUserModal);
-            document.getElementById('cancelUserBtn').addEventListener('click', hideUserModal);
-            document.getElementById('userForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                saveUser();
-            });
-            
-            // 用戶導入模態框事件
-            document.getElementById('closeImportUsersModal').addEventListener('click', hideImportUsersModal);
-            document.getElementById('cancelImportBtn').addEventListener('click', hideImportUsersModal);
-            document.getElementById('importBtn').addEventListener('click', importUsers);
-            
-            // 二維碼模態框事件
-            document.getElementById('closeQrCodeModal').addEventListener('click', hideQrCodeModal);
-            document.getElementById('downloadQrCodeBtn').addEventListener('click', downloadQrCode);
-            document.getElementById('printQrCodeBtn').addEventListener('click', printQrCode);
-        }
+            }
+        });
         
-        function saveGame() {
-            const gameId = document.getElementById('gameId').value;
-            const gameName = document.getElementById('gameName').value.trim();
-            const boothNumber = document.getElementById('boothNumber').value.trim();
-            const description = document.getElementById('gameDescription').value.trim();
-            const status = document.getElementById('gameStatus').value;
-            
-            if (!gameName || !boothNumber) {
-                alert('請填寫必填字段');
-                return;
-            }
-            
-            if (gameId) {
-                // 更新遊戲
-                const gameIndex = mockGames.findIndex(g => g.id == gameId);
-                if (gameIndex !== -1) {
-                    mockGames[gameIndex] = {
-                        ...mockGames[gameIndex],
-                        name: gameName,
-                        boothNumber: boothNumber,
-                        description: description,
-                        status: status
-                    };
-                    alert('遊戲更新成功！');
-                }
-            } else {
-                // 添加新遊戲
-                const newGame = {
-                    id: mockGames.length > 0 ? Math.max(...mockGames.map(g => g.id)) + 1 : 1,
-                    name: gameName,
-                    boothNumber: boothNumber,
-                    description: description,
-                    plays: 0,
-                    gifts: 0,
-                    status: status
-                };
-                mockGames.push(newGame);
-                alert('遊戲添加成功！');
-            }
-            
-            saveGamesToStorage();
-            hideGameModal();
-            loadGames();
-            loadGameFilter();
-            updateChart(document.getElementById('chartTypeSelect').value);
-        }
-        
-        function saveUser() {
-            const userId = document.getElementById('userId').value;
-            const userFormId = document.getElementById('userFormId').value.trim();
-            const userName = document.getElementById('userFormName').value.trim();
-            const userGroup = document.getElementById('userFormGroup').value;
-            
-            if (!userFormId || !userName) {
-                alert('請填寫必填字段');
-                return;
-            }
-            
-            if (userId) {
-                // 更新用戶
-                const userIndex = mockUsers.findIndex(u => u.id == userId);
-                if (userIndex !== -1) {
-                    mockUsers[userIndex] = {
-                        ...mockUsers[userIndex],
-                        id: userFormId,
-                        name: userName,
-                        group: userGroup
-                    };
-                    alert('用戶更新成功！');
-                }
-            } else {
-                // 添加新用戶
-                const existingUser = mockUsers.find(u => u.id === userFormId);
-                if (existingUser) {
-                    alert('用戶ID已存在！');
-                    return;
-                }
-                
-                const newUser = {
-                    id: userFormId,
-                    name: userName,
-                    group: userGroup,
-                    plays: 0,
-                    gifts: 0
-                };
-                mockUsers.push(newUser);
-                alert('用戶添加成功！');
-            }
-            
-            hideUserModal();
-            loadUsers();
-        }
-        
-        function importUsers() {
-            const fileInput = document.getElementById('usersFile');
-            const file = fileInput.files[0];
-            
-            if (!file) {
-                alert('請選擇CSV文件');
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result;
-                const lines = text.split('\n');
-                let importedCount = 0;
-                
-                for (let i = 0; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (!line) continue;
-                    
-                    const parts = line.split(',');
-                    if (parts.length >= 2) {
-                        const userId = parts[0].trim();
-                        const userName = parts[1].trim();
-                        const userGroup = parts.length >= 3 ? parts[2].trim() : 'A組';
-                        
-                        // 檢查用戶是否已存在
-                        const existingUser = mockUsers.find(u => u.id === userId);
-                        if (!existingUser) {
-                            mockUsers.push({
-                                id: userId,
-                                name: userName,
-                                group: userGroup,
-                                plays: 0,
-                                gifts: 0
-                            });
-                            importedCount++;
-                        }
-                    }
-                }
-                
-                alert(`成功導入 ${importedCount} 名用戶！`);
-                hideImportUsersModal();
-                loadUsers();
-            };
-            
-            reader.readAsText(file, 'UTF-8');
-        }
-        
-        function downloadQrCode() {
-            const qrCodeImage = document.querySelector('#qrCodeContainer img');
-            if (qrCodeImage) {
-                const link = document.createElement('a');
-                link.href = qrCodeImage.src;
-                link.download = `${document.getElementById('qrCodeModalTitle').textContent.replace(' 二維碼', '')}_QRCode.png`;
-                link.click();
-            }
-        }
-        
-        function printQrCode() {
-            const qrCodeContent = document.getElementById('qrCodeContainer').innerHTML;
-            const gameName = document.getElementById('qrCodeModalTitle').textContent;
-            const boothNumber = document.getElementById('qrCodeGameName').textContent;
-            
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <html>
-                <head>
-                    <title>${gameName}</title>
-                    <style>
-                        body { 
-                            display: flex; 
-                            flex-direction: column; 
-                            align-items: center; 
-                            justify-content: center; 
-                            height: 100vh; 
-                            margin: 0; 
-                            font-family: Arial, sans-serif;
-                        }
-                        .content { 
-                            text-align: center; 
-                        }
-                        h1 { 
-                            font-size: 24px; 
-                            margin-bottom: 10px; 
-                        }
-                        p { 
-                            font-size: 18px; 
-                            margin-bottom: 20px; 
-                        }
-                        img { 
-                            max-width: 300px; 
-                            max-height: 300px; 
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="content">
-                        <h1>${gameName}</h1>
-                        <p>${boothNumber}</p>
-                        ${qrCodeContent}
-                    </div>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-            printWindow.print();
-        }
+        console.log('管理員控制台JavaScript加載完成！');
     </script>
 </body>
 </html>
