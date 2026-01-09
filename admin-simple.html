@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR遊戲系統 - 管理員登入</title>
+    <title>QR遊戲系統 - 管理員登入（簡化版）</title>
     <!-- Tailwind CSS v3 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-    <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
     <!-- Tailwind 配置 -->
     <script>
         tailwind.config = {
@@ -57,6 +55,14 @@
                 <p class="mt-2 text-sm text-gray-600">
                     請輸入管理員帳號和密碼
                 </p>
+                
+                <!-- 警告信息 -->
+                <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                    <div class="flex items-center text-yellow-700 text-sm">
+                        <i class="fa fa-exclamation-triangle mr-2"></i>
+                        <span>這是簡化版登入，跳過數據庫連接檢查</span>
+                    </div>
+                </div>
             </div>
             
             <!-- 登入表單 -->
@@ -98,68 +104,24 @@
                     <a href="db-test.html" class="text-primary hover:text-blue-700 transition-all-300">
                         <i class="fa fa-wrench mr-1"></i> 數據庫連接測試工具
                     </a>
-                    <span class="mx-2 text-gray-400">|</span>
-                    <a href="admin-simple.html" class="text-warning hover:text-yellow-700 transition-all-300">
-                        <i class="fa fa-bolt mr-1"></i> 簡化版登入
-                    </a>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- 配置文件 -->
-    <script src="config.js"></script>
-    
     <script>
-        // 模擬管理員數據（實際應在數據庫中）
+        // 管理員憑據
         const ADMIN_CREDENTIALS = {
             username: 'admin',
             password: 'admin123'
         };
         
-        // 初始化Supabase
-        function initializeSupabase() {
-            try {
-                const supabase = createClient(config.supabase.url, config.supabase.anonKey);
-                console.log('Supabase初始化成功！');
-                return supabase;
-            } catch (error) {
-                console.error('Supabase初始化失敗:', error);
-                return null;
-            }
-        }
-        
-        // 測試數據庫連接
-        async function testDatabaseConnection() {
-            try {
-                const supabase = initializeSupabase();
-                if (!supabase) {
-                    return { success: false, error: 'Supabase初始化失敗' };
-                }
-                
-                // 測試簡單的查詢操作
-                const { data, error } = await supabase.from('games').select('*').limit(1);
-                
-                if (error) {
-                    console.error('數據庫查詢失敗:', error);
-                    return { success: false, error: error.message };
-                }
-                
-                console.log('數據庫連接成功！');
-                return { success: true };
-            } catch (error) {
-                console.error('數據庫連接測試失敗:', error);
-                return { success: false, error: error.message };
-            }
-        }
-        
         document.addEventListener('DOMContentLoaded', function() {
             const loginForm = document.getElementById('loginForm');
             const errorMessage = document.getElementById('errorMessage');
             const errorText = document.getElementById('errorText');
-            const loginBtn = document.getElementById('loginBtn');
             
-            loginForm.addEventListener('submit', async function(e) {
+            loginForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 
                 const username = document.getElementById('username').value.trim();
@@ -171,30 +133,13 @@
                     return;
                 }
                 
-                // 模擬登入驗證
+                // 登入驗證（不檢查數據庫連接）
                 if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-                    // 登入成功，先測試數據庫連接
-                    loginBtn.disabled = true;
-                    loginBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> 正在連接數據庫...';
+                    // 登入成功，設置會話標記
+                    sessionStorage.setItem('adminLoggedIn', 'true');
                     
-                    try {
-                        const connectionResult = await testDatabaseConnection();
-                        
-                        if (connectionResult.success) {
-                            // 數據庫連接成功，跳轉到管理員控制台
-                            window.location.href = 'admin-dashboard.html';
-                        } else {
-                            // 數據庫連接失敗，顯示錯誤信息
-                            showError('無法連接到數據庫，請檢查配置文件中的連接信息。');
-                            console.error('數據庫連接錯誤:', connectionResult.error);
-                        }
-                    } catch (error) {
-                        showError('數據庫連接測試時發生錯誤。');
-                        console.error('連接測試錯誤:', error);
-                    } finally {
-                        loginBtn.disabled = false;
-                        loginBtn.innerHTML = '<i class="fa fa-sign-in mr-2"></i> 登入系統';
-                    }
+                    // 跳轉到管理員控制台
+                    window.location.href = 'admin-dashboard.html';
                 } else {
                     showError('帳號或密碼錯誤，請重新輸入');
                 }
@@ -204,10 +149,10 @@
                 errorText.textContent = message;
                 errorMessage.classList.remove('hidden');
                 
-                // 5秒後自動隱藏錯誤訊息
+                // 3秒後自動隱藏錯誤訊息
                 setTimeout(() => {
                     errorMessage.classList.add('hidden');
-                }, 5000);
+                }, 3000);
             }
         });
     </script>
