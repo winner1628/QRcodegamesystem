@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>導航測試</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="flex h-screen">
+        <!-- 側邊欄 -->
+        <aside class="w-64 bg-gray-800 text-white">
+            <div class="p-4 border-b border-gray-700">
+                <h1 class="text-xl font-bold">管理控制台</h1>
+            </div>
+            <nav class="mt-4">
+                <ul>
+                    <li>
+                        <a href="#" onclick="switchTab('dashboard'); return false;" 
+                           class="block w-full text-left px-4 py-3 bg-blue-600 text-white hover:bg-blue-700">
+                            <i class="fa fa-dashboard w-6"></i> 數據概覽
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="switchTab('games'); return false;" 
+                           class="block w-full text-left px-4 py-3 hover:bg-gray-700">
+                            <i class="fa fa-gamepad w-6"></i> 遊戲管理
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="switchTab('users'); return false;" 
+                           class="block w-full text-left px-4 py-3 hover:bg-gray-700">
+                            <i class="fa fa-users w-6"></i> 用戶管理
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="switchTab('records'); return false;" 
+                           class="block w-full text-left px-4 py-3 hover:bg-gray-700">
+                            <i class="fa fa-history w-6"></i> 記錄查詢
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="switchTab('export'); return false;" 
+                           class="block w-full text-left px-4 py-3 hover:bg-gray-700">
+                            <i class="fa fa-download w-6"></i> 數據導出
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="switchTab('settings'); return false;" 
+                           class="block w-full text-left px-4 py-3 hover:bg-gray-700">
+                            <i class="fa fa-cog w-6"></i> 系統設置
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+        
+        <!-- 主內容 -->
+        <main class="flex-1 p-6">
+            <div id="dashboard" class="block">
+                <h2 class="text-2xl font-bold mb-4">數據概覽</h2>
+                <p>這是數據概覽頁面。</p>
+            </div>
+            <div id="games" class="hidden">
+                <h2 class="text-2xl font-bold mb-4">遊戲管理</h2>
+                <p>這是遊戲管理頁面。</p>
+            </div>
+            <div id="users" class="hidden">
+                <h2 class="text-2xl font-bold mb-4">用戶管理</h2>
+                <p>這是用戶管理頁面。</p>
+            </div>
+            <div id="records" class="hidden">
+                <h2 class="text-2xl font-bold mb-4">記錄查詢</h2>
+                <p>這是記錄查詢頁面。</p>
+            </div>
+            <div id="export" class="hidden">
+                <h2 class="text-2xl font-bold mb-4">數據導出</h2>
+                <p>這是數據導出頁面。</p>
+            </div>
+            <div id="settings" class="hidden">
+                <h2 class="text-2xl font-bold mb-4">系統設置</h2>
+                <p>這是系統設置頁面。</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // 隱藏所有內容
+            const tabs = ['dashboard', 'games', 'users', 'records', 'export', 'settings'];
+            tabs.forEach(tab => {
+                document.getElementById(tab).classList.add('hidden');
+            });
+            
+            // 顯示選中的內容
+            document.getElementById(tabName).classList.remove('hidden');
+            
+            // 更新導航樣式
+            const navLinks = document.querySelectorAll('nav a');
+            navLinks.forEach(link => {
+                link.classList.remove('bg-blue-600');
+                link.classList.add('hover:bg-gray-700');
+            });
+            
+            // 高亮當前選中的導航
+            event.target.closest('a').classList.add('bg-blue-600');
+            event.target.closest('a').classList.remove('hover:bg-gray-700');
+            
+            console.log('切換到:', tabName);
+        }
+        
+        console.log('導航測試頁面加載完成');
+    </script>
+</body>
+</html>

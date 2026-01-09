@@ -142,12 +142,12 @@
                     sessionStorage.setItem('adminLoggedIn', 'true');
                     sessionStorage.setItem('loginMode', 'simple');
                     
-                    // 跳轉到管理員控制台
+                    // 跳轉到全新的管理面板
                     loginBtn.disabled = true;
                     loginBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> 正在登入...';
                     
                     setTimeout(() => {
-                        window.location.href = 'admin-dashboard.html';
+                        window.location.href = 'admin-panel.html';
                     }, 1000);
                 } else {
                     showError('帳號或密碼錯誤，請重新輸入');

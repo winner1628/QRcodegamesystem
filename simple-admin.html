@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>簡單管理面板</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        /* 簡單的CSS樣式 */
+        .tab-button {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .tab-button:hover {
+            background-color: #4b5563;
+        }
+        .tab-button.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="flex h-screen">
+        <!-- 側邊欄 -->
+        <div class="w-64 bg-gray-800 text-white">
+            <div class="p-4 border-b border-gray-700">
+                <h1 class="text-xl font-bold">管理控制台</h1>
+            </div>
+            
+            <!-- 導航按鈕 - 使用最簡單的結構 -->
+            <div class="mt-4">
+                <div class="tab-button active px-4 py-3 flex items-center" onclick="switchTab('dashboard')">
+                    <i class="fa fa-dashboard w-6"></i>
+                    <span>數據概覽</span>
+                </div>
+                <div class="tab-button px-4 py-3 flex items-center" onclick="switchTab('games')">
+                    <i class="fa fa-gamepad w-6"></i>
+                    <span>遊戲管理</span>
+                </div>
+                <div class="tab-button px-4 py-3 flex items-center" onclick="switchTab('users')">
+                    <i class="fa fa-users w-6"></i>
+                    <span>用戶管理</span>
+                </div>
+                <div class="tab-button px-4 py-3 flex items-center" onclick="switchTab('records')">
+                    <i class="fa fa-history w-6"></i>
+                    <span>記錄查詢</span>
+                </div>
+                <div class="tab-button px-4 py-3 flex items-center" onclick="switchTab('export')">
+                    <i class="fa fa-download w-6"></i>
+                    <span>數據導出</span>
+                </div>
+                <div class="tab-button px-4 py-3 flex items-center" onclick="switchTab('settings')">
+                    <i class="fa fa-cog w-6"></i>
+                    <span>系統設置</span>
+                </div>
+            </div>
+            
+            <!-- 登出按鈕 -->
+            <div class="absolute bottom-0 w-64 p-4 border-t border-gray-700">
+                <button onclick="logout()" class="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700">
+                    <i class="fa fa-sign-out mr-2"></i> 登出
+                </button>
+            </div>
+        </div>
+        
+        <!-- 主內容區 -->
+        <div class="flex-1 p-6 overflow-y-auto">
+            <!-- 數據概覽 -->
+            <div id="dashboard" class="tab-content active">
+                <h2 class="text-2xl font-bold mb-6">數據概覽</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <p class="text-gray-600">已設置遊戲</p>
+                        <p class="text-3xl font-bold">0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <p class="text-gray-600">參與用戶</p>
+                        <p class="text-3xl font-bold">0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <p class="text-gray-600">今日參與次數</p>
+                        <p class="text-3xl font-bold">0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <p class="text-gray-600">禮品發放</p>
+                        <p class="text-3xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 遊戲管理 -->
+            <div id="games" class="tab-content">
+                <h2 class="text-2xl font-bold mb-6">遊戲管理</h2>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <p>這是遊戲管理頁面。</p>
+                </div>
+            </div>
+            
+            <!-- 用戶管理 -->
+            <div id="users" class="tab-content">
+                <h2 class="text-2xl font-bold mb-6">用戶管理</h2>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <p>這是用戶管理頁面。</p>
+                </div>
+            </div>
+            
+            <!-- 記錄查詢 -->
+            <div id="records" class="tab-content">
+                <h2 class="text-2xl font-bold mb-6">記錄查詢</h2>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <p>這是記錄查詢頁面。</p>
+                </div>
+            </div>
+            
+            <!-- 數據導出 -->
+            <div id="export" class="tab-content">
+                <h2 class="text-2xl font-bold mb-6">數據導出</h2>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <p>這是數據導出頁面。</p>
+                </div>
+            </div>
+            
+            <!-- 系統設置 -->
+            <div id="settings" class="tab-content">
+                <h2 class="text-2xl font-bold mb-6">系統設置</h2>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <p>這是系統設置頁面。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 最簡單的JavaScript -->
+    <script>
+        // 全局變量
+        let currentTab = 'dashboard';
+        
+        // 頁面加載完成
+        window.onload = function() {
+            console.log('頁面加載完成，所有功能可用');
+            
+            // 檢查登入狀態
+            const isLoggedIn = sessionStorage.getItem('adminLoggedIn') === 'true';
+            if (!isLoggedIn) {
+                alert('請先登入系統');
+                window.location.href = 'admin.html';
+                return;
+            }
+        };
+        
+        // 切換標籤頁 - 最簡單的實現
+        function switchTab(tabName) {
+            console.log('切換到標籤頁:', tabName);
+            
+            // 隱藏所有內容
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 顯示目標內容
+            const targetContent = document.getElementById(tabName);
+            if (targetContent) {
+                targetContent.classList.add('active');
+                currentTab = tabName;
+            }
+            
+            // 更新按鈕狀態
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // 高亮當前按鈕
+            const targetButton = event.currentTarget;
+            if (targetButton) {
+                targetButton.classList.add('active');
+            }
+            
+            console.log('成功切換到:', tabName);
+        }
+        
+        // 登出功能
+        function logout() {
+            if (confirm('確定要登出系統嗎？')) {
+                sessionStorage.removeItem('adminLoggedIn');
+                window.location.href = 'admin.html';
+            }
+        }
+        
+        // 將函數綁定到全局作用域
+        window.switchTab = switchTab;
+        window.logout = logout;
+        
+        console.log('JavaScript初始化完成');
+    </script>
+</body>
+</html>
