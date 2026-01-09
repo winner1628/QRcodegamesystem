@@ -6,9 +6,9 @@
 const config = {
   // Supabase 数据库配置
   supabase: {
-    url: 'https://vphihqysgdhdnuszybib.supabase.co',  // 替换为您的Supabase项目URL
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwaGlocXlzZ2RoZG51c3p5YmliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5MjExMjEsImV4cCI6MjA4MzQ5NzEyMX0.85JkUoJw4S7gVIPGn23G4CDaCKhgtzqNQOYDiQEKNps',  // 替换为您的Supabase匿名密钥
-    serviceRoleKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwaGlocXlzZ2RoZG51c3p5YmliIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NzkyMTEyMSwiZXhwIjoyMDgzNDk3MTIxfQ.7PF3LfgT5kplfstnt2fNez5YWyWc808OQo0m16irEr4'  // 替换为您的Supabase服务角色密钥
+    url: 'https://your-project-url.supabase.co',  // 替换为您的Supabase项目URL
+    anonKey: 'your-anon-key'  // 替换为您的Supabase匿名密钥
+    // 注意：serviceRoleKey已移除，前端不需要使用此密钥
   },
   
   // 系统配置
