@@ -276,23 +276,59 @@
             }, 50);
         }
         
-        function manualLogin(userId) {
+        async function manualLogin(userId) {
             // 簡單的前端驗證
             if (!userId) {
                 showError('請輸入用戶ID');
                 return;
             }
             
-            // 模擬登入驗證
-            const user = users.find(u => u.id === userId);
-            if (user) {
-                // 登入成功，保存用戶信息到sessionStorage
-                sessionStorage.setItem('currentUser', JSON.stringify(user));
-                // 跳轉到用戶控制台
-                window.location.href = 'user-dashboard.html';
-            } else {
-                showError('未找到對應的用戶信息');
+            try {
+                // 從數據庫查找用戶
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', userId)
+                    .single();
+                
+                if (error) {
+                    console.error('查詢用戶時發生錯誤:', error);
+                    // 如果數據庫查詢失敗，回退到本地用戶數據
+                    const localUser = users.find(u => u.id === userId);
+                    if (localUser) {
+                        handleSuccessfulLogin(localUser);
+                    } else {
+                        showError('未找到對應的用戶信息');
+                    }
+                } else if (data) {
+                    // 數據庫中找到用戶
+                    handleSuccessfulLogin(data);
+                } else {
+                    // 數據庫中未找到用戶，檢查本地數據
+                    const localUser = users.find(u => u.id === userId);
+                    if (localUser) {
+                        handleSuccessfulLogin(localUser);
+                    } else {
+                        showError('未找到對應的用戶信息');
+                    }
+                }
+            } catch (error) {
+                console.error('登入過程中發生錯誤:', error);
+                // 發生異常時，檢查本地用戶數據
+                const localUser = users.find(u => u.id === userId);
+                if (localUser) {
+                    handleSuccessfulLogin(localUser);
+                } else {
+                    showError('登入失敗，請稍後重試');
+                }
             }
+        }
+        
+        function handleSuccessfulLogin(user) {
+            // 登入成功，保存用戶信息到sessionStorage
+            sessionStorage.setItem('currentUser', JSON.stringify(user));
+            // 跳轉到用戶控制台
+            window.location.href = 'user-dashboard.html';
         }
         
         async function startScan() {
@@ -412,6 +448,9 @@
             
             // 關閉掃碼模態框
             document.getElementById('scanModal').classList.add('hidden');
+            
+            // 自動登入
+            manualLogin(userId);
             
             // 執行登入
             manualLogin(userId);

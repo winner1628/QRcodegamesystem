@@ -1135,9 +1135,13 @@
                 return;
             }
             
-            if (!userId && mockUsers.some(u => u.id === userInputId)) {
-                alert('用戶ID已存在！');
-                return;
+            // 檢查用戶ID是否已存在
+            if (!userId) {
+                const userExists = users.some(u => u.id === userInputId);
+                if (userExists) {
+                    alert('用戶ID已存在！');
+                    return;
+                }
             }
             
             if (userId) {
