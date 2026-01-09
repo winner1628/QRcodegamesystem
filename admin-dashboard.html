@@ -55,40 +55,40 @@
             <nav class="mt-4">
                 <ul>
                     <li>
-                        <a href="#" class="sidebar-active flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" onclick="navigateTo('dashboard')">
+                        <button class="nav-btn w-full text-left sidebar-active flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" data-section="dashboard">
                             <i class="fa fa-dashboard w-6"></i>
                             <span>數據概覽</span>
-                        </a>
+                        </button>
                     </li>
                     <li>
-                        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" onclick="navigateTo('games')">
+                        <button class="nav-btn w-full text-left flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" data-section="games">
                             <i class="fa fa-gamepad w-6"></i>
                             <span>遊戲管理</span>
-                        </a>
+                        </button>
                     </li>
                     <li>
-                        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" onclick="navigateTo('users')">
+                        <button class="nav-btn w-full text-left flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" data-section="users">
                             <i class="fa fa-users w-6"></i>
                             <span>用戶管理</span>
-                        </a>
+                        </button>
                     </li>
                     <li>
-                        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" onclick="navigateTo('records')">
+                        <button class="nav-btn w-full text-left flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" data-section="records">
                             <i class="fa fa-history w-6"></i>
                             <span>記錄查詢</span>
-                        </a>
+                        </button>
                     </li>
                     <li>
-                        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" onclick="navigateTo('export')">
+                        <button class="nav-btn w-full text-left flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" data-section="export">
                             <i class="fa fa-download w-6"></i>
                             <span>數據導出</span>
-                        </a>
+                        </button>
                     </li>
                     <li>
-                        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" onclick="navigateTo('settings')">
+                        <button class="nav-btn w-full text-left flex items-center px-4 py-3 hover:bg-gray-700 transition-all-300" data-section="settings">
                             <i class="fa fa-cog w-6"></i>
                             <span>系統設置</span>
-                        </a>
+                        </button>
                     </li>
                 </ul>
             </nav>
@@ -550,6 +550,17 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('管理員控制台初始化中...');
             
+            // 為導航按鈕添加事件監聽器
+            const navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const section = this.getAttribute('data-section');
+                    if (section) {
+                        navigateTo(section);
+                    }
+                });
+            });
+            
             // 初始化頁面
             initializeDashboard();
             
@@ -564,17 +575,16 @@
             console.log(`導航到：${section}`);
             
             // 移除所有活動狀態
-            const navLinks = document.querySelectorAll('aside nav ul li a');
-            navLinks.forEach(link => {
-                link.classList.remove('sidebar-active');
+            const navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach(btn => {
+                btn.classList.remove('sidebar-active');
             });
             
-            // 添加當前活動狀態 - 使用更可靠的方法
-            navLinks.forEach(link => {
-                if (link.getAttribute('onclick') && link.getAttribute('onclick').includes(`navigateTo('${section}')`)) {
-                    link.classList.add('sidebar-active');
-                }
-            });
+            // 添加當前活動狀態
+            const activeButton = document.querySelector(`[data-section="${section}"]`);
+            if (activeButton) {
+                activeButton.classList.add('sidebar-active');
+            }
             
             // 切換內容區域
             switchSection(section);
