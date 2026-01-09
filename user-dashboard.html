@@ -226,15 +226,35 @@
         let scanInterval = null;
         let currentUser = null;
         
-        // 模擬數據
-        const mockGames = [
-            { id: 1, name: '投籃挑戰', boothNumber: 'A01', description: '挑戰你的投籃技巧，投中指定次數即可獲得獎品！', status: 'active' },
-            { id: 2, name: '套圈圈', boothNumber: 'A02', description: '經典的套圈圈遊戲，套中目標即可獲得相應獎品。', status: 'active' },
-            { id: 3, name: '射擊遊戲', boothNumber: 'A03', description: '使用氣槍射擊目標，精準度越高獎品越好！', status: 'active' },
-            { id: 4, name: '闖關挑戰', boothNumber: 'A04', description: '通過多重關卡考驗，展現你的綜合實力。', status: 'maintenance' },
-            { id: 5, name: '幸運抽獎', boothNumber: 'A05', description: '運氣也是實力的一部分，看看你能抽到什麼獎品！', status: 'active' },
-            { id: 6, name: '智力謎題', boothNumber: 'A06', description: '挑戰你的智力極限，解開謎題獲得獎勵。', status: 'active' }
-        ];
+        // 從localStorage獲取遊戲數據，如果沒有則使用默認數據
+        function getGamesFromStorage() {
+            const storedGames = localStorage.getItem('qrGameSystem_games');
+            if (storedGames) {
+                try {
+                    return JSON.parse(storedGames);
+                } catch (e) {
+                    console.error('Failed to parse stored games:', e);
+                }
+            }
+            
+            // 默認遊戲數據
+            return [
+                { id: 1, name: '投籃挑戰', boothNumber: 'A01', description: '挑戰你的投籃技巧，投中指定次數即可獲得獎品！', status: 'active' },
+                { id: 2, name: '套圈圈', boothNumber: 'A02', description: '經典的套圈圈遊戲，套中目標即可獲得相應獎品。', status: 'active' },
+                { id: 3, name: '射擊遊戲', boothNumber: 'A03', description: '使用氣槍射擊目標，精準度越高獎品越好！', status: 'active' },
+                { id: 4, name: '闖關挑戰', boothNumber: 'A04', description: '通過多重關卡考驗，展現你的綜合實力。', status: 'maintenance' },
+                { id: 5, name: '幸運抽獎', boothNumber: 'A05', description: '運氣也是實力的一部分，看看你能抽到什麼獎品！', status: 'active' },
+                { id: 6, name: '智力謎題', boothNumber: 'A06', description: '挑戰你的智力極限，解開謎題獲得獎勵。', status: 'active' }
+            ];
+        }
+        
+        let mockGames = getGamesFromStorage();
+        
+        // 定期檢查遊戲數據更新
+        setInterval(() => {
+            mockGames = getGamesFromStorage();
+            loadAvailableGames();
+        }, 30000); // 每30秒檢查一次更新
         
         const mockRecords = [
             { time: '2025-01-15 10:30', gameName: '投籃挑戰', score: '85分', gift: '小熊玩偶' },

@@ -123,6 +123,23 @@
                 <section id="dashboard-section" class="space-y-6">
                     <!-- 統計卡片 -->
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <!-- 數據管理卡片 -->
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="p-3 bg-red-100 rounded-full">
+                                        <i class="fa fa-trash text-danger text-xl"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <p class="text-sm text-gray-600">數據管理</p>
+                                        <button class="text-danger hover:text-red-700 text-sm font-medium"
+                                                onclick="showDeleteAllDataConfirm()">
+                                            清空所有數據
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="bg-white p-6 rounded-lg shadow-sm">
                             <div class="flex items-center">
                                 <div class="p-3 bg-blue-100 rounded-full">
@@ -641,11 +658,79 @@ U003,王大壯,B組</pre>
         // 全局變量
         let mainChart = null;
         
-        // 模擬數據
-        const mockGames = [
-            { id: 1, name: '投籃挑戰', boothNumber: 'A01', plays: 156, gifts: 89, status: 'active' },
-            { id: 2, name: '套圈圈', boothNumber: 'A02', plays: 203, gifts: 124, status: 'active' },
-            { id: 3, name: '射擊遊戲', boothNumber: 'A03', plays: 187, gifts: 95, status: 'active' },
+        // 從localStorage獲取或初始化數據
+        function initializeData() {
+            // 初始化遊戲數據
+            const storedGames = localStorage.getItem('qrGameSystem_games');
+            if (storedGames) {
+                try {
+                    return JSON.parse(storedGames);
+                } catch (e) {
+                    console.error('Failed to parse stored games:', e);
+                }
+            }
+            
+            // 默認遊戲數據
+            const defaultGames = [
+                { id: 1, name: '投籃挑戰', boothNumber: 'A01', plays: 156, gifts: 89, status: 'active' },
+                { id: 2, name: '套圈圈', boothNumber: 'A02', plays: 203, gifts: 124, status: 'active' },
+                { id: 3, name: '射擊遊戲', boothNumber: 'A03', plays: 187, gifts: 95, status: 'active' },
+                { id: 4, name: '闖關挑戰', boothNumber: 'A04', plays: 134, gifts: 67, status: 'maintenance' },
+                { id: 5, name: '幸運抽獎', boothNumber: 'A05', plays: 245, gifts: 156, status: 'active' },
+                { id: 6, name: '智力謎題', boothNumber: 'A06', plays: 112, gifts: 45, status: 'active' },
+                { id: 7, name: '釣魚遊戲', boothNumber: 'A07', plays: 178, gifts: 89, status: 'active' },
+                { id: 8, name: '擊鼓傳花', boothNumber: 'A08', plays: 145, gifts: 67, status: 'active' },
+                { id: 9, name: '猜謎比賽', boothNumber: 'A09', plays: 167, gifts: 78, status: 'active' },
+                { id: 10, name: '記憶挑戰', boothNumber: 'A10', plays: 123, gifts: 54, status: 'active' },
+                { id: 11, name: '氣球爆破', boothNumber: 'A11', plays: 198, gifts: 102, status: 'active' },
+                { id: 12, name: '籃球投準', boothNumber: 'A12', plays: 156, gifts: 78, status: 'active' }
+            ];
+            
+            // 保存到localStorage
+            localStorage.setItem('qrGameSystem_games', JSON.stringify(defaultGames));
+            return defaultGames;
+        }
+        
+        const mockGames = initializeData();
+        
+        // 保存遊戲數據到localStorage
+        function saveGamesToStorage() {
+            localStorage.setItem('qrGameSystem_games', JSON.stringify(mockGames));
+        }
+        
+        // 清空所有數據
+        function showDeleteAllDataConfirm() {
+            if (confirm('警告：此操作將清空所有數據，包括遊戲設置、參與記錄等，且不可撤銷！確定要繼續嗎？')) {
+                if (confirm('再次確認：所有數據將被永久刪除，此操作不可撤銷！')) {
+                    deleteAllData();
+                }
+            }
+        }
+        
+        function deleteAllData() {
+            try {
+                // 清空localStorage中的所有數據
+                localStorage.removeItem('qrGameSystem_games');
+                localStorage.removeItem('qrGameSystem_records');
+                localStorage.removeItem('qrGameSystem_users');
+                
+                // 重新初始化數據
+                mockGames = initializeData();
+                
+                // 重新加載頁面數據
+                loadGames();
+                loadGameFilter();
+                loadUsers();
+                loadRecords();
+                updateChart(document.getElementById('chartTypeSelect').value);
+                updateStatistics();
+                
+                alert('所有數據已成功清空！');
+            } catch (error) {
+                console.error('Error deleting data:', error);
+                alert('清空數據時發生錯誤，請重試。');
+            }
+        }
             { id: 4, name: '闖關挑戰', boothNumber: 'A04', plays: 134, gifts: 67, status: 'maintenance' },
             { id: 5, name: '幸運抽獎', boothNumber: 'A05', plays: 245, gifts: 156, status: 'active' },
             { id: 6, name: '智力謎題', boothNumber: 'A06', plays: 112, gifts: 45, status: 'active' },
@@ -869,6 +954,7 @@ U003,王大壯,B組</pre>
                         const gameIndex = mockGames.findIndex(g => g.id == gameId);
                         if (gameIndex !== -1) {
                             mockGames.splice(gameIndex, 1);
+                            saveGamesToStorage();
                             alert('遊戲已成功刪除！');
                             loadGames();
                             loadGameFilter();
@@ -1504,6 +1590,7 @@ U003,王大壯,B組</pre>
                 alert('遊戲添加成功！');
             }
             
+            saveGamesToStorage();
             hideGameModal();
             loadGames();
             loadGameFilter();
