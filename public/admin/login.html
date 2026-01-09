@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理员登录 - QR游戏系统</title>
+    <title>管理員登入 - QR遊戲系統</title>
     <!-- Tailwind CSS v3 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
@@ -46,7 +46,7 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
     <div class="w-full max-w-md">
-        <!-- 登录卡片 -->
+        <!-- 登入卡片 -->
         <div class="bg-white rounded-lg card-shadow p-8">
             <!-- 标题 -->
             <div class="text-center mb-8">
@@ -55,16 +55,16 @@
                         <i class="fa fa-user-circle text-primary text-4xl"></i>
                     </div>
                 </div>
-                <h2 class="text-2xl font-bold text-gray-800">管理员登录</h2>
-                <p class="text-gray-500 mt-1">请输入您的管理员账号和密码</p>
+                <h2 class="text-2xl font-bold text-gray-800">管理員登入</h2>
+                <p class="text-gray-500 mt-1">請輸入您的管理員帳號和密碼</p>
             </div>
             
-            <!-- 登录表单 -->
+            <!-- 登入表单 -->
             <form id="loginForm" class="space-y-6">
-                <!-- 用户名 -->
+                <!-- 使用者名稱 -->
                 <div>
                     <label for="username" class="block text-sm font-medium text-gray-700 mb-1">
-                        用户名
+                        使用者名稱
                     </label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
@@ -72,14 +72,14 @@
                         </span>
                         <input type="text" id="username" name="username" required
                                class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                               placeholder="请输入用户名">
+                               placeholder="请输入使用者名稱">
                     </div>
                 </div>
                 
-                <!-- 密码 -->
+                <!-- 密碼 -->
                 <div>
                     <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
-                        密码
+                        密碼
                     </label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
@@ -87,32 +87,32 @@
                         </span>
                         <input type="password" id="password" name="password" required
                                class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                               placeholder="请输入密码">
+                               placeholder="请输入密碼">
                         <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600">
                             <i class="fa fa-eye-slash"></i>
                         </button>
                     </div>
                 </div>
                 
-                <!-- 记住我 -->
+                <!-- 記住我 -->
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
                         <input id="remember-me" name="remember-me" type="checkbox"
                                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
                         <label for="remember-me" class="ml-2 block text-sm text-gray-700">
-                            记住我
+                            記住我
                         </label>
                     </div>
                     <a href="#" class="text-sm text-primary hover:text-blue-700">
-                        忘记密码?
+                        忘记密碼?
                     </a>
                 </div>
                 
-                <!-- 登录按钮 -->
+                <!-- 登入按钮 -->
                 <div>
                     <button type="submit" 
                             class="w-full bg-gradient-primary text-white py-2 px-4 rounded-md hover:opacity-90 transition-all-300 flex justify-center items-center">
-                        <i class="fa fa-sign-in mr-2"></i> 登录
+                        <i class="fa fa-sign-in mr-2"></i> 登入
                     </button>
                 </div>
             </form>
@@ -132,16 +132,16 @@
             </div>
         </div>
         
-        <!-- 返回首页 -->
+        <!-- 返回首頁 -->
         <div class="text-center mt-6">
             <a href="/index.html" class="text-gray-600 hover:text-primary transition-all-300">
-                <i class="fa fa-arrow-left mr-1"></i> 返回首页
+                <i class="fa fa-arrow-left mr-1"></i> 返回首頁
             </a>
         </div>
     </div>
 
     <script>
-        // 切换密码可见性
+        // 切换密碼可见性
         document.getElementById('togglePassword').addEventListener('click', function() {
             const passwordInput = document.getElementById('password');
             const icon = this.querySelector('i');
@@ -157,7 +157,7 @@
             }
         });
         
-        // 登录表单提交
+        // 登入表单提交
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -166,14 +166,14 @@
             const errorMessage = document.getElementById('errorMessage');
             const errorText = document.getElementById('errorText');
             
-            // 模拟登录验证 (实际应用中应该调用API)
+            // 模拟登入验证 (实际应用中应该调用API)
             if (username === 'admin' && password === 'admin123') {
-                // 登录成功，保存登录状态并跳转到管理页面
+                // 登入成功，保存登入状态并跳转到管理页面
                 localStorage.setItem('adminLoggedIn', 'true');
                 window.location.href = '/admin/dashboard.html';
             } else {
-                // 登录失败，显示错误信息
-                errorText.textContent = '用户名或密码错误，请重试。';
+                // 登入失败，显示错误信息
+                errorText.textContent = '使用者名稱或密碼错误，请重试。';
                 errorMessage.classList.remove('hidden');
                 
                 // 3秒后自动隐藏错误信息
