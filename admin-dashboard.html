@@ -719,185 +719,215 @@
         }
         
         // 加載用戶數據
-        function loadUsers() {
-            console.log('加載用戶數據...');
+        async function loadUsers(searchTerm = '') {
+            console.log('加載用戶數據...', searchTerm);
             
             const tbody = document.getElementById('usersTableBody');
             if (!tbody) return;
             
-            tbody.innerHTML = '';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">加載中...</td></tr>';
             
-            mockUsers.forEach(user => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-gray-900">${user.id}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${user.name}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${user.group}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${user.plays}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${user.gifts}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button onclick="showUserModal('${user.id}')" class="text-primary hover:text-blue-800 mr-3">
-                            <i class="fa fa-edit"></i>
-                        </button>
-                        <button onclick="deleteUser('${user.id}')" class="text-danger hover:text-red-800">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                        <button onclick="viewUserRecords('${user.id}')" class="text-info hover:text-blue-800 ml-3">
-                            <i class="fa fa-eye"></i>
-                        </button>
-                    </td>
-                `;
+            try {
+                let query = supabase.from('users').select('*');
                 
-                tbody.appendChild(row);
-            });
+                if (searchTerm) {
+                    query = query.or(`id.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%,group.ilike.%${searchTerm}%`);
+                }
+                
+                const { data, error } = await query.order('id', { ascending: true });
+                
+                if (error) {
+                    console.error('加載用戶數據失敗:', error);
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-600">加載失敗</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = '';
+                
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">暫無數據</td></tr>';
+                    return;
+                }
+                
+                for (const user of data) {
+                    // 獲取用戶參與次數和獲獎次數
+                    const { data: records } = await supabase
+                        .from('records')
+                        .select('*')
+                        .eq('user_id', user.id);
+                    
+                    const plays = records.length;
+                    const gifts = records.filter(r => r.gift === '是').length;
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">${user.id}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${user.name}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${user.group}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${plays}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${gifts}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button onclick="showUserModal('${user.id}')" class="text-primary hover:text-blue-800 mr-3">
+                                <i class="fa fa-edit"></i>
+                            </button>
+                            <button onclick="deleteUser('${user.id}')" class="text-danger hover:text-red-800">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                            <button onclick="viewUserRecords('${user.id}')" class="text-info hover:text-blue-800 ml-3">
+                                <i class="fa fa-eye"></i>
+                            </button>
+                        </td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                }
+            } catch (error) {
+                console.error('加載用戶數據異常:', error);
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-600">加載異常</td></tr>';
+            }
         }
         
         // 加載記錄數據
-        function loadRecords() {
-            console.log('加載記錄數據...');
+        async function loadRecords(searchTerm = '', gameFilter = '') {
+            console.log('加載記錄數據...', { searchTerm, gameFilter });
             
             const tbody = document.getElementById('recordsTableBody');
             if (!tbody) return;
             
-            tbody.innerHTML = '';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">加載中...</td></tr>';
             
-            mockRecords.forEach(record => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${record.time}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${record.userId}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${record.userName}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${record.gameName}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${record.score}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${record.gift}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${record.operator}</div>
-                    </td>
-                `;
+            try {
+                let query = supabase
+                    .from('records')
+                    .select('*')
+                    .order('created_at', { ascending: false });
                 
-                tbody.appendChild(row);
+                if (searchTerm) {
+                    query = query.or(`user_id.ilike.%${searchTerm}%,user_name.ilike.%${searchTerm}%,game_name.ilike.%${searchTerm}%`);
+                }
+                
+                if (gameFilter && gameFilter !== 'all') {
+                    query = query.eq('game_name', gameFilter);
+                }
+                
+                const { data, error } = await query;
+                
+                if (error) {
+                    console.error('加載記錄數據失敗:', error);
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-red-600">加載失敗</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = '';
+                
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-500">暫無數據</td></tr>';
+                    return;
+                }
+                
+                data.forEach(record => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${formatDateTime(record.created_at)}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${record.user_id}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${record.user_name}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${record.game_name}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${record.score || '-'}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${record.gift || '否'}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${record.operator || '系統'}</div>
+                        </td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('加載記錄數據異常:', error);
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-red-600">加載異常</td></tr>';
+            }
+        }
+        
+        // 格式化日期時間
+        function formatDateTime(dateTimeString) {
+            const date = new Date(dateTimeString);
+            return date.toLocaleString('zh-TW', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
             });
         }
         
         // 加載遊戲篩選器
-        function loadGameFilter() {
+        async function loadGameFilter() {
             console.log('加載遊戲篩選器...');
             
             const select = document.getElementById('gameFilter');
             if (!select) return;
             
-            select.innerHTML = '<option value="">選擇遊戲</option>';
+            select.innerHTML = '<option value="all">全部遊戲</option>';
             
-            mockGames.forEach(game => {
-                const option = document.createElement('option');
-                option.value = game.name;
-                option.textContent = game.name;
-                select.appendChild(option);
-            });
+            try {
+                const { data, error } = await supabase
+                    .from('games')
+                    .select('*')
+                    .order('booth_number', { ascending: true });
+                
+                if (error) {
+                    console.error('加載遊戲篩選器失敗:', error);
+                    return;
+                }
+                
+                data.forEach(game => {
+                    const option = document.createElement('option');
+                    option.value = game.name;
+                    option.textContent = game.name;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('加載遊戲篩選器異常:', error);
+            }
         }
         
         // 搜索用戶
         function searchUsers() {
-            const searchTerm = document.getElementById('userSearch').value.trim().toLowerCase();
+            const searchTerm = document.getElementById('userSearch').value.trim();
             console.log(`搜索用戶：${searchTerm}`);
-            
-            const tbody = document.getElementById('usersTableBody');
-            if (!tbody) return;
-            
-            tbody.innerHTML = '';
-            
-            const filteredUsers = mockUsers.filter(user => 
-                user.id.toLowerCase().includes(searchTerm) || 
-                user.name.toLowerCase().includes(searchTerm) ||
-                user.group.toLowerCase().includes(searchTerm)
-            );
-            
-            filteredUsers.forEach(user => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-gray-900">${user.id}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${user.name}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${user.group}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${user.plays}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${user.gifts}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button onclick="showUserModal('${user.id}')" class="text-primary hover:text-blue-800 mr-3">
-                            <i class="fa fa-edit"></i>
-                        </button>
-                        <button onclick="deleteUser('${user.id}')" class="text-danger hover:text-red-800">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                        <button onclick="viewUserRecords('${user.id}')" class="text-info hover:text-blue-800 ml-3">
-                            <i class="fa fa-eye"></i>
-                        </button>
-                    </td>
-                `;
-                
-                tbody.appendChild(row);
-            });
+            loadUsers(searchTerm);
         }
         
         // 搜索記錄
         function searchRecords() {
-            const searchTerm = document.getElementById('recordSearch').value.trim().toLowerCase();
+            const searchTerm = document.getElementById('recordSearch').value.trim();
             const gameFilter = document.getElementById('gameFilter').value;
             
             console.log(`搜索記錄：${searchTerm}，遊戲：${gameFilter}`);
-            
-            const tbody = document.getElementById('recordsTableBody');
-            if (!tbody) return;
-            
-            tbody.innerHTML = '';
-            
-            let filteredRecords = mockRecords;
-            
-            // 按搜索詞篩選
-            if (searchTerm) {
-                filteredRecords = filteredRecords.filter(record => 
-                    record.userId.toLowerCase().includes(searchTerm) ||
-                    record.userName.toLowerCase().includes(searchTerm) ||
-                    record.gameName.toLowerCase().includes(searchTerm)
-                );
-            }
-            
-            // 按遊戲篩選
-            if (gameFilter) {
-                filteredRecords = filteredRecords.filter(record => 
-                    record.gameName === gameFilter
-                );
-            }
+            loadRecords(searchTerm, gameFilter);
+        }
             
             filteredRecords.forEach(record => {
                 const row = document.createElement('tr');
