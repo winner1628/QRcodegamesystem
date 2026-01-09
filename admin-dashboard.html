@@ -625,45 +625,35 @@
         function loadSectionData(sectionName) {
             console.log('加載數據:', sectionName);
             
-            switch (sectionName) {
-                case 'dashboard':
-                    updateDashboard();
-                    if (typeof updateChart === 'function') {
-                        updateChart('gameHeat');
-                    }
-                    break;
-                case 'games':
-                    if (typeof loadGames === 'function') {
-                        loadGames();
-                    }
-                    break;
-                case 'users':
-                    if (typeof loadUsers === 'function') {
-                        loadUsers();
-                    }
-                    break;
-                case 'records':
-                    if (typeof loadRecords === 'function') {
-                        loadRecords();
-                    }
-                    if (typeof loadGameFilter === 'function') {
-                        loadGameFilter();
-                    }
-                    break;
-            }
-        }
-            
-            // 重新加載對應數據
-            if (section === 'games') {
-                loadGames();
-            } else if (section === 'users') {
-                loadUsers();
-            } else if (section === 'records') {
-                loadRecords();
-                loadGameFilter();
-            } else if (section === 'dashboard') {
-                updateStatistics();
-                updateChart(document.getElementById('chartTypeSelect').value);
+            try {
+                switch (sectionName) {
+                    case 'dashboard':
+                        updateDashboard();
+                        if (typeof updateChart === 'function') {
+                            updateChart('gameHeat');
+                        }
+                        break;
+                    case 'games':
+                        if (typeof loadGames === 'function') {
+                            loadGames();
+                        }
+                        break;
+                    case 'users':
+                        if (typeof loadUsers === 'function') {
+                            loadUsers();
+                        }
+                        break;
+                    case 'records':
+                        if (typeof loadRecords === 'function') {
+                            loadRecords();
+                        }
+                        if (typeof loadGameFilter === 'function') {
+                            loadGameFilter();
+                        }
+                        break;
+                }
+            } catch (error) {
+                console.error('加載數據時出錯:', error);
             }
         }
         
