@@ -432,41 +432,45 @@
             // 模擬QR碼數據格式: "game:{gameId}"
             if (data.startsWith('game:')) {
                 const gameId = parseInt(data.split(':')[1]);
-                const game = mockGames.find(g => g.id === gameId);
-                
-                if (game) {
-                    if (game.status === 'active') {
-                        // 模擬參與記錄
-                        const newRecord = {
-                            time: new Date().toLocaleString('zh-TW', { 
-                                year: 'numeric', 
-                                month: '2-digit', 
-                                day: '2-digit',
-                                hour: '2-digit', 
-                                minute: '2-digit'
-                            }),
-                            gameName: game.name,
-                            score: Math.floor(Math.random() * 30 + 70) + '分',
-                            gift: getRandomGift()
-                        };
-                        
-                        // 更新UI
-                        document.getElementById('gameName').textContent = game.name;
-                        document.getElementById('successModal').classList.remove('hidden');
-                        
-                        // 更新最近參與記錄
-                        updateRecentRecords(newRecord);
-                        
-                        // 更新今日參與次數
-                        updateTodayPlays();
-                    } else {
-                        alert('此遊戲暫停開放，請選擇其他遊戲參與。');
-                    }
-                } else {
-                    alert('未找到對應的遊戲信息。');
-                }
+                handleGamePlay(gameId);
             } else {
                 alert('無效的二維碼，請掃描正確的遊戲二維碼。');
+            }
+        }
+        
+        function handleGamePlay(gameId) {
+            const game = mockGames.find(g => g.id === gameId);
+            
+            if (game) {
+                if (game.status === 'active') {
+                    // 模擬參與記錄
+                    const newRecord = {
+                        time: new Date().toLocaleString('zh-TW', { 
+                            year: 'numeric', 
+                            month: '2-digit', 
+                            day: '2-digit',
+                            hour: '2-digit', 
+                            minute: '2-digit'
+                        }),
+                        gameName: game.name,
+                        score: Math.floor(Math.random() * 30 + 70) + '分',
+                        gift: getRandomGift()
+                    };
+                    
+                    // 更新UI
+                    document.getElementById('gameName').textContent = game.name;
+                    document.getElementById('successModal').classList.remove('hidden');
+                    
+                    // 更新最近參與記錄
+                    updateRecentRecords(newRecord);
+                    
+                    // 更新今日參與次數
+                    updateTodayPlays();
+                } else {
+                    alert('此遊戲暫停開放，請選擇其他遊戲參與。');
+                }
+            } else {
+                alert('未找到對應的遊戲信息。');
             }
         }
         
@@ -546,23 +550,23 @@
                         <p class="text-sm text-gray-600 mb-3">${game.description}</p>
                         <div class="flex justify-between items-center text-sm">
                             <span class="text-gray-500">攤位: ${game.boothNumber}</span>
-                            <button class="text-primary hover:text-blue-700 scan-qr-btn" data-game-id="${game.id}">
-                                <i class="fa fa-qrcode mr-1"></i> 掃碼參與
+                            <button class="text-primary hover:text-blue-700 play-game-btn" data-game-id="${game.id}">
+                                <i class="fa fa-play-circle mr-1"></i> 參與遊戲
                             </button>
                         </div>
                     </div>
                 `;
             }).join('');
             
-            // 綁定掃碼按鈕事件
-            document.querySelectorAll('.scan-qr-btn').forEach(btn => {
+            // 綁定參與遊戲按鈕事件
+            document.querySelectorAll('.play-game-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const gameId = this.getAttribute('data-game-id');
                     const game = mockGames.find(g => g.id == gameId);
                     
                     if (game && game.status === 'active') {
-                        // 模擬掃描QR碼
-                        handleQRCode(`game:${gameId}`);
+                        // 直接處理遊戲參與
+                        handleGamePlay(gameId);
                     } else {
                         alert('此遊戲暫停開放，請選擇其他遊戲參與。');
                     }
