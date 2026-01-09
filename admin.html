@@ -95,8 +95,8 @@
                 
                 <!-- 工具鏈接 -->
                 <div class="text-center text-sm">
-                    <a href="db-test-standalone.html" class="text-primary hover:text-blue-700 transition-all-300">
-                        <i class="fa fa-wrench mr-1"></i> 獨立數據庫測試工具
+                    <a href="test-config.html" class="text-primary hover:text-blue-700 transition-all-300">
+                        <i class="fa fa-wrench mr-1"></i> 配置測試工具
                     </a>
                     <span class="mx-2 text-gray-400">|</span>
                     <a href="admin-simple.html" class="text-warning hover:text-yellow-700 transition-all-300">
@@ -120,7 +120,16 @@
         // 初始化Supabase
         function initializeSupabase() {
             try {
-                const supabase = createClient(config.supabase.url, config.supabase.anonKey);
+                // 檢查配置文件是否加載
+                if (!window.config) {
+                    throw new Error('配置文件未加載');
+                }
+                
+                if (!window.config.supabase || !window.config.supabase.url || !window.config.supabase.anonKey) {
+                    throw new Error('Supabase配置不完整');
+                }
+                
+                const supabase = createClient(window.config.supabase.url, window.config.supabase.anonKey);
                 console.log('Supabase初始化成功！');
                 return supabase;
             } catch (error) {
@@ -173,7 +182,14 @@
                 
                 // 模擬登入驗證
                 if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-                    // 登入成功，先測試數據庫連接
+                    // 登入成功，設置會話標記
+                    sessionStorage.setItem('adminLoggedIn', 'true');
+                    
+                    // 跳轉到管理員控制台（跳過數據庫連接檢查）
+                    window.location.href = 'admin-dashboard.html';
+                    
+                    /*
+                    // 如果需要重新啟用數據庫連接檢查，請取消注釋下面的代碼
                     loginBtn.disabled = true;
                     loginBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> 正在連接數據庫...';
                     
@@ -182,19 +198,21 @@
                         
                         if (connectionResult.success) {
                             // 數據庫連接成功，跳轉到管理員控制台
+                            sessionStorage.setItem('adminLoggedIn', 'true');
                             window.location.href = 'admin-dashboard.html';
                         } else {
                             // 數據庫連接失敗，顯示錯誤信息
-                            showError('無法連接到數據庫，請檢查配置文件中的連接信息。');
+                            showError('無法連接到數據庫: ' + connectionResult.error + '\n\n您可以使用簡化版登入跳過此檢查。');
                             console.error('數據庫連接錯誤:', connectionResult.error);
                         }
                     } catch (error) {
-                        showError('數據庫連接測試時發生錯誤。');
+                        showError('數據庫連接測試時發生錯誤: ' + error.message);
                         console.error('連接測試錯誤:', error);
                     } finally {
                         loginBtn.disabled = false;
                         loginBtn.innerHTML = '<i class="fa fa-sign-in mr-2"></i> 登入系統';
                     }
+                    */
                 } else {
                     showError('帳號或密碼錯誤，請重新輸入');
                 }

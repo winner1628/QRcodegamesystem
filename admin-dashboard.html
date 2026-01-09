@@ -12,6 +12,15 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
+    <!-- 確保Supabase加載 -->
+    <script>
+        if (typeof createClient === 'undefined') {
+            console.error('錯誤：Supabase客戶端庫未加載');
+            document.addEventListener('DOMContentLoaded', function() {
+                alert('錯誤：Supabase客戶端庫未加載，請檢查網絡連接');
+            });
+        }
+    </script>
     <!-- Tailwind 配置 -->
     <script>
         tailwind.config = {
@@ -624,12 +633,45 @@ QR遊戲系統是一個用於管理攤位遊戲的綜合平台，支持用戶通
         // 初始化Supabase
         function initializeSupabase() {
             try {
+                if (!window.config) {
+                    throw new Error('配置文件未加載');
+                }
+                
+                if (!config.supabase || !config.supabase.url || !config.supabase.anonKey) {
+                    throw new Error('Supabase配置不完整');
+                }
+                
                 supabase = createClient(config.supabase.url, config.supabase.anonKey);
                 console.log('Supabase初始化成功！');
+                
+                // 測試連接
+                testSupabaseConnection().then(success => {
+                    if (success) {
+                        console.log('數據庫連接測試成功');
+                    } else {
+                        console.warn('數據庫連接測試失敗，但將繼續加載');
+                    }
+                });
+                
                 return true;
             } catch (error) {
                 console.error('Supabase初始化失敗:', error);
-                alert('無法連接到數據庫，請檢查配置文件中的連接信息。');
+                alert('無法連接到數據庫: ' + error.message + '\n\n請檢查config.js文件中的連接信息，或使用簡化版登入。');
+                return false;
+            }
+        }
+        
+        // 測試Supabase連接
+        async function testSupabaseConnection() {
+            try {
+                const { data, error } = await supabase.from('games').select('*').limit(1);
+                if (error) {
+                    console.warn('連接測試警告:', error.message);
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.warn('連接測試異常:', error.message);
                 return false;
             }
         }
@@ -638,12 +680,16 @@ QR遊戲系統是一個用於管理攤位遊戲的綜合平台，支持用戶通
         document.addEventListener('DOMContentLoaded', function() {
             console.log('管理員控制台初始化中...');
             
-            // 初始化Supabase
-            const supabaseInitialized = initializeSupabase();
-            if (!supabaseInitialized) {
-                console.error('Supabase初始化失敗，無法繼續加載數據');
+            // 檢查是否已登入
+            const isLoggedIn = sessionStorage.getItem('adminLoggedIn') === 'true';
+            if (!isLoggedIn) {
+                alert('請先登入系統');
+                window.location.href = 'admin.html';
                 return;
             }
+            
+            // 初始化Supabase
+            initializeSupabase();
             
             // 初始化導航
             initNavigation();
