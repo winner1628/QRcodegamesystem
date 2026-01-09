@@ -127,6 +127,14 @@
     <script src="config.js"></script>
     
     <script>
+        // 確保Supabase客戶端已加載
+        if (typeof createClient === 'undefined') {
+            console.error('錯誤：Supabase客戶端庫未加載');
+            document.addEventListener('DOMContentLoaded', function() {
+                alert('錯誤：Supabase客戶端庫未加載，請檢查網絡連接或CDN配置');
+            });
+        }
+        
         document.addEventListener('DOMContentLoaded', function() {
             // 加載配置文件中的設置
             if (window.config && window.config.supabase) {
@@ -185,6 +193,11 @@
         // 初始化Supabase客戶端
         function createSupabaseClient(url, key) {
             try {
+                // 使用全局的createClient函數（來自Supabase CDN）
+                if (typeof createClient === 'undefined') {
+                    throw new Error('Supabase客戶端庫未加載，請檢查CDN連接');
+                }
+                
                 const supabase = createClient(url, key);
                 return supabase;
             } catch (error) {
