@@ -762,39 +762,51 @@ U003,王大壯,B組</pre>
         ];
         
         document.addEventListener('DOMContentLoaded', function() {
-            // 初始化頁面
-            initializeDashboard();
+            console.log('DOM loaded, initializing dashboard...');
             
-            // 側邊欄導航
-            const navLinks = document.querySelectorAll('nav a');
-            navLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    // 移除所有活動狀態
-                    navLinks.forEach(l => l.classList.remove('sidebar-active'));
-                    
-                    // 添加當前活動狀態
-                    this.classList.add('sidebar-active');
-                    
-                    // 切換內容區域
-                    const section = this.getAttribute('data-section');
-                    switchSection(section);
+            try {
+                // 初始化頁面
+                initializeDashboard();
+                
+                // 側邊欄導航
+                const navLinks = document.querySelectorAll('nav a');
+                navLinks.forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        // 移除所有活動狀態
+                        navLinks.forEach(l => l.classList.remove('sidebar-active'));
+                        
+                        // 添加當前活動狀態
+                        this.classList.add('sidebar-active');
+                        
+                        // 切換內容區域
+                        const section = this.getAttribute('data-section');
+                        switchSection(section);
+                    });
                 });
-            });
-            
-            // 登出按鈕
-            document.getElementById('logoutBtn').addEventListener('click', function() {
-                if (confirm('確定要登出系統嗎？')) {
-                    window.location.href = 'admin.html';
+                
+                // 登出按鈕
+                const logoutBtn = document.getElementById('logoutBtn');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', function() {
+                        if (confirm('確定要登出系統嗎？')) {
+                            window.location.href = 'admin.html';
+                        }
+                    });
                 }
-            });
-            
-            // 按鈕事件綁定
-            bindButtonEvents();
-            
-            // 初始化圖表
-            initializeCharts();
+                
+                // 按鈕事件綁定
+                bindButtonEvents();
+                
+                // 初始化圖表
+                initializeCharts();
+                
+                console.log('Dashboard initialization completed successfully');
+            } catch (error) {
+                console.error('Error during dashboard initialization:', error);
+                alert('頁面初始化時發生錯誤，請刷新頁面重試。');
+            }
         });
         
         function initializeDashboard() {
@@ -834,56 +846,61 @@ U003,王大壯,B組</pre>
         }
         
         function bindButtonEvents() {
-            // 遊戲管理按鈕
-            document.getElementById('addGameBtn').addEventListener('click', function() {
-                showGameModal();
+            console.log('Binding button events...');
+            
+            const buttonBindings = [
+                // 遊戲管理按鈕
+                { id: 'addGameBtn', event: 'click', handler: () => showGameModal() },
+                
+                // 用戶管理按鈕
+                { id: 'addUserBtn', event: 'click', handler: () => showUserModal() },
+                { id: 'importUsersBtn', event: 'click', handler: () => showImportUsersModal() },
+                
+                // 圖表控制
+                { id: 'chartTypeSelect', event: 'change', handler: function() { updateChart(this.value); } },
+                { id: 'refreshChartBtn', event: 'click', handler: () => {
+                    const chartType = document.getElementById('chartTypeSelect').value;
+                    updateChart(chartType);
+                }},
+                
+                // 用戶搜索
+                { id: 'searchUserBtn', event: 'click', handler: () => {
+                    const searchTerm = document.getElementById('userSearch').value.trim();
+                    searchUsers(searchTerm);
+                }},
+                
+                // 記錄查詢按鈕
+                { id: 'searchRecordBtn', event: 'click', handler: () => {
+                    const searchTerm = document.getElementById('recordSearch').value.trim();
+                    const gameFilter = document.getElementById('gameFilter').value;
+                    searchRecords(searchTerm, gameFilter);
+                }},
+                
+                // 數據導出按鈕
+                { id: 'exportRecordsBtn', event: 'click', handler: exportRecords },
+                { id: 'exportUsersBtn', event: 'click', handler: exportUsers },
+                { id: 'exportStatsBtn', event: 'click', handler: exportStats },
+                { id: 'exportGiftsBtn', event: 'click', handler: exportGifts },
+                
+                // 系統設置按鈕
+                { id: 'saveSettingsBtn', event: 'click', handler: () => alert('設置已保存！') },
+                { id: 'cancelSettingsBtn', event: 'click', handler: () => alert('已取消設置更改') },
+                
+                // 清空數據按鈕
+                { id: 'deleteAllDataBtn', event: 'click', handler: showDeleteAllDataConfirm }
+            ];
+            
+            buttonBindings.forEach(binding => {
+                const element = document.getElementById(binding.id);
+                if (element) {
+                    element.addEventListener(binding.event, binding.handler);
+                    console.log(`Bound ${binding.event} event to ${binding.id}`);
+                } else {
+                    console.warn(`Element ${binding.id} not found, skipping event binding`);
+                }
             });
             
-            // 用戶管理按鈕
-            document.getElementById('addUserBtn').addEventListener('click', function() {
-                showUserModal();
-            });
-            
-            document.getElementById('importUsersBtn').addEventListener('click', function() {
-                showImportUsersModal();
-            });
-            
-            // 圖表控制
-            document.getElementById('chartTypeSelect').addEventListener('change', function() {
-                updateChart(this.value);
-            });
-            
-            document.getElementById('refreshChartBtn').addEventListener('click', function() {
-                const chartType = document.getElementById('chartTypeSelect').value;
-                updateChart(chartType);
-            });
-            
-            document.getElementById('searchUserBtn').addEventListener('click', function() {
-                const searchTerm = document.getElementById('userSearch').value.trim();
-                searchUsers(searchTerm);
-            });
-            
-            // 記錄查詢按鈕
-            document.getElementById('searchRecordBtn').addEventListener('click', function() {
-                const searchTerm = document.getElementById('recordSearch').value.trim();
-                const gameFilter = document.getElementById('gameFilter').value;
-                searchRecords(searchTerm, gameFilter);
-            });
-            
-            // 數據導出按鈕
-            document.getElementById('exportRecordsBtn').addEventListener('click', exportRecords);
-            document.getElementById('exportUsersBtn').addEventListener('click', exportUsers);
-            document.getElementById('exportStatsBtn').addEventListener('click', exportStats);
-            document.getElementById('exportGiftsBtn').addEventListener('click', exportGifts);
-            
-            // 系統設置按鈕
-            document.getElementById('saveSettingsBtn').addEventListener('click', function() {
-                alert('設置已保存！');
-            });
-            
-            document.getElementById('cancelSettingsBtn').addEventListener('click', function() {
-                alert('已取消設置更改');
-            });
+            console.log('Button event binding completed');
         }
         
         function loadGames() {

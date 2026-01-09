@@ -263,17 +263,26 @@
         ];
         
         document.addEventListener('DOMContentLoaded', function() {
-            // 初始化用戶信息
-            initializeUser();
+            console.log('User dashboard DOM loaded, initializing...');
             
-            // 初始化頁面
-            initializePage();
-            
-            // 綁定事件
-            bindEvents();
-            
-            // 初始化動畫
-            initializeAnimations();
+            try {
+                // 初始化用戶信息
+                initializeUser();
+                
+                // 初始化頁面
+                initializePage();
+                
+                // 綁定事件
+                bindEvents();
+                
+                // 初始化動畫
+                initializeAnimations();
+                
+                console.log('User dashboard initialization completed successfully');
+            } catch (error) {
+                console.error('Error during user dashboard initialization:', error);
+                alert('頁面初始化時發生錯誤，請刷新頁面重試。');
+            }
         });
         
         function initializeUser() {
