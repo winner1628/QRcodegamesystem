@@ -716,11 +716,11 @@ QR遊戲系統是一個用於管理攤位遊戲的綜合平台，支持用戶通
                 return;
             }
             
+            // 立即初始化導航（優先處理用戶交互）
+            initNavigation();
+            
             // 初始化Supabase
             initializeSupabase();
-            
-            // 初始化導航
-            initNavigation();
             
             // 初始化頁面數據
             loadAllData();
@@ -736,11 +736,32 @@ QR遊戲系統是一個用於管理攤位遊戲的綜合平台，支持用戶通
         
         // 初始化導航
         function initNavigation() {
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
+            const navButtons = document.querySelectorAll('.nav-btn');
+            console.log(`找到 ${navButtons.length} 個導航按鈕`);
+            
+            navButtons.forEach((btn, index) => {
+                // 移除可能存在的重複事件監聽器
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                
+                // 添加新的事件監聽器
+                newBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
                     const section = this.getAttribute('data-section');
+                    console.log(`點擊導航按鈕: ${section}`);
+                    
+                    // 添加點擊效果
+                    this.classList.add('scale-95');
+                    setTimeout(() => {
+                        this.classList.remove('scale-95');
+                    }, 150);
+                    
                     showSection(section);
-                });
+                }, { capture: true });
+                
+                console.log(`導航按鈕 ${index + 1} (${newBtn.getAttribute('data-section')}) 初始化完成`);
             });
         }
         
