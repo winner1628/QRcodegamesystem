@@ -120,7 +120,7 @@
             <!-- 內容區域 -->
             <div class="p-6">
                 <!-- 數據概覽 -->
-                <section id="dashboard-section" class="space-y-6">
+                <section id="dashboard-section" class="space-y-6" style="display: none;">
                     <!-- 統計卡片 -->
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <!-- 數據管理卡片 -->
@@ -255,7 +255,7 @@
                 </section>
                 
                 <!-- 用戶管理 -->
-                <section id="users-section" class="hidden space-y-6">
+                <section id="users-section" class="space-y-6" style="display: none;">
                     <div class="bg-white p-6 rounded-lg shadow-sm">
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-lg font-semibold text-gray-800">用戶管理</h3>
@@ -314,7 +314,7 @@
                 </section>
                 
                 <!-- 記錄查詢 -->
-                <section id="records-section" class="hidden space-y-6">
+                <section id="records-section" class="space-y-6" style="display: none;">
                     <div class="bg-white p-6 rounded-lg shadow-sm">
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-lg font-semibold text-gray-800">參與記錄查詢</h3>
@@ -373,7 +373,7 @@
                 </section>
                 
                 <!-- 數據導出 -->
-                <section id="export-section" class="hidden space-y-6">
+                <section id="export-section" class="space-y-6" style="display: none;">
                     <div class="bg-white p-6 rounded-lg shadow-sm">
                         <h3 class="text-lg font-semibold text-gray-800 mb-6">數據導出</h3>
                         
@@ -446,7 +446,7 @@
                 </section>
                 
                 <!-- 系統設置 -->
-                <section id="settings-section" class="hidden space-y-6">
+                <section id="settings-section" class="space-y-6" style="display: none;">
                     <div class="bg-white p-6 rounded-lg shadow-sm">
                         <h3 class="text-lg font-semibold text-gray-800 mb-6">系統設置</h3>
                         
@@ -510,24 +510,13 @@
     <script>
         // 全局變量
         let mainChart = null;
-        let currentSection = 'dashboard';
-        
-        // 導航配置
-        const navigationConfig = {
-            dashboard: { title: '數據概覽', icon: 'fa-dashboard' },
-            games: { title: '遊戲管理', icon: 'fa-gamepad' },
-            users: { title: '用戶管理', icon: 'fa-users' },
-            records: { title: '記錄查詢', icon: 'fa-history' },
-            export: { title: '數據導出', icon: 'fa-download' },
-            settings: { title: '系統設置', icon: 'fa-cog' }
-        };
         
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
             console.log('管理員控制台初始化中...');
             
-            // 初始化導航事件
-            initializeNavigation();
+            // 初始化導航
+            initNavigation();
             
             // 初始化頁面
             initializeDashboard();
@@ -535,140 +524,132 @@
             // 初始化圖表
             initializeCharts();
             
+            // 顯示默認頁面
+            setTimeout(() => {
+                showSection('dashboard');
+            }, 100);
+            
             console.log('管理員控制台初始化完成！');
         });
         
         // 初始化導航
-        function initializeNavigation() {
+        function initNavigation() {
             console.log('初始化導航...');
             
-            // 為所有導航按鈕添加事件監聽器
+            // 為所有導航按鈕添加事件處理
             const navButtons = document.querySelectorAll('.nav-btn');
             navButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const section = this.dataset.section;
+                btn.onclick = function() {
+                    const section = this.getAttribute('data-section');
                     if (section) {
-                        console.log(`點擊導航按鈕：${section}`);
-                        navigateTo(section);
+                        console.log('點擊導航:', section);
+                        showSection(section);
                     }
-                });
+                };
             });
             
             console.log('導航初始化完成');
         }
         
-        // 導航功能
-        function navigateTo(section) {
-            console.log(`導航到：${section}`);
+        // 顯示指定部分
+        function showSection(sectionName) {
+            console.log('顯示部分:', sectionName);
             
-            // 檢查是否為當前頁面
-            if (currentSection === section) {
-                console.log('已經在當前頁面');
-                return;
-            }
-            
-            // 更新當前頁面
-            currentSection = section;
-            
-            // 更新導航按鈕狀態
-            updateNavigationButtons(section);
-            
-            // 切換內容區域
-            switchSection(section);
-            
-            // 更新頁面標題
-            updatePageTitle(section);
-        }
-        
-        // 更新導航按鈕狀態
-        function updateNavigationButtons(activeSection) {
-            console.log(`更新導航按鈕狀態，激活：${activeSection}`);
-            
-            // 移除所有按鈕的激活狀態
-            const navButtons = document.querySelectorAll('.nav-btn');
-            navButtons.forEach(btn => {
-                btn.classList.remove('sidebar-active');
-                btn.classList.add('hover:bg-gray-700');
-            });
-            
-            // 激活當前按鈕
-            const activeButton = document.querySelector(`[data-section="${activeSection}"]`);
-            if (activeButton) {
-                activeButton.classList.add('sidebar-active');
-                activeButton.classList.remove('hover:bg-gray-700');
-                console.log('成功激活按鈕');
-            } else {
-                console.error(`找不到導航按鈕：${activeSection}`);
-            }
-        }
-        
-        // 切換頁面
-        function switchSection(section) {
-            console.log(`切換到頁面：${section}`);
-            
-            // 隱藏所有區域
+            // 隱藏所有部分
             const sections = ['dashboard', 'games', 'users', 'records', 'export', 'settings'];
-            sections.forEach(s => {
-                const element = document.getElementById(`${s}-section`);
+            sections.forEach(name => {
+                const element = document.getElementById(name + '-section');
                 if (element) {
-                    element.classList.add('hidden');
-                    console.log(`隱藏頁面：${s}`);
-                } else {
-                    console.warn(`找不到頁面元素：${s}-section`);
+                    element.style.display = 'none';
                 }
             });
             
-            // 顯示當前區域
-            const targetSection = document.getElementById(`${section}-section`);
+            // 顯示選擇的部分
+            const targetSection = document.getElementById(sectionName + '-section');
             if (targetSection) {
-                targetSection.classList.remove('hidden');
-                console.log(`顯示頁面：${section}`);
-                
-                // 加載對應頁面的數據
-                loadSectionData(section);
+                targetSection.style.display = 'block';
+                console.log('成功顯示部分:', sectionName);
             } else {
-                console.error(`找不到頁面元素：${section}-section`);
-                alert(`找不到${section}頁面！`);
+                console.error('找不到部分:', sectionName);
                 return;
             }
+            
+            // 更新導航按鈕狀態
+            updateNavButtons(sectionName);
+            
+            // 更新頁面標題
+            updatePageTitle(sectionName);
+            
+            // 加載部分數據
+            loadSectionData(sectionName);
         }
         
-        // 加載頁面數據
-        function loadSectionData(section) {
-            console.log(`加載${section}頁面數據...`);
+        // 更新導航按鈕狀態
+        function updateNavButtons(activeSection) {
+            console.log('更新導航按鈕:', activeSection);
             
-            switch (section) {
-                case 'dashboard':
-                    updateDashboard();
-                    updateChart('gameHeat');
-                    break;
-                case 'games':
-                    loadGames();
-                    break;
-                case 'users':
-                    loadUsers();
-                    break;
-                case 'records':
-                    loadRecords();
-                    loadGameFilter();
-                    break;
-                case 'export':
-                    // 導出頁面不需要特殊加載
-                    break;
-                case 'settings':
-                    // 設置頁面暫時不需要特殊加載
-                    break;
-                default:
-                    console.warn(`未知的頁面：${section}`);
+            // 移除所有按鈕的激活狀態
+            const buttons = document.querySelectorAll('.nav-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('sidebar-active');
+            });
+            
+            // 激活當前按鈕
+            const activeButton = document.querySelector('[data-section="' + activeSection + '"]');
+            if (activeButton) {
+                activeButton.classList.add('sidebar-active');
+                console.log('成功激活按鈕:', activeSection);
+            } else {
+                console.error('找不到按鈕:', activeSection);
             }
         }
         
         // 更新頁面標題
-        function updatePageTitle(section) {
+        function updatePageTitle(sectionName) {
+            const titles = {
+                'dashboard': '數據概覽',
+                'games': '遊戲管理',
+                'users': '用戶管理',
+                'records': '記錄查詢',
+                'export': '數據導出',
+                'settings': '系統設置'
+            };
+            
             const titleElement = document.querySelector('main h2');
-            if (titleElement && navigationConfig[section]) {
-                titleElement.textContent = navigationConfig[section].title;
-                console.log(`更新頁面標題為：${navigationConfig[section].title}`);
+            if (titleElement && titles[sectionName]) {
+                titleElement.textContent = titles[sectionName];
+            }
+        }
+        
+        // 加載部分數據
+        function loadSectionData(sectionName) {
+            console.log('加載數據:', sectionName);
+            
+            switch (sectionName) {
+                case 'dashboard':
+                    updateDashboard();
+                    if (typeof updateChart === 'function') {
+                        updateChart('gameHeat');
+                    }
+                    break;
+                case 'games':
+                    if (typeof loadGames === 'function') {
+                        loadGames();
+                    }
+                    break;
+                case 'users':
+                    if (typeof loadUsers === 'function') {
+                        loadUsers();
+                    }
+                    break;
+                case 'records':
+                    if (typeof loadRecords === 'function') {
+                        loadRecords();
+                    }
+                    if (typeof loadGameFilter === 'function') {
+                        loadGameFilter();
+                    }
+                    break;
             }
         }
             
