@@ -172,33 +172,13 @@
                 
                 if (error) {
                     console.error('加載用戶數據失敗:', error);
-                    // 如果數據庫加載失敗，使用備用用戶數據
-                    users = [
-                        { id: 'U001', name: '陳小明', group: 'A組' },
-                        { id: 'U002', name: '李美麗', group: 'A組' },
-                        { id: 'U003', name: '王大壯', group: 'B組' },
-                        { id: 'U004', name: '張小麗', group: 'B組' },
-                        { id: 'U005', name: '劉強', group: 'C組' },
-                        { id: 'U006', name: '趙麗麗', group: 'C組' },
-                        { id: 'U007', name: '黃小軍', group: 'A組' },
-                        { id: 'U008', name: '周美華', group: 'B組' }
-                    ];
+                    users = [];
                 } else {
-                    users = data;
+                    users = data || [];
                 }
             } catch (error) {
                 console.error('加載用戶數據時發生錯誤:', error);
-                // 發生錯誤時使用備用用戶數據
-                users = [
-                    { id: 'U001', name: '陳小明', group: 'A組' },
-                    { id: 'U002', name: '李美麗', group: 'A組' },
-                    { id: 'U003', name: '王大壯', group: 'B組' },
-                    { id: 'U004', name: '張小麗', group: 'B組' },
-                    { id: 'U005', name: '劉強', group: 'C組' },
-                    { id: 'U006', name: '趙麗麗', group: 'C組' },
-                    { id: 'U007', name: '黃小軍', group: 'A組' },
-                    { id: 'U008', name: '周美華', group: 'B組' }
-                ];
+                users = [];
             }
         }
         
@@ -450,9 +430,6 @@
             document.getElementById('scanModal').classList.add('hidden');
             
             // 自動登入
-            manualLogin(userId);
-            
-            // 執行登入
             manualLogin(userId);
         }
         
