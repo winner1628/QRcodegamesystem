@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase 連接測試</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
+    <!-- 配置文件 -->
+    <script src="config.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-lg p-8 max-w-2xl w-full">
+        <div class="text-center mb-8">
+            <i class="fa fa-database text-4xl text-primary mb-4"></i>
+            <h1 class="text-2xl font-bold text-gray-800">Supabase 連接測試</h1>
+            <p class="text-gray-600 mt-2">檢查 Supabase 客戶端庫加載和數據庫連接狀態</p>
+        </div>
+        
+        <div class="space-y-6">
+            <!-- Supabase 加載狀態 -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                    <i class="fa fa-check-circle text-green-500 mr-2"></i>Supabase 客戶端庫
+                </h3>
+                <div id="supabase-status" class="text-sm text-gray-600">
+                    <span class="inline-block animate-pulse">正在檢查...</span>
+                </div>
+            </div>
+            
+            <!-- 配置信息 -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                    <i class="fa fa-cog text-blue-500 mr-2"></i>配置信息
+                </h3>
+                <div id="config-info" class="text-sm text-gray-600">
+                    <span class="inline-block animate-pulse">正在加載配置...</span>
+                </div>
+            </div>
+            
+            <!-- 數據庫連接測試 -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                    <i class="fa fa-wifi text-purple-500 mr-2"></i>數據庫連接測試
+                </h3>
+                <div id="connection-status" class="text-sm text-gray-600">
+                    <span class="inline-block animate-pulse">正在測試連接...</span>
+                </div>
+            </div>
+            
+            <!-- 數據查詢測試 -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                    <i class="fa fa-table text-orange-500 mr-2"></i>數據查詢測試
+                </h3>
+                <div id="query-status" class="text-sm text-gray-600">
+                    <span class="inline-block animate-pulse">尚未執行查詢...</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 操作按鈕 -->
+        <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+            <button onclick="testConnection()" class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center">
+                <i class="fa fa-refresh mr-2"></i>重新測試
+            </button>
+            <button onclick="testQuery()" class="px-6 py-3 bg-success text-white rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center">
+                <i class="fa fa-search mr-2"></i>測試查詢
+            </button>
+            <button onclick="window.location.href='admin.html'" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center">
+                <i class="fa fa-arrow-left mr-2"></i>返回管理員登入
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let supabase;
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Supabase 連接測試初始化...');
+            
+            // 檢查 Supabase 客戶端庫
+            checkSupabaseClient();
+            
+            // 檢查配置
+            checkConfig();
+        });
+        
+        // 檢查 Supabase 客戶端庫
+        function checkSupabaseClient() {
+            const statusDiv = document.getElementById('supabase-status');
+            
+            if (typeof createClient !== 'undefined') {
+                statusDiv.innerHTML = `
+                    <div class="flex items-center text-green-600">
+                        <i class="fa fa-check-circle mr-2"></i>
+                        <span>Supabase 客戶端庫加載成功</span>
+                    </div>
+                    <div class="mt-2 text-gray-600">
+                        <small>createClient 函數可用</small>
+                    </div>
+                `;
+                console.log('✅ Supabase 客戶端庫加載成功');
+            } else {
+                statusDiv.innerHTML = `
+                    <div class="flex items-center text-red-600">
+                        <i class="fa fa-times-circle mr-2"></i>
+                        <span>Supabase 客戶端庫加載失敗</span>
+                    </div>
+                    <div class="mt-2 text-gray-600">
+                        <small>createClient 函數不可用，請檢查網絡連接或 CDN 資源</small>
+                    </div>
+                `;
+                console.error('❌ Supabase 客戶端庫加載失敗');
+            }
+        }
+        
+        // 檢查配置
+        function checkConfig() {
+            const configDiv = document.getElementById('config-info');
+            
+            if (window.config) {
+                const supabaseConfig = window.config.supabase || {};
+                const hasUrl = !!supabaseConfig.url;
+                const hasAnonKey = !!supabaseConfig.anonKey;
+                
+                configDiv.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="flex items-center ${hasUrl ? 'text-green-600' : 'text-red-600'}">
+                            <i class="fa ${hasUrl ? 'fa-check-circle' : 'fa-times-circle'} mr-2"></i>
+                            <span>URL: ${hasUrl ? '已配置' : '未配置'}</span>
+                        </div>
+                        <div class="flex items-center ${hasAnonKey ? 'text-green-600' : 'text-red-600'}">
+                            <i class="fa ${hasAnonKey ? 'fa-check-circle' : 'fa-times-circle'} mr-2"></i>
+                            <span>匿名密鑰: ${hasAnonKey ? '已配置' : '未配置'}</span>
+                        </div>
+                        <div class="mt-2 text-gray-600">
+                            <small>配置文件加載: ${hasUrl && hasAnonKey ? '完整' : '不完整'}</small>
+                        </div>
+                    </div>
+                `;
+                
+                if (hasUrl && hasAnonKey) {
+                    console.log('✅ 配置信息完整');
+                } else {
+                    console.error('❌ 配置信息不完整');
+                }
+            } else {
+                configDiv.innerHTML = `
+                    <div class="flex items-center text-red-600">
+                        <i class="fa fa-times-circle mr-2"></i>
+                        <span>配置文件未加載</span>
+                    </div>
+                    <div class="mt-2 text-gray-600">
+                        <small>window.config 為 undefined</small>
+                    </div>
+                `;
+                console.error('❌ 配置文件未加載');
+            }
+        }
+        
+        // 測試連接
+        async function testConnection() {
+            const connectionDiv = document.getElementById('connection-status');
+            
+            try {
+                connectionDiv.innerHTML = `
+                    <div class="flex items-center text-yellow-600">
+                        <i class="fa fa-spinner fa-spin mr-2"></i>
+                        <span>正在建立連接...</span>
+                    </div>
+                `;
+                
+                if (!window.config || !window.config.supabase) {
+                    throw new Error('配置信息不完整');
+                }
+                
+                if (typeof createClient === 'undefined') {
+                    throw new Error('Supabase 客戶端庫未加載');
+                }
+                
+                // 初始化 Supabase
+                supabase = createClient(window.config.supabase.url, window.config.supabase.anonKey);
+                
+                // 測試連接
+                const { data, error } = await supabase.rpc('now');
+                
+                if (error) {
+                    throw error;
+                }
+                
+                connectionDiv.innerHTML = `
+                    <div class="flex items-center text-green-600">
+                        <i class="fa fa-check-circle mr-2"></i>
+                        <span>數據庫連接成功</span>
+                    </div>
+                    <div class="mt-2 text-gray-600">
+                        <small>時間: ${new Date().toLocaleString()}</small>
+                    </div>
+                `;
+                console.log('✅ 數據庫連接成功');
+                
+            } catch (error) {
+                connectionDiv.innerHTML = `
+                    <div class="flex items-center text-red-600">
+                        <i class="fa fa-times-circle mr-2"></i>
+                        <span>數據庫連接失敗</span>
+                    </div>
+                    <div class="mt-2 text-gray-600">
+                        <small>錯誤: ${error.message}</small>
+                    </div>
+                `;
+                console.error('❌ 數據庫連接失敗:', error);
+            }
+        }
+        
+        // 測試查詢
+        async function testQuery() {
+            const queryDiv = document.getElementById('query-status');
+            
+            try {
+                queryDiv.innerHTML = `
+                    <div class="flex items-center text-yellow-600">
+                        <i class="fa fa-spinner fa-spin mr-2"></i>
+                        <span>正在執行查詢...</span>
+                    </div>
+                `;
+                
+                if (!supabase) {
+                    throw new Error('Supabase 未初始化，請先測試連接');
+                }
+                
+                // 查詢 games 表
+                const { data, error } = await supabase.from('games').select('*').limit(5);
+                
+                if (error) {
+                    throw error;
+                }
+                
+                queryDiv.innerHTML = `
+                    <div class="flex items-center text-green-600">
+                        <i class="fa fa-check-circle mr-2"></i>
+                        <span>查詢成功，找到 ${data.length} 條記錄</span>
+                    </div>
+                    <div class="mt-2 text-gray-600">
+                        <small>示例: ${data.length > 0 ? data[0].name : '無數據'}</small>
+                    </div>
+                `;
+                console.log('✅ 查詢成功:', data);
+                
+            } catch (error) {
+                queryDiv.innerHTML = `
+                    <div class="flex items-center text-red-600">
+                        <i class="fa fa-times-circle mr-2"></i>
+                        <span>查詢失敗</span>
+                    </div>
+                    <div class="mt-2 text-gray-600">
+                        <small>錯誤: ${error.message}</small>
+                    </div>
+                `;
+                console.error('❌ 查詢失敗:', error);
+            }
+        }
+        
+        // 頁面加載完成後自動測試
+        window.addEventListener('load', function() {
+            setTimeout(testConnection, 1000);
+        });
+    </script>
+</body>
+</html>

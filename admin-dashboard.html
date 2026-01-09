@@ -14,12 +14,24 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
     <!-- 確保Supabase加載 -->
     <script>
-        if (typeof createClient === 'undefined') {
-            console.error('錯誤：Supabase客戶端庫未加載');
-            document.addEventListener('DOMContentLoaded', function() {
-                alert('錯誤：Supabase客戶端庫未加載，請檢查網絡連接');
-            });
+        // 全局標誌
+        window.supabaseLoaded = false;
+        
+        // 檢查Supabase是否加載
+        function checkSupabaseLoaded() {
+            if (typeof createClient !== 'undefined') {
+                window.supabaseLoaded = true;
+                console.log('✅ Supabase客戶端庫加載成功');
+            } else {
+                console.warn('⚠️ Supabase客戶端庫尚未加載');
+            }
         }
+        
+        // 立即檢查
+        checkSupabaseLoaded();
+        
+        // 延遲再次檢查
+        setTimeout(checkSupabaseLoaded, 1000);
     </script>
     <!-- Tailwind 配置 -->
     <script>
@@ -633,30 +645,46 @@ QR遊戲系統是一個用於管理攤位遊戲的綜合平台，支持用戶通
         // 初始化Supabase
         function initializeSupabase() {
             try {
+                // 檢查配置文件
                 if (!window.config) {
                     throw new Error('配置文件未加載');
                 }
                 
-                if (!config.supabase || !config.supabase.url || !config.supabase.anonKey) {
+                if (!window.config.supabase || !window.config.supabase.url || !window.config.supabase.anonKey) {
                     throw new Error('Supabase配置不完整');
                 }
                 
-                supabase = createClient(config.supabase.url, config.supabase.anonKey);
-                console.log('Supabase初始化成功！');
+                // 檢查Supabase客戶端是否加載
+                if (typeof createClient === 'undefined') {
+                    throw new Error('Supabase客戶端庫未加載，請檢查網絡連接');
+                }
+                
+                // 初始化Supabase
+                supabase = createClient(window.config.supabase.url, window.config.supabase.anonKey);
+                console.log('✅ Supabase初始化成功！');
                 
                 // 測試連接
                 testSupabaseConnection().then(success => {
                     if (success) {
-                        console.log('數據庫連接測試成功');
+                        console.log('✅ 數據庫連接測試成功');
                     } else {
-                        console.warn('數據庫連接測試失敗，但將繼續加載');
+                        console.warn('⚠️ 數據庫連接測試失敗，但將繼續加載');
                     }
                 });
                 
                 return true;
             } catch (error) {
-                console.error('Supabase初始化失敗:', error);
-                alert('無法連接到數據庫: ' + error.message + '\n\n請檢查config.js文件中的連接信息，或使用簡化版登入。');
+                console.error('❌ Supabase初始化失敗:', error);
+                
+                // 顯示友好的錯誤信息
+                const errorMessage = `數據庫連接問題: ${error.message}\n\n` +
+                                    `可能的原因:\n` +
+                                    `1. 網絡連接問題\n` +
+                                    `2. CDN資源加載失敗\n` +
+                                    `3. 配置信息錯誤\n\n` +
+                                    `系統將以離線模式繼續，某些功能可能受限。`;
+                
+                alert(errorMessage);
                 return false;
             }
         }
@@ -774,65 +802,112 @@ QR遊戲系統是一個用於管理攤位遊戲的綜合平台，支持用戶通
         // 加載遊戲數據
         async function loadGames() {
             try {
+                // 檢查supabase是否初始化
+                if (!supabase) {
+                    console.warn('⚠️ Supabase未初始化，使用模擬數據');
+                    games = [];
+                    showOfflineMessage('遊戲數據加載失敗，Supabase未初始化');
+                    renderGamesTable();
+                    return;
+                }
+                
                 const { data, error } = await supabase.from('games').select('*');
                 
                 if (error) {
-                    console.error('加載遊戲數據失敗:', error);
+                    console.error('❌ 加載遊戲數據失敗:', error);
                     games = [];
+                    showOfflineMessage('加載遊戲數據失敗: ' + error.message);
                 } else {
                     games = data || [];
+                    console.log(`✅ 成功加載 ${games.length} 個遊戲`);
                 }
                 
-                const tbody = document.getElementById('gamesTableBody');
-                tbody.innerHTML = '';
-                
-                if (games.length === 0) {
-                    const emptyRow = document.createElement('tr');
-                    emptyRow.innerHTML = `
-                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-                            <i class="fa fa-info-circle mr-2"></i>暫無遊戲數據
+                // 渲染表格
+                renderGamesTable();
+            } catch (error) {
+                console.error('❌ 加載遊戲時發生未預期錯誤:', error);
+                games = [];
+                showOfflineMessage('加載數據時發生錯誤: ' + error.message);
+                renderGamesTable();
+            }
+        }
+        
+        // 渲染遊戲表格
+        function renderGamesTable() {
+            const tbody = document.getElementById('gamesTableBody');
+            tbody.innerHTML = '';
+            
+            if (games.length === 0) {
+                const emptyRow = document.createElement('tr');
+                emptyRow.innerHTML = `
+                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                        <i class="fa fa-info-circle mr-2"></i>暫無遊戲數據
+                    </td>
+                `;
+                tbody.appendChild(emptyRow);
+            } else {
+                games.forEach(game => {
+                    const statusBadge = game.status === 'active' 
+                        ? '<span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">正常</span>'
+                        : '<span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">維護中</span>';
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">${game.name}</div>
+                            <div class="text-xs text-gray-500">${game.description || '無描述'}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${game.booth_number}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${game.plays || 0}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${game.gifts || 0}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            ${statusBadge}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button onclick="showGameModal('${game.id}')" class="text-primary hover:text-blue-800 mr-3">
+                                <i class="fa fa-edit"></i> 編輯
+                            </button>
+                            <button onclick="deleteGame('${game.id}')" class="text-danger hover:text-red-800 mr-3">
+                                <i class="fa fa-trash"></i> 刪除
+                            </button>
+                            <button onclick="showQrCodeModal('${game.id}')" class="text-success hover:text-green-800">
+                                <i class="fa fa-qrcode"></i> 二維碼
+                            </button>
                         </td>
                     `;
-                    tbody.appendChild(emptyRow);
-                } else {
-                    games.forEach(game => {
-                        const statusBadge = game.status === 'active' 
-                            ? '<span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">正常</span>'
-                            : '<span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">維護中</span>';
-                        
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">${game.name}</div>
-                                <div class="text-xs text-gray-500">${game.description || '無描述'}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">${game.booth_number}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">${game.plays || 0}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">${game.gifts || 0}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                ${statusBadge}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <button onclick="showGameModal('${game.id}')" class="text-primary hover:text-blue-800 mr-3">
-                                    <i class="fa fa-edit"></i> 編輯
-                                </button>
-                                <button onclick="deleteGame('${game.id}')" class="text-danger hover:text-red-800 mr-3">
-                                    <i class="fa fa-trash"></i> 刪除
-                                </button>
-                                <button onclick="showQrCodeModal('${game.id}')" class="text-success hover:text-green-800">
-                                    <i class="fa fa-qrcode"></i> 二維碼
-                                </button>
-                            </td>
-                        `;
-                        tbody.appendChild(row);
-                    });
-                }
+                    tbody.appendChild(row);
+                });
+            }
+        }
+        
+        // 顯示離線消息
+        function showOfflineMessage(message) {
+            console.warn('📶 離線模式:', message);
+            // 可以在界面上顯示離線狀態指示器
+            const offlineIndicator = document.getElementById('offlineIndicator');
+            if (!offlineIndicator) {
+                const indicator = document.createElement('div');
+                indicator.id = 'offlineIndicator';
+                indicator.className = 'fixed top-4 right-4 bg-yellow-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center';
+                indicator.innerHTML = `
+                    <i class="fa fa-wifi mr-2"></i>
+                    <span>離線模式: ${message}</span>
+                `;
+                document.body.appendChild(indicator);
+                
+                // 3秒後自動隱藏
+                setTimeout(() => {
+                    if (indicator.parentNode) {
+                        indicator.remove();
+                    }
+                }, 3000);
+            }
             } catch (error) {
                 console.error('加載遊戲數據時發生錯誤:', error);
                 const tbody = document.getElementById('gamesTableBody');
@@ -910,6 +985,90 @@ QR遊戲系統是一個用於管理攤位遊戲的綜合平台，支持用戶通
                     });
                 }
             } catch (error) {
+                console.error('❌ 加載遊戲時發生未預期錯誤:', error);
+                games = [];
+                showOfflineMessage('加載數據時發生錯誤: ' + error.message);
+                renderGamesTable();
+            }
+        }
+        
+        // 渲染遊戲表格
+        function renderGamesTable() {
+            const tbody = document.getElementById('gamesTableBody');
+            tbody.innerHTML = '';
+            
+            if (games.length === 0) {
+                const emptyRow = document.createElement('tr');
+                emptyRow.innerHTML = `
+                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                        <i class="fa fa-info-circle mr-2"></i>暫無遊戲數據
+                    </td>
+                `;
+                tbody.appendChild(emptyRow);
+            } else {
+                games.forEach(game => {
+                    const statusBadge = game.status === 'active' 
+                        ? '<span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">正常</span>'
+                        : '<span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">維護中</span>';
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">${game.name}</div>
+                            <div class="text-xs text-gray-500">${game.description || '無描述'}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${game.booth_number}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${game.plays || 0}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${game.gifts || 0}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            ${statusBadge}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button onclick="showGameModal('${game.id}')" class="text-primary hover:text-blue-800 mr-3">
+                                <i class="fa fa-edit"></i> 編輯
+                            </button>
+                            <button onclick="deleteGame('${game.id}')" class="text-danger hover:text-red-800 mr-3">
+                                <i class="fa fa-trash"></i> 刪除
+                            </button>
+                            <button onclick="showQrCodeModal('${game.id}')" class="text-success hover:text-green-800">
+                                <i class="fa fa-qrcode"></i> 二維碼
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        }
+        
+        // 顯示離線消息
+        function showOfflineMessage(message) {
+            console.warn('📶 離線模式:', message);
+            // 可以在界面上顯示離線狀態指示器
+            const offlineIndicator = document.getElementById('offlineIndicator');
+            if (!offlineIndicator) {
+                const indicator = document.createElement('div');
+                indicator.id = 'offlineIndicator';
+                indicator.className = 'fixed top-4 right-4 bg-yellow-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center';
+                indicator.innerHTML = `
+                    <i class="fa fa-wifi mr-2"></i>
+                    <span>離線模式: ${message}</span>
+                `;
+                document.body.appendChild(indicator);
+                
+                // 3秒後自動隱藏
+                setTimeout(() => {
+                    if (indicator.parentNode) {
+                        indicator.remove();
+                    }
+                }, 3000);
+            }
+            } catch (error) {
                 console.error('加載用戶數據時發生錯誤:', error);
                 const tbody = document.getElementById('usersTableBody');
                 tbody.innerHTML = `
@@ -983,6 +1142,90 @@ QR遊戲系統是一個用於管理攤位遊戲的綜合平台，支持用戶通
                         tbody.appendChild(row);
                     });
                 }
+            } catch (error) {
+                console.error('❌ 加載遊戲時發生未預期錯誤:', error);
+                games = [];
+                showOfflineMessage('加載數據時發生錯誤: ' + error.message);
+                renderGamesTable();
+            }
+        }
+        
+        // 渲染遊戲表格
+        function renderGamesTable() {
+            const tbody = document.getElementById('gamesTableBody');
+            tbody.innerHTML = '';
+            
+            if (games.length === 0) {
+                const emptyRow = document.createElement('tr');
+                emptyRow.innerHTML = `
+                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                        <i class="fa fa-info-circle mr-2"></i>暫無遊戲數據
+                    </td>
+                `;
+                tbody.appendChild(emptyRow);
+            } else {
+                games.forEach(game => {
+                    const statusBadge = game.status === 'active' 
+                        ? '<span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">正常</span>'
+                        : '<span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">維護中</span>';
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">${game.name}</div>
+                            <div class="text-xs text-gray-500">${game.description || '無描述'}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${game.booth_number}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${game.plays || 0}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${game.gifts || 0}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            ${statusBadge}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button onclick="showGameModal('${game.id}')" class="text-primary hover:text-blue-800 mr-3">
+                                <i class="fa fa-edit"></i> 編輯
+                            </button>
+                            <button onclick="deleteGame('${game.id}')" class="text-danger hover:text-red-800 mr-3">
+                                <i class="fa fa-trash"></i> 刪除
+                            </button>
+                            <button onclick="showQrCodeModal('${game.id}')" class="text-success hover:text-green-800">
+                                <i class="fa fa-qrcode"></i> 二維碼
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        }
+        
+        // 顯示離線消息
+        function showOfflineMessage(message) {
+            console.warn('📶 離線模式:', message);
+            // 可以在界面上顯示離線狀態指示器
+            const offlineIndicator = document.getElementById('offlineIndicator');
+            if (!offlineIndicator) {
+                const indicator = document.createElement('div');
+                indicator.id = 'offlineIndicator';
+                indicator.className = 'fixed top-4 right-4 bg-yellow-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center';
+                indicator.innerHTML = `
+                    <i class="fa fa-wifi mr-2"></i>
+                    <span>離線模式: ${message}</span>
+                `;
+                document.body.appendChild(indicator);
+                
+                // 3秒後自動隱藏
+                setTimeout(() => {
+                    if (indicator.parentNode) {
+                        indicator.remove();
+                    }
+                }, 3000);
+            }
             } catch (error) {
                 console.error('加載記錄數據時發生錯誤:', error);
                 const tbody = document.getElementById('recordsTableBody');
@@ -1175,6 +1418,11 @@ QR遊戲系統是一個用於管理攤位遊戲的綜合平台，支持用戶通
             }
             
             try {
+                // 檢查supabase是否初始化
+                if (!supabase) {
+                    throw new Error('Supabase未初始化，無法保存數據');
+                }
+                
                 if (gameId) {
                     // 更新遊戲
                     const { error } = await supabase
@@ -1186,7 +1434,7 @@ QR遊戲系統是一個用於管理攤位遊戲的綜合平台，支持用戶通
                         throw error;
                     }
                     
-                    alert('遊戲信息已更新！');
+                    alert('✅ 遊戲信息已更新！');
                 } else {
                     // 添加新遊戲
                     const newGame = {
@@ -1208,7 +1456,7 @@ QR遊戲系統是一個用於管理攤位遊戲的綜合平台，支持用戶通
                         throw error;
                     }
                     
-                    alert('新遊戲已添加！');
+                    alert('✅ 新遊戲已添加！');
                 }
                 
                 closeGameModal();
