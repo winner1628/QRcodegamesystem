@@ -150,20 +150,20 @@
             addLog('开始创建数据库表结构...', 'info');
             
             try {
-                // 步骤1：创建管理员表
-                await createAdminsTable();
+                // 步骤1：清理现有数据
+                await cleanupExistingData();
                 
-                // 步骤2：创建游戏表
-                await createGamesTable();
+                // 步骤2：添加管理员数据
+                await addAdminData();
                 
-                // 步骤3：创建用户表
-                await createUsersTable();
+                // 步骤3：添加游戏数据
+                await addGameData();
                 
-                // 步骤4：创建游戏记录表
-                await createGameRecordsTable();
+                // 步骤4：添加用户数据
+                await addUserData();
                 
-                // 步骤5：添加初始数据
-                await addInitialData();
+                // 步骤5：添加游戏记录数据
+                await addGameRecordData();
                 
                 addLog('数据库设置完成！', 'success');
                 addLog('系统已准备就绪，可以开始使用', 'success');
@@ -181,14 +181,39 @@
             }
         }
 
-        // 创建管理员表
-        async function createAdminsTable() {
-            addLog('正在创建管理员表...', 'info');
+        // 清理现有数据
+        async function cleanupExistingData() {
+            addLog('正在清理现有数据...', 'info');
             
             try {
-                // 先尝试清空现有数据
-                await supabase.from('admins').delete().neq('id', 'x');
+                // 尝试清理各个表的数据
+                const tables = ['game_records', 'users', 'games', 'admins'];
                 
+                for (const table of tables) {
+                    try {
+                        const { error } = await supabase.from(table).delete().neq('id', 'x');
+                        if (error) {
+                            addLog(`清理表 ${table} 时出错: ${error.message}`, 'warning');
+                        } else {
+                            addLog(`表 ${table} 数据清理成功`, 'success');
+                        }
+                    } catch (error) {
+                        addLog(`清理表 ${table} 失败，但继续执行: ${error.message}`, 'warning');
+                    }
+                }
+                
+                return true;
+            } catch (error) {
+                addLog('清理现有数据失败: ' + error.message, 'error');
+                throw error;
+            }
+        }
+
+        // 添加管理员数据
+        async function addAdminData() {
+            addLog('正在添加管理员数据...', 'info');
+            
+            try {
                 const adminData = {
                     id: 'admin1',
                     username: 'admin',
@@ -199,115 +224,30 @@
                 const { error } = await supabase.from('admins').insert(adminData);
                 
                 if (error) {
-                    throw new Error('创建管理员表失败: ' + error.message);
+                    throw new Error('添加管理员数据失败: ' + error.message);
                 }
                 
-                addLog('管理员表创建成功，默认管理员已添加', 'success');
+                addLog('管理员数据添加成功', 'success');
                 return true;
             } catch (error) {
-                addLog('创建管理员表失败: ' + error.message, 'error');
+                addLog('添加管理员数据失败: ' + error.message, 'error');
                 throw error;
             }
         }
 
-        // 创建游戏表
-        async function createGamesTable() {
-            addLog('正在创建游戏表...', 'info');
+        // 添加游戏数据
+        async function addGameData() {
+            addLog('正在添加游戏数据...', 'info');
             
             try {
-                // 先尝试清空现有数据
-                await supabase.from('games').delete().neq('id', 'x');
-                
-                const gameData = {
-                    id: 'G001',
-                    name: '示例游戏1',
-                    description: '这是一个示例游戏',
-                    max_score: 100,
-                    created_at: new Date().toISOString()
-                };
-                
-                const { error } = await supabase.from('games').insert(gameData);
-                
-                if (error) {
-                    throw new Error('创建游戏表失败: ' + error.message);
-                }
-                
-                addLog('游戏表创建成功，包含max_score字段', 'success');
-                return true;
-            } catch (error) {
-                addLog('创建游戏表失败: ' + error.message, 'error');
-                throw error;
-            }
-        }
-
-        // 创建用户表
-        async function createUsersTable() {
-            addLog('正在创建用户表...', 'info');
-            
-            try {
-                // 先尝试清空现有数据
-                await supabase.from('users').delete().neq('id', 'x');
-                
-                const userData = {
-                    id: 'U001',
-                    name: '测试用户',
-                    student_id: 'S001',
-                    total_score: 0,
-                    created_at: new Date().toISOString()
-                };
-                
-                const { error } = await supabase.from('users').insert(userData);
-                
-                if (error) {
-                    throw new Error('创建用户表失败: ' + error.message);
-                }
-                
-                addLog('用户表创建成功，包含student_id字段', 'success');
-                return true;
-            } catch (error) {
-                addLog('创建用户表失败: ' + error.message, 'error');
-                throw error;
-            }
-        }
-
-        // 创建游戏记录表
-        async function createGameRecordsTable() {
-            addLog('正在创建游戏记录表...', 'info');
-            
-            try {
-                // 先尝试清空现有数据
-                await supabase.from('game_records').delete().neq('id', 'x');
-                
-                const recordData = {
-                    id: 'R001',
-                    user_id: 'U001',
-                    game_id: 'G001',
-                    score: 50,
-                    recorded_at: new Date().toISOString()
-                };
-                
-                const { error } = await supabase.from('game_records').insert(recordData);
-                
-                if (error) {
-                    addLog('创建游戏记录表失败，但继续执行: ' + error.message, 'warning');
-                } else {
-                    addLog('游戏记录表创建成功', 'success');
-                }
-                
-                return true;
-            } catch (error) {
-                addLog('创建游戏记录表失败: ' + error.message, 'error');
-                throw error;
-            }
-        }
-
-        // 添加初始数据
-        async function addInitialData() {
-            addLog('正在添加初始数据...', 'info');
-            
-            try {
-                // 添加更多游戏
                 const games = [
+                    {
+                        id: 'G001',
+                        name: '示例游戏1',
+                        description: '这是一个示例游戏',
+                        max_score: 100,
+                        created_at: new Date().toISOString()
+                    },
                     {
                         id: 'G002',
                         name: '投篮游戏',
@@ -328,17 +268,35 @@
                     try {
                         const { error } = await supabase.from('games').insert(game);
                         if (error) {
-                            addLog('添加游戏失败: ' + error.message, 'warning');
+                            addLog(`添加游戏 "${game.name}" 失败: ${error.message}`, 'warning');
                         } else {
                             addLog(`游戏 "${game.name}" 添加成功`, 'success');
                         }
                     } catch (error) {
-                        addLog(`添加游戏时出错: ${error.message}`, 'warning');
+                        addLog(`添加游戏 "${game.name}" 时出错: ${error.message}`, 'warning');
                     }
                 }
                 
-                // 添加更多用户
+                return true;
+            } catch (error) {
+                addLog('添加游戏数据失败: ' + error.message, 'error');
+                throw error;
+            }
+        }
+
+        // 添加用户数据
+        async function addUserData() {
+            addLog('正在添加用户数据...', 'info');
+            
+            try {
                 const users = [
+                    {
+                        id: 'U001',
+                        name: '测试用户',
+                        student_id: 'S001',
+                        total_score: 0,
+                        created_at: new Date().toISOString()
+                    },
                     {
                         id: 'U002',
                         name: '张三',
@@ -359,19 +317,60 @@
                     try {
                         const { error } = await supabase.from('users').insert(user);
                         if (error) {
-                            addLog('添加用户失败: ' + error.message, 'warning');
+                            addLog(`添加用户 "${user.name}" 失败: ${error.message}`, 'warning');
                         } else {
                             addLog(`用户 "${user.name}" 添加成功`, 'success');
                         }
                     } catch (error) {
-                        addLog(`添加用户时出错: ${error.message}`, 'warning');
+                        addLog(`添加用户 "${user.name}" 时出错: ${error.message}`, 'warning');
                     }
                 }
                 
-                addLog('初始数据添加完成', 'success');
                 return true;
             } catch (error) {
-                addLog('添加初始数据失败: ' + error.message, 'error');
+                addLog('添加用户数据失败: ' + error.message, 'error');
+                throw error;
+            }
+        }
+
+        // 添加游戏记录数据
+        async function addGameRecordData() {
+            addLog('正在添加游戏记录数据...', 'info');
+            
+            try {
+                const records = [
+                    {
+                        id: 'R001',
+                        user_id: 'U001',
+                        game_id: 'G001',
+                        score: 50,
+                        recorded_at: new Date().toISOString()
+                    },
+                    {
+                        id: 'R002',
+                        user_id: 'U002',
+                        game_id: 'G002',
+                        score: 80,
+                        recorded_at: new Date().toISOString()
+                    }
+                ];
+                
+                for (const record of records) {
+                    try {
+                        const { error } = await supabase.from('game_records').insert(record);
+                        if (error) {
+                            addLog(`添加游戏记录失败: ${error.message}`, 'warning');
+                        } else {
+                            addLog(`游戏记录添加成功`, 'success');
+                        }
+                    } catch (error) {
+                        addLog(`添加游戏记录时出错: ${error.message}`, 'warning');
+                    }
+                }
+                
+                return true;
+            } catch (error) {
+                addLog('添加游戏记录数据失败: ' + error.message, 'error');
                 throw error;
             }
         }
