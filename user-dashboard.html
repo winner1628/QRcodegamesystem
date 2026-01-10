@@ -253,7 +253,10 @@
         <!-- 标签页 -->
         <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg shadow-lg mb-6">
             <div class="flex border-b border-white border-opacity-10">
-                <div class="tab active" data-tab="scan">
+                <div class="tab active" data-tab="manual-input">
+                    <i class="fa fa-keyboard-o mr-2"></i>手動輸入
+                </div>
+                <div class="tab" data-tab="scan">
                     <i class="fa fa-qrcode mr-2"></i>掃描遊戲
                 </div>
                 <div class="tab" data-tab="records">
@@ -262,7 +265,7 @@
             </div>
             <div class="p-6">
                 <!-- 扫描游戏 -->
-                <div id="scan-content" class="tab-content active">
+                <div id="scan-content" class="tab-content">
                     <div class="text-center mb-6">
                         <h3 class="text-lg font-bold text-white mb-2">掃描遊戲QR碼</h3>
                         <p class="text-gray-300">請掃描遊戲攤位的QR碼來記錄成績</p>
@@ -283,8 +286,35 @@
                     </div>
                 </div>
 
+                <!-- 手动输入 -->
+                <div id="manual-input-content" class="tab-content active">
+                    <div class="text-center mb-6">
+                        <h3 class="text-lg font-bold text-white mb-2">手動輸入成績</h3>
+                        <p class="text-gray-300">請選擇遊戲並輸入分數</p>
+                    </div>
+                    <div class="max-w-md mx-auto">
+                        <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6">
+                            <form id="manualScoreForm" class="space-y-4">
+                                <div>
+                                    <label for="manualGameSelect" class="block text-white mb-2">遊戲名稱</label>
+                                    <select id="manualGameSelect" class="form-input" required>
+                                        <option value="">請選擇遊戲</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="manualScore" class="block text-white mb-2">得分</label>
+                                    <input type="number" id="manualScore" class="form-input" placeholder="請輸入得分" required>
+                                </div>
+                                <button type="submit" class="btn-primary w-full">
+                                    <i class="fa fa-save mr-2"></i>保存成績
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 游戏记录 -->
-                <div id="records-content" class="tab-content active">
+                <div id="records-content" class="tab-content">
                     <div class="mb-4">
                         <h3 class="text-lg font-bold text-white mb-2">遊戲記錄</h3>
                         <p class="text-gray-300">查看您的遊戲歷史記錄</p>
@@ -371,6 +401,7 @@
                 // 初始化数据
                 await loadUserStatistics();
                 await loadGameRecords();
+                await loadGamesForManualInput();
                 
                 // 绑定事件
                 bindEvents();
@@ -414,6 +445,12 @@
             document.getElementById('scoreForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 await submitScore();
+            });
+
+            // 手动成绩表单提交
+            document.getElementById('manualScoreForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await submitManualScore();
             });
 
             // 点击模态框外部关闭
@@ -610,6 +647,61 @@
             }
         }
 
+        // 手动提交成绩
+        async function submitManualScore() {
+            try {
+                const gameId = document.getElementById('manualGameSelect').value;
+                const score = parseInt(document.getElementById('manualScore').value);
+                
+                if (!gameId) {
+                    showToast('請選擇遊戲', 'error');
+                    return;
+                }
+                
+                if (isNaN(score) || score < 0) {
+                    showToast('請輸入有效的分數', 'error');
+                    return;
+                }
+                
+                // 获取游戏信息
+                const games = await dbManager.getAllGames();
+                const game = games.find(g => g.id === gameId);
+                
+                if (game && score > game.max_score) {
+                    showToast(`分數不能超過${game.max_score}`, 'error');
+                    return;
+                }
+                
+                const recordData = {
+                    id: 'R' + Date.now(),
+                    user_id: currentUser.id,
+                    game_id: gameId,
+                    score: score,
+                    recorded_at: new Date().toISOString()
+                };
+                
+                await dbManager.addGameRecord(recordData);
+                
+                // 更新用户总分
+                const records = await dbManager.getUserGameRecords(currentUser.id);
+                const totalScore = records.reduce((sum, record) => sum + record.score, 0);
+                await dbManager.updateUserTotalScore(currentUser.id, totalScore);
+                
+                // 清空表单
+                document.getElementById('manualScoreForm').reset();
+                
+                // 重新加载数据
+                await loadUserStatistics();
+                await loadGameRecords();
+                
+                showToast('成績記錄成功', 'success');
+                
+            } catch (error) {
+                console.error('手動提交成績失敗:', error);
+                showToast('成績記錄失敗', 'error');
+            }
+        }
+
         // 加载用户统计数据
         async function loadUserStatistics() {
             try {
@@ -674,6 +766,28 @@
             } catch (error) {
                 console.error('加载游戏记录失败:', error);
                 showToast('加載記錄失敗', 'error');
+            }
+        }
+
+        // 加载游戏列表到手动输入表单
+        async function loadGamesForManualInput() {
+            try {
+                const games = await dbManager.getAllGames();
+                const select = document.getElementById('manualGameSelect');
+                
+                // 清空现有选项
+                select.innerHTML = '<option value="">請選擇遊戲</option>';
+                
+                // 添加游戏选项
+                games.forEach(game => {
+                    const option = document.createElement('option');
+                    option.value = game.id;
+                    option.textContent = `${game.name} (最高分: ${game.max_score})`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('加载游戏列表失败:', error);
+                showToast('加載遊戲列表失敗', 'error');
             }
         }
 
