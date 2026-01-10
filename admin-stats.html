@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>数据统计 - QR码游戏系统</title>
+    <title>數據統計 - QR碼遊戲系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
@@ -103,19 +103,19 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div class="stat-card text-center">
                 <div class="stat-number" id="totalGames">0</div>
-                <div class="stat-label">游戏总数</div>
+                <div class="stat-label">遊戲總數</div>
             </div>
             <div class="stat-card text-center">
                 <div class="stat-number" id="totalUsers">0</div>
-                <div class="stat-label">用户总数</div>
+                <div class="stat-label">使用者總數</div>
             </div>
             <div class="stat-card text-center">
                 <div class="stat-number" id="totalRecords">0</div>
-                <div class="stat-label">记录总数</div>
+                <div class="stat-label">記錄總數</div>
             </div>
             <div class="stat-card text-center">
                 <div class="stat-number" id="avgScore">0</div>
-                <div class="stat-label">平均分数</div>
+                <div class="stat-label">平均分數</div>
             </div>
         </div>
 
@@ -123,7 +123,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <!-- 游戏参与度图表 -->
             <div class="glass-card p-6">
-                <h3 class="text-xl font-bold text-white mb-4">游戏参与度</h3>
+                <h3 class="text-xl font-bold text-white mb-4">遊戲參與度</h3>
                 <div class="chart-container">
                     <canvas id="gameParticipationChart"></canvas>
                 </div>
@@ -131,7 +131,7 @@
             
             <!-- 用户分数分布图表 -->
             <div class="glass-card p-6">
-                <h3 class="text-xl font-bold text-white mb-4">用户分数分布</h3>
+                <h3 class="text-xl font-bold text-white mb-4">使用者分數分佈</h3>
                 <div class="chart-container">
                     <canvas id="userScoreChart"></canvas>
                 </div>
@@ -140,20 +140,20 @@
 
         <!-- 最近活动 -->
         <div class="glass-card p-6 mb-8">
-            <h3 class="text-xl font-bold text-white mb-4">最近活动</h3>
+            <h3 class="text-xl font-bold text-white mb-4">最近活動</h3>
             <div class="overflow-x-auto">
                 <table class="min-w-full bg-transparent">
                     <thead>
                         <tr class="border-b border-gray-300">
-                            <th class="py-3 px-4 text-left text-white">时间</th>
-                            <th class="py-3 px-4 text-left text-white">用户</th>
-                            <th class="py-3 px-4 text-left text-white">游戏</th>
-                            <th class="py-3 px-4 text-left text-white">分数</th>
+                            <th class="py-3 px-4 text-left text-white">時間</th>
+                            <th class="py-3 px-4 text-left text-white">使用者</th>
+                            <th class="py-3 px-4 text-left text-white">遊戲</th>
+                            <th class="py-3 px-4 text-left text-white">分數</th>
                         </tr>
                     </thead>
                     <tbody id="recentActivities">
                         <tr>
-                            <td colspan="4" class="py-4 text-center text-white">暂无数据</td>
+                            <td colspan="4" class="py-4 text-center text-white">暫無數據</td>
                         </tr>
                     </tbody>
                 </table>
@@ -192,7 +192,7 @@
                 await loadRecentActivities();
             } catch (error) {
                 console.error('加载数据失败:', error);
-                alert('加载数据失败，请稍后重试');
+                alert('加載數據失敗，請稍後重試');
             }
         });
 
@@ -261,7 +261,7 @@
                     data: {
                         labels: Object.keys(gameParticipation),
                         datasets: [{
-                            label: '参与次数',
+                            label: '參與次數',
                             data: Object.values(gameParticipation),
                             backgroundColor: [
                                 'rgba(255, 99, 132, 0.8)',
@@ -323,7 +323,7 @@
                     data: {
                         labels: topUsers.map(user => user.name),
                         datasets: [{
-                            label: '总分数',
+                            label: '總分數',
                             data: topUsers.map(user => user.total_score),
                             backgroundColor: 'rgba(75, 192, 192, 0.2)',
                             borderColor: 'rgba(75, 192, 192, 1)',

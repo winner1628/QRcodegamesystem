@@ -448,7 +448,7 @@
                     showMessage('使用者更新成功', 'success');
                 } else {
                     // 新增用户
-                    const userId = generateUserId();
+                    const userId = await generateUserId();
                     userData.id = userId;
                     
                     const { error } = await db.supabase.from('users').insert(userData);
@@ -510,9 +510,30 @@
         }
 
         // 生成用户ID
-        function generateUserId() {
-            const timestamp = Date.now().toString().slice(-6);
-            return 'U' + timestamp;
+        async function generateUserId() {
+            try {
+                // 获取现有用户的最大ID
+                const { data, error } = await db.supabase.from('users').select('id').order('id', { ascending: false }).limit(1);
+                
+                if (error) {
+                    console.error('获取用户ID失败:', error);
+                    // 如果出错，使用时间戳作为备用
+                    return 'U' + Date.now().toString().slice(-6);
+                }
+                
+                if (data && data.length > 0) {
+                    const lastId = data[0].id;
+                    const lastNumber = parseInt(lastId.substring(1));
+                    const nextNumber = lastNumber + 1;
+                    return 'U' + nextNumber.toString().padStart(6, '0');
+                } else {
+                    // 如果没有现有用户，从U000001开始
+                    return 'U000001';
+                }
+            } catch (error) {
+                console.error('生成用户ID失败:', error);
+                return 'U' + Date.now().toString().slice(-6);
+            }
         }
 
         // 显示消息
