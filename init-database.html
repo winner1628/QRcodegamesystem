@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>初始化数据库 - QR码游戏系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            min-height: 100vh;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 15px 0 rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px 0 rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .log-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            height: 300px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .log-success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            color: #c8e6c9;
+        }
+
+        .log-error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            color: #ffcdd2;
+        }
+
+        .log-info {
+            background: rgba(33, 150, 243, 0.2);
+            border: 1px solid rgba(33, 150, 243, 0.3);
+            color: #bbdefb;
+        }
+
+        .step-item {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .step-item.active {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: rgba(102, 126, 234, 0.4);
+            transform: translateX(10px);
+        }
+
+        .step-item.completed {
+            background: rgba(76, 175, 80, 0.2);
+            border-color: rgba(76, 175, 80, 0.4);
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            margin-right: 15px;
+        }
+
+        .step-item.completed .step-number {
+            background: #4caf50;
+            color: white;
+        }
+
+        .step-item.active .step-number {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+            <!-- 标题卡片 -->
+            <div class="glass-card p-8 mb-8 text-center">
+                <h1 class="text-3xl font-bold text-white mb-4">数据库初始化工具</h1>
+                <p class="text-white text-opacity-80 mb-6">自动创建和初始化系统所需的数据库表结构</p>
+                <div class="flex justify-center space-x-4">
+                    <button id="startInitBtn" class="btn-primary">
+                        <i class="fa fa-database mr-2"></i>开始初始化
+                    </button>
+                    <button id="testConnectionBtn" class="btn-secondary">
+                        <i class="fa fa-check-circle mr-2"></i>测试连接
+                    </button>
+                </div>
+            </div>
+
+            <!-- 进度和日志卡片 -->
+            <div class="glass-card p-8">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- 左侧：初始化步骤 -->
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-4">初始化步骤</h3>
+                        <div class="space-y-3">
+                            <div class="step-item" id="step-1">
+                                <div class="flex items-center">
+                                    <div class="step-number">1</div>
+                                    <div>
+                                        <h4 class="font-bold text-white">连接数据库</h4>
+                                        <p class="text-white text-opacity-70 text-sm">测试与Supabase的连接</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="step-item" id="step-2">
+                                <div class="flex items-center">
+                                    <div class="step-number">2</div>
+                                    <div>
+                                        <h4 class="font-bold text-white">创建管理员表</h4>
+                                        <p class="text-white text-opacity-70 text-sm">创建admins表并添加默认管理员</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="step-item" id="step-3">
+                                <div class="flex items-center">
+                                    <div class="step-number">3</div>
+                                    <div>
+                                        <h4 class="font-bold text-white">创建游戏表</h4>
+                                        <p class="text-white text-opacity-70 text-sm">创建games表</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="step-item" id="step-4">
+                                <div class="flex items-center">
+                                    <div class="step-number">4</div>
+                                    <div>
+                                        <h4 class="font-bold text-white">创建用户表</h4>
+                                        <p class="text-white text-opacity-70 text-sm">创建users表</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="step-item" id="step-5">
+                                <div class="flex items-center">
+                                    <div class="step-number">5</div>
+                                    <div>
+                                        <h4 class="font-bold text-white">创建记录表</h4>
+                                        <p class="text-white text-opacity-70 text-sm">创建game_records表</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="step-item" id="step-6">
+                                <div class="flex items-center">
+                                    <div class="step-number">6</div>
+                                    <div>
+                                        <h4 class="font-bold text-white">添加示例数据</h4>
+                                        <p class="text-white text-opacity-70 text-sm">添加测试游戏和用户数据</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 右侧：日志输出 -->
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-4">执行日志</h3>
+                        <div class="log-container" id="logContainer">
+                            <div class="log-entry log-info">
+                                <i class="fa fa-info-circle mr-2"></i>
+                                系统就绪，请点击"开始初始化"按钮
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 底部：结果和操作按钮 -->
+                <div class="mt-8 text-center">
+                    <div id="resultMessage" class="hidden mb-4 p-4 rounded-lg"></div>
+                    <div class="flex justify-center space-x-4">
+                        <button id="resetBtn" class="btn-secondary" disabled>
+                            <i class="fa fa-refresh mr-2"></i>重新开始
+                        </button>
+                        <button id="gotoLoginBtn" class="btn-primary hidden">
+                            <i class="fa fa-sign-in mr-2"></i>前往登录
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // 导入模块
+        import './js/config.js';
+        import './js/database.js';
+
+        // 全局变量
+        let db = null;
+        let isInitialized = false;
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('数据库初始化工具加载完成');
+            
+            // 绑定事件
+            bindEvents();
+            
+            // 尝试初始化数据库管理器
+            try {
+                db = new DatabaseManager();
+                addLog('数据库管理器初始化成功', 'info');
+            } catch (error) {
+                addLog('数据库管理器初始化失败: ' + error.message, 'error');
+            }
+        });
+
+        // 绑定事件
+        function bindEvents() {
+            document.getElementById('startInitBtn').addEventListener('click', startInitialization);
+            document.getElementById('testConnectionBtn').addEventListener('click', testConnection);
+            document.getElementById('resetBtn').addEventListener('click', resetInitialization);
+            document.getElementById('gotoLoginBtn').addEventListener('click', () => {
+                window.location.href = 'admin-login.html';
+            });
+        }
+
+        // 开始初始化
+        async function startInitialization() {
+            if (isInitialized) return;
+            
+            isInitialized = true;
+            resetUI();
+            addLog('开始数据库初始化...', 'info');
+            
+            try {
+                // 步骤1：连接数据库
+                await executeStep(1, testConnection);
+                
+                // 步骤2：创建管理员表
+                await executeStep(2, createAdminsTable);
+                
+                // 步骤3：创建游戏表
+                await executeStep(3, createGamesTable);
+                
+                // 步骤4：创建用户表
+                await executeStep(4, createUsersTable);
+                
+                // 步骤5：创建记录表
+                await executeStep(5, createGameRecordsTable);
+                
+                // 步骤6：添加示例数据
+                await executeStep(6, addSampleData);
+                
+                // 初始化完成
+                showResult('数据库初始化成功！系统已准备就绪。', 'success');
+                document.getElementById('gotoLoginBtn').classList.remove('hidden');
+                document.getElementById('resetBtn').disabled = false;
+                
+            } catch (error) {
+                addLog('初始化失败: ' + error.message, 'error');
+                showResult('初始化过程中发生错误，请查看日志获取详细信息。', 'error');
+                document.getElementById('resetBtn').disabled = false;
+            }
+        }
+
+        // 执行单个步骤
+        async function executeStep(stepNumber, stepFunction) {
+            const stepElement = document.getElementById(`step-${stepNumber}`);
+            stepElement.classList.add('active');
+            
+            try {
+                await stepFunction();
+                stepElement.classList.remove('active');
+                stepElement.classList.add('completed');
+            } catch (error) {
+                stepElement.classList.remove('active');
+                throw error;
+            }
+        }
+
+        // 测试连接
+        async function testConnection() {
+            addLog('正在测试数据库连接...', 'info');
+            
+            try {
+                const result = await db.supabase.from('information_schema.tables')
+                    .select('table_name')
+                    .limit(1);
+                
+                if (result.error) {
+                    throw new Error('连接失败: ' + result.error.message);
+                }
+                
+                addLog('数据库连接成功！', 'success');
+                return true;
+            } catch (error) {
+                addLog('数据库连接失败: ' + error.message, 'error');
+                throw error;
+            }
+        }
+
+        // 创建管理员表
+        async function createAdminsTable() {
+            addLog('正在创建管理员表...', 'info');
+            
+            try {
+                // 尝试查询管理员表
+                const { error: selectError } = await db.supabase.from('admins').select('id').limit(1);
+                
+                if (selectError) {
+                    // 表不存在，尝试创建
+                    addLog('管理员表不存在，尝试创建...', 'info');
+                    
+                    // 在Supabase中，我们直接插入数据，如果表不存在会自动创建
+                    const hashedPassword = btoa('admin123');
+                    const { error: insertError } = await db.supabase.from('admins').insert({
+                        username: 'admin',
+                        password: hashedPassword,
+                        created_at: new Date().toISOString()
+                    });
+                    
+                    if (insertError) {
+                        throw new Error('创建管理员表失败: ' + insertError.message);
+                    }
+                    
+                    addLog('管理员表创建成功，默认管理员已添加', 'success');
+                } else {
+                    addLog('管理员表已存在', 'info');
+                }
+                
+                return true;
+            } catch (error) {
+                addLog('创建管理员表失败: ' + error.message, 'error');
+                throw error;
+            }
+        }
+
+        // 创建游戏表
+        async function createGamesTable() {
+            addLog('正在创建游戏表...', 'info');
+            
+            try {
+                // 尝试查询游戏表
+                const { error: selectError } = await db.supabase.from('games').select('id').limit(1);
+                
+                if (selectError) {
+                    // 表不存在，尝试创建
+                    addLog('游戏表不存在，尝试创建...', 'info');
+                    
+                    // 在Supabase中，我们直接插入数据，如果表不存在会自动创建
+                    const { error: insertError } = await db.supabase.from('games').insert({
+                        id: 'G001',
+                        name: '示例游戏1',
+                        description: '这是一个示例游戏',
+                        max_score: 100,
+                        created_at: new Date().toISOString()
+                    });
+                    
+                    if (insertError) {
+                        throw new Error('创建游戏表失败: ' + insertError.message);
+                    }
+                    
+                    addLog('游戏表创建成功，示例游戏已添加', 'success');
+                } else {
+                    addLog('游戏表已存在', 'info');
+                }
+                
+                return true;
+            } catch (error) {
+                addLog('创建游戏表失败: ' + error.message, 'error');
+                throw error;
+            }
+        }
+
+        // 创建用户表
+        async function createUsersTable() {
+            addLog('正在创建用户表...', 'info');
+            
+            try {
+                // 尝试查询用户表
+                const { error: selectError } = await db.supabase.from('users').select('id').limit(1);
+                
+                if (selectError) {
+                    // 表不存在，尝试创建
+                    addLog('用户表不存在，尝试创建...', 'info');
+                    
+                    // 在Supabase中，我们直接插入数据，如果表不存在会自动创建
+                    const { error: insertError } = await db.supabase.from('users').insert({
+                        id: 'U001',
+                        name: '测试用户',
+                        student_id: 'S001',
+                        total_score: 0,
+                        created_at: new Date().toISOString()
+                    });
+                    
+                    if (insertError) {
+                        throw new Error('创建用户表失败: ' + insertError.message);
+                    }
+                    
+                    addLog('用户表创建成功，测试用户已添加', 'success');
+                } else {
+                    addLog('用户表已存在', 'info');
+                }
+                
+                return true;
+            } catch (error) {
+                addLog('创建用户表失败: ' + error.message, 'error');
+                throw error;
+            }
+        }
+
+        // 创建记录表
+        async function createGameRecordsTable() {
+            addLog('正在创建游戏记录表...', 'info');
+            
+            try {
+                // 尝试查询记录表
+                const { error: selectError } = await db.supabase.from('game_records').select('id').limit(1);
+                
+                if (selectError) {
+                    // 表不存在，尝试创建
+                    addLog('游戏记录表不存在，尝试创建...', 'info');
+                    
+                    // 在Supabase中，我们直接插入数据，如果表不存在会自动创建
+                    const { error: insertError } = await db.supabase.from('game_records').insert({
+                        user_id: 'U001',
+                        game_id: 'G001',
+                        score: 50,
+                        recorded_at: new Date().toISOString()
+                    });
+                    
+                    if (insertError) {
+                        throw new Error('创建游戏记录表失败: ' + insertError.message);
+                    }
+                    
+                    addLog('游戏记录表创建成功，示例记录已添加', 'success');
+                } else {
+                    addLog('游戏记录表已存在', 'info');
+                }
+                
+                return true;
+            } catch (error) {
+                addLog('创建游戏记录表失败: ' + error.message, 'error');
+                throw error;
+            }
+        }
+
+        // 添加示例数据
+        async function addSampleData() {
+            addLog('正在添加示例数据...', 'info');
+            
+            try {
+                // 添加更多示例游戏
+                const games = [
+                    {
+                        id: 'G002',
+                        name: '投篮游戏',
+                        description: '经典的投篮游戏，看谁投得更准',
+                        max_score: 200,
+                        created_at: new Date().toISOString()
+                    },
+                    {
+                        id: 'G003',
+                        name: '套圈游戏',
+                        description: '传统套圈游戏，套中即可得分',
+                        max_score: 150,
+                        created_at: new Date().toISOString()
+                    }
+                ];
+                
+                for (const game of games) {
+                    const { error } = await db.supabase.from('games').insert(game);
+                    if (error && !error.message.includes('duplicate key')) {
+                        throw new Error('添加示例游戏失败: ' + error.message);
+                    }
+                }
+                
+                // 添加更多示例用户
+                const users = [
+                    {
+                        id: 'U002',
+                        name: '张三',
+                        student_id: 'S002',
+                        total_score: 0,
+                        created_at: new Date().toISOString()
+                    },
+                    {
+                        id: 'U003',
+                        name: '李四',
+                        student_id: 'S003',
+                        total_score: 0,
+                        created_at: new Date().toISOString()
+                    }
+                ];
+                
+                for (const user of users) {
+                    const { error } = await db.supabase.from('users').insert(user);
+                    if (error && !error.message.includes('duplicate key')) {
+                        throw new Error('添加示例用户失败: ' + error.message);
+                    }
+                }
+                
+                addLog('示例数据添加成功', 'success');
+                return true;
+            } catch (error) {
+                addLog('添加示例数据失败: ' + error.message, 'error');
+                throw error;
+            }
+        }
+
+        // 添加日志
+        function addLog(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            let icon = 'info-circle';
+            if (type === 'success') icon = 'check-circle';
+            if (type === 'error') icon = 'exclamation-circle';
+            
+            logEntry.innerHTML = `
+                <span class="text-gray-400">[${timestamp}]</span>
+                <i class="fa fa-${icon} mr-2"></i>
+                ${message}
+            `;
+            
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // 显示结果
+        function showResult(message, type) {
+            const resultElement = document.getElementById('resultMessage');
+            resultElement.textContent = message;
+            resultElement.className = 'mb-4 p-4 rounded-lg';
+            
+            if (type === 'success') {
+                resultElement.classList.add('bg-green-500', 'text-white');
+            } else {
+                resultElement.classList.add('bg-red-500', 'text-white');
+            }
+            
+            resultElement.classList.remove('hidden');
+        }
+
+        // 重置UI
+        function resetUI() {
+            // 重置步骤状态
+            for (let i = 1; i <= 6; i++) {
+                const step = document.getElementById(`step-${i}`);
+                step.classList.remove('active', 'completed');
+            }
+            
+            // 清空日志
+            const logContainer = document.getElementById('logContainer');
+            logContainer.innerHTML = '';
+            
+            // 隐藏结果
+            document.getElementById('resultMessage').classList.add('hidden');
+            document.getElementById('gotoLoginBtn').classList.add('hidden');
+            
+            // 禁用重置按钮
+            document.getElementById('resetBtn').disabled = true;
+        }
+
+        // 重置初始化
+        function resetInitialization() {
+            isInitialized = false;
+            resetUI();
+            addLog('系统已重置，请点击"开始初始化"按钮重新开始', 'info');
+        }
+    </script>
+</body>
+</html>
