@@ -13,6 +13,7 @@
             background-size: 400% 400%;
             animation: gradient 15s ease infinite;
             min-height: 100vh;
+            color: black;
         }
 
         @keyframes gradient {
@@ -208,23 +209,32 @@
                 </div>
             </div>
 
-            <!-- 批量操作 -->
+            <!-- 清空记录 -->
             <div class="menu-card">
                 <div>
                     <div class="menu-icon">
-                        <i class="fa fa-cogs"></i>
+                        <i class="fa fa-trash"></i>
                     </div>
-                    <div class="menu-title">批量操作</div>
-                    <div class="menu-description">清空記錄和導出數據</div>
+                    <div class="menu-title">清空記錄</div>
+                    <div class="menu-description">清空所有遊戲記錄數據</div>
                 </div>
-                <div class="space-y-2 mt-4">
-                    <button id="deleteAllRecordsBtn" class="btn-danger w-full text-sm">
-                        <i class="fa fa-trash mr-1"></i>清空所有記錄
-                    </button>
-                    <button id="exportDataBtn" class="btn-success w-full text-sm">
-                        <i class="fa fa-download mr-1"></i>導出所有數據
-                    </button>
+                <button id="deleteAllRecordsBtn" class="btn-danger w-full">
+                    <i class="fa fa-exclamation-triangle mr-2"></i>清空記錄
+                </button>
+            </div>
+
+            <!-- 导出数据 -->
+            <div class="menu-card">
+                <div>
+                    <div class="menu-icon">
+                        <i class="fa fa-download"></i>
+                    </div>
+                    <div class="menu-title">導出數據</div>
+                    <div class="menu-description">導出系統所有數據為CSV文件</div>
                 </div>
+                <button id="exportDataBtn" class="btn-success w-full">
+                    <i class="fa fa-file-text-o mr-2"></i>導出數據
+                </button>
             </div>
         </div>
     </div>
