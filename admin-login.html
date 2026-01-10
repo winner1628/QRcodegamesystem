@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理员登录 - QR码游戏系统</title>
+    <title>管理員登入 - QR碼遊戲系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <style>
@@ -30,20 +30,20 @@
             <!-- 登录卡片 -->
             <div class="card">
                 <div class="text-center mb-6">
-                    <h1 class="text-2xl font-bold text-gray-800">管理员登录</h1>
-                    <p class="text-gray-600">请输入管理员账号和密码</p>
+                    <h1 class="text-2xl font-bold text-gray-800">管理員登入</h1>
+                    <p class="text-gray-600">請輸入管理員帳號和密碼</p>
                 </div>
 
                 <!-- 登录表单 -->
                 <form id="loginForm" class="space-y-4">
                     <div>
-                        <label for="username" class="block text-gray-700 font-medium mb-2">用户名</label>
-                        <input type="text" id="username" name="username" class="form-input" placeholder="请输入用户名" required>
+                        <label for="username" class="block text-gray-700 font-medium mb-2">使用者名稱</label>
+                        <input type="text" id="username" name="username" class="form-input" placeholder="請輸入使用者名稱" required>
                         <div id="usernameError" class="error-message"></div>
                     </div>
                     <div>
-                        <label for="password" class="block text-gray-700 font-medium mb-2">密码</label>
-                        <input type="password" id="password" name="password" class="form-input" placeholder="请输入密码" required>
+                        <label for="password" class="block text-gray-700 font-medium mb-2">密碼</label>
+                        <input type="password" id="password" name="password" class="form-input" placeholder="請輸入密碼" required>
                         <div id="passwordError" class="error-message"></div>
                     </div>
                     <div class="text-center">
@@ -59,14 +59,14 @@
                 <!-- 返回首页 -->
                 <div class="mt-6 text-center">
                     <button onclick="window.location.href='index.html'" class="text-blue-600 hover:text-blue-800">
-                        <i class="fa fa-arrow-left mr-1"></i>返回首页
+                        <i class="fa fa-arrow-left mr-1"></i>返回首頁
                     </button>
                 </div>
             </div>
 
             <!-- 默认账号提示 -->
             <div class="mt-4 text-center text-gray-500 text-sm">
-                <p>默认账号：admin / admin123</p>
+                <p>預設帳號：admin / admin123</p>
             </div>
         </div>
     </div>
@@ -97,11 +97,11 @@
                 // 简单验证
                 let isValid = true;
                 if (!username) {
-                    document.getElementById('usernameError').textContent = '请输入用户名';
+                    document.getElementById('usernameError').textContent = '請輸入使用者名稱';
                     isValid = false;
                 }
                 if (!password) {
-                    document.getElementById('passwordError').textContent = '请输入密码';
+                    document.getElementById('passwordError').textContent = '請輸入密碼';
                     isValid = false;
                 }
 
@@ -127,7 +127,7 @@
                     }
                 } catch (error) {
                     console.error('登录失败:', error);
-                    document.getElementById('loginError').textContent = '登录失败，请稍后重试';
+                    document.getElementById('loginError').textContent = '登入失敗，請稍後重試';
                     document.getElementById('loginError').classList.remove('hidden');
                 } finally {
                     // 恢复按钮状态

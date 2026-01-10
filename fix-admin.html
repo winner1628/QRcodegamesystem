@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>修复管理员账号 - QR码游戏系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+        }
+        .card {
+            @apply bg-white rounded-lg shadow-lg p-6 border border-gray-200;
+        }
+        .btn-primary {
+            @apply bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors duration-300;
+        }
+        .btn-danger {
+            @apply bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors duration-300;
+        }
+        .status-success {
+            @apply text-green-600;
+        }
+        .status-error {
+            @apply text-red-600;
+        }
+        .step {
+            @apply mb-6 p-4 border rounded-lg;
+        }
+        .step.success {
+            @apply bg-green-50 border-green-300;
+        }
+        .step.error {
+            @apply bg-red-50 border-red-300;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+    <div class="container mx-auto">
+        <div class="max-w-2xl mx-auto">
+            <div class="card mb-6 text-center">
+                <h1 class="text-2xl font-bold text-gray-800 mb-4">修复管理员账号</h1>
+                <p class="text-gray-600">此工具将强制重置管理员账号</p>
+            </div>
+
+            <!-- 修复步骤 -->
+            <div class="card mb-6">
+                <div id="step1" class="step">
+                    <h3 class="text-lg font-bold mb-2">步骤1: 检查数据库连接</h3>
+                    <div id="step1Status" class="flex items-center">
+                        <i class="fa fa-spinner fa-spin mr-2"></i>
+                        <span>正在检查...</span>
+                    </div>
+                </div>
+
+                <div id="step2" class="step hidden">
+                    <h3 class="text-lg font-bold mb-2">步骤2: 删除现有管理员账号</h3>
+                    <div id="step2Status" class="flex items-center">
+                        <i class="fa fa-spinner fa-spin mr-2"></i>
+                        <span>准备删除...</span>
+                    </div>
+                </div>
+
+                <div id="step3" class="step hidden">
+                    <h3 class="text-lg font-bold mb-2">步骤3: 创建新管理员账号</h3>
+                    <div id="step3Status" class="flex items-center">
+                        <i class="fa fa-spinner fa-spin mr-2"></i>
+                        <span>准备创建...</span>
+                    </div>
+                </div>
+
+                <div id="step4" class="step hidden">
+                    <h3 class="text-lg font-bold mb-2">步骤4: 验证新账号</h3>
+                    <div id="step4Status" class="flex items-center">
+                        <i class="fa fa-spinner fa-spin mr-2"></i>
+                        <span>准备验证...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="text-center mb-6">
+                <button id="startFixBtn" class="btn-primary">
+                    <i class="fa fa-play mr-2"></i>开始修复
+                </button>
+                <button id="resetBtn" class="btn-danger ml-4" disabled>
+                    <i class="fa fa-refresh mr-2"></i>重新开始
+                </button>
+            </div>
+
+            <!-- 结果显示 -->
+            <div id="resultCard" class="card hidden">
+                <h3 class="text-lg font-bold mb-4 text-center">修复结果</h3>
+                <div id="resultMessage" class="text-center mb-4"></div>
+                <div class="bg-gray-100 p-4 rounded-lg">
+                    <p class="font-bold">新的管理员账号:</p>
+                    <p><strong>用户名:</strong> <span id="newUsername">admin</span></p>
+                    <p><strong>密码:</strong> <span id="newPassword">admin123</span></p>
+                </div>
+                <div class="text-center mt-6">
+                    <button onclick="window.location.href='admin-login.html'" class="btn-primary">
+                        <i class="fa fa-sign-in mr-2"></i>前往登录
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // 导入模块
+        import './js/config.js';
+        import './js/database.js';
+        import './js/auth.js';
+
+        // 全局变量
+        let currentStep = 0;
+        let isFixing = false;
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 绑定事件
+            document.getElementById('startFixBtn').addEventListener('click', startFix);
+            document.getElementById('resetBtn').addEventListener('click', resetFix);
+        });
+
+        // 开始修复
+        async function startFix() {
+            if (isFixing) return;
+            
+            isFixing = true;
+            document.getElementById('startFixBtn').disabled = true;
+            document.getElementById('resetBtn').disabled = false;
+            
+            try {
+                await executeStep(1, checkConnection);
+                await executeStep(2, deleteExistingAdmin);
+                await executeStep(3, createNewAdmin);
+                await executeStep(4, verifyNewAdmin);
+                
+                // 显示成功结果
+                showResult(true);
+            } catch (error) {
+                console.error('修复失败:', error);
+                showResult(false, error.message);
+            } finally {
+                isFixing = false;
+            }
+        }
+
+        // 执行步骤
+        async function executeStep(stepNumber, stepFunction) {
+            showStep(stepNumber);
+            try {
+                await stepFunction();
+                markStepSuccess(stepNumber);
+            } catch (error) {
+                markStepError(stepNumber, error.message);
+                throw error;
+            }
+        }
+
+        // 显示步骤
+        function showStep(stepNumber) {
+            // 隐藏所有步骤
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById(`step${i}`).classList.add('hidden');
+            }
+            
+            // 显示当前步骤
+            const stepElement = document.getElementById(`step${stepNumber}`);
+            stepElement.classList.remove('hidden');
+            currentStep = stepNumber;
+        }
+
+        // 标记步骤成功
+        function markStepSuccess(stepNumber) {
+            const stepElement = document.getElementById(`step${stepNumber}`);
+            const statusElement = document.getElementById(`step${stepNumber}Status`);
+            
+            stepElement.classList.add('success');
+            stepElement.classList.remove('error');
+            
+            statusElement.innerHTML = '<i class="fa fa-check-circle mr-2 status-success"></i><span>成功</span>';
+        }
+
+        // 标记步骤失败
+        function markStepError(stepNumber, errorMessage) {
+            const stepElement = document.getElementById(`step${stepNumber}`);
+            const statusElement = document.getElementById(`step${stepNumber}Status`);
+            
+            stepElement.classList.add('error');
+            stepElement.classList.remove('success');
+            
+            statusElement.innerHTML = `<i class="fa fa-times-circle mr-2 status-error"></i><span>失败: ${errorMessage}</span>`;
+        }
+
+        // 步骤1: 检查连接
+        async function checkConnection() {
+            const statusElement = document.getElementById('step1Status');
+            statusElement.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i><span>正在检查数据库连接...</span>';
+            
+            try {
+                const supabase = window.AppConfig.supabase;
+                const { error } = await supabase.from('admins').select('id').limit(1);
+                
+                if (error && error.code !== 'PGRST116') { // 不考虑"找不到数据"的错误
+                    throw new Error('数据库连接失败: ' + error.message);
+                }
+                
+                statusElement.innerHTML = '<i class="fa fa-check-circle mr-2 status-success"></i><span>数据库连接成功</span>';
+            } catch (error) {
+                statusElement.innerHTML = `<i class="fa fa-times-circle mr-2 status-error"></i><span>数据库连接失败</span>`;
+                throw error;
+            }
+        }
+
+        // 步骤2: 删除现有管理员
+        async function deleteExistingAdmin() {
+            const statusElement = document.getElementById('step2Status');
+            statusElement.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i><span>正在删除现有管理员账号...</span>';
+            
+            try {
+                const supabase = window.AppConfig.supabase;
+                const { error } = await supabase.from('admins').delete();
+                
+                if (error) {
+                    // 如果是表不存在的错误，这是可以接受的
+                    if (error.code === '42P01') { // PostgreSQL表不存在错误码
+                        statusElement.innerHTML = '<i class="fa fa-info-circle mr-2"></i><span>管理员表不存在，跳过删除</span>';
+                    } else {
+                        throw new Error('删除管理员账号失败: ' + error.message);
+                    }
+                } else {
+                    statusElement.innerHTML = '<i class="fa fa-check-circle mr-2 status-success"></i><span>成功删除现有管理员账号</span>';
+                }
+            } catch (error) {
+                statusElement.innerHTML = `<i class="fa fa-times-circle mr-2 status-error"></i><span>删除失败</span>`;
+                throw error;
+            }
+        }
+
+        // 步骤3: 创建新管理员
+        async function createNewAdmin() {
+            const statusElement = document.getElementById('step3Status');
+            statusElement.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i><span>正在创建新管理员账号...</span>';
+            
+            try {
+                const config = window.AppConfig;
+                const db = new DatabaseManager();
+                const hashedPassword = db.hashPassword(config.DEFAULT_ADMIN.password);
+                
+                const { error } = await config.supabase.from('admins').insert({
+                    username: config.DEFAULT_ADMIN.username,
+                    password: hashedPassword,
+                    created_at: new Date().toISOString()
+                });
+                
+                if (error) {
+                    throw new Error('创建管理员账号失败: ' + error.message);
+                }
+                
+                statusElement.innerHTML = '<i class="fa fa-check-circle mr-2 status-success"></i><span>成功创建新管理员账号</span>';
+            } catch (error) {
+                statusElement.innerHTML = `<i class="fa fa-times-circle mr-2 status-error"></i><span>创建失败</span>`;
+                throw error;
+            }
+        }
+
+        // 步骤4: 验证新管理员
+        async function verifyNewAdmin() {
+            const statusElement = document.getElementById('step4Status');
+            statusElement.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i><span>正在验证新管理员账号...</span>';
+            
+            try {
+                const config = window.AppConfig;
+                const db = new DatabaseManager();
+                
+                const isValid = await db.verifyAdmin(config.DEFAULT_ADMIN.username, config.DEFAULT_ADMIN.password);
+                
+                if (!isValid) {
+                    throw new Error('验证失败，账号可能未正确创建');
+                }
+                
+                statusElement.innerHTML = '<i class="fa fa-check-circle mr-2 status-success"></i><span>新管理员账号验证成功</span>';
+            } catch (error) {
+                statusElement.innerHTML = `<i class="fa fa-times-circle mr-2 status-error"></i><span>验证失败</span>`;
+                throw error;
+            }
+        }
+
+        // 显示结果
+        function showResult(success, errorMessage = '') {
+            const resultCard = document.getElementById('resultCard');
+            const resultMessage = document.getElementById('resultMessage');
+            
+            resultCard.classList.remove('hidden');
+            
+            if (success) {
+                resultMessage.innerHTML = '<i class="fa fa-check-circle mr-2 status-success"></i><span class="status-success">管理员账号修复成功！</span>';
+            } else {
+                resultMessage.innerHTML = `<i class="fa fa-times-circle mr-2 status-error"></i><span class="status-error">修复失败: ${errorMessage}</span>`;
+            }
+        }
+
+        // 重置修复
+        function resetFix() {
+            // 重置步骤状态
+            for (let i = 1; i <= 4; i++) {
+                const stepElement = document.getElementById(`step${i}`);
+                stepElement.classList.remove('success', 'error', 'hidden');
+                
+                const statusElement = document.getElementById(`step${i}Status`);
+                statusElement.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i><span>准备中...</span>';
+            }
+            
+            // 隐藏结果
+            document.getElementById('resultCard').classList.add('hidden');
+            
+            // 重置按钮状态
+            document.getElementById('startFixBtn').disabled = false;
+            document.getElementById('resetBtn').disabled = true;
+            
+            // 重置状态
+            currentStep = 0;
+            isFixing = false;
+        }
+    </script>
+</body>
+</html>
