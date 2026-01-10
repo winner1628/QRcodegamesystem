@@ -191,7 +191,8 @@
                 
                 for (const table of tables) {
                     try {
-                        const { error } = await supabase.from(table).delete().neq('id', 'x');
+                        // 使用limit来限制删除数量，避免UUID错误
+                        const { error } = await supabase.from(table).delete().limit(1000);
                         if (error) {
                             addLog(`清理表 ${table} 时出错: ${error.message}`, 'warning');
                         } else {
