@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR遊戲系統 - 獨立數據庫連接測試</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#64748b',
+                        success: '#10b981',
+                        danger: '#ef4444',
+                        warning: '#f59e0b',
+                        info: '#06b6d4'
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .transition-all-300 {
+                transition: all 0.3s ease;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <!-- 頁面標題 -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">獨立數據庫連接測試</h1>
+            <p class="text-gray-600">不依賴外部CDN的數據庫連接診斷工具</p>
+        </div>
+        
+        <!-- 測試卡片 -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold text-gray-800">
+                    <i class="fa fa-database text-primary mr-2"></i>
+                    連接配置
+                </h2>
+                <a href="index.html" class="text-primary hover:text-blue-700 transition-all-300">
+                    <i class="fa fa-arrow-left mr-1"></i> 返回首頁
+                </a>
+            </div>
+            
+            <!-- 配置表單 -->
+            <form id="testForm" class="space-y-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Supabase URL
+                        </label>
+                        <input type="text" id="supabaseUrl" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                               placeholder="https://your-project.supabase.co">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Supabase 匿名密鑰
+                        </label>
+                        <input type="text" id="supabaseKey" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                               placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+                    </div>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button type="submit" id="testBtn"
+                            class="px-6 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
+                        <i class="fa fa-check-circle mr-2"></i> 開始測試
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- 測試結果 -->
+        <div id="testResults" class="hidden space-y-6">
+            <!-- 連接測試 -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fa fa-plug text-primary mr-2"></i>
+                    連接測試
+                </h3>
+                <div id="connectionResult" class="space-y-3">
+                    <!-- 測試結果將在這裡顯示 -->
+                </div>
+            </div>
+            
+            <!-- 配置分析 -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fa fa-code text-info mr-2"></i>
+                    配置分析
+                </h3>
+                <div id="configAnalysis" class="space-y-3">
+                    <!-- 配置分析將在這裡顯示 -->
+                </div>
+            </div>
+            
+            <!-- 故障排除指南 -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fa fa-lightbulb-o text-warning mr-2"></i>
+                    故障排除指南
+                </h3>
+                <div id="troubleshooting" class="space-y-3">
+                    <!-- 故障排除建議將在這裡顯示 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 配置文件 -->
+    <script src="config.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加載配置文件中的設置
+            if (window.config && window.config.supabase) {
+                document.getElementById('supabaseUrl').value = window.config.supabase.url || '';
+                document.getElementById('supabaseKey').value = window.config.supabase.anonKey || '';
+            }
+            
+            const testForm = document.getElementById('testForm');
+            const testBtn = document.getElementById('testBtn');
+            const testResults = document.getElementById('testResults');
+            
+            testForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const url = document.getElementById('supabaseUrl').value.trim();
+                const key = document.getElementById('supabaseKey').value.trim();
+                
+                if (!url || !key) {
+                    alert('請填寫Supabase URL和匿名密鑰！');
+                    return;
+                }
+                
+                // 禁用按鈕，顯示加載狀態
+                testBtn.disabled = true;
+                testBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> 正在測試...';
+                
+                // 顯示結果區域
+                testResults.classList.remove('hidden');
+                
+                // 清除之前的結果
+                document.getElementById('connectionResult').innerHTML = '';
+                document.getElementById('configAnalysis').innerHTML = '';
+                document.getElementById('troubleshooting').innerHTML = '';
+                
+                // 執行所有測試
+                performAllTests(url, key);
+            });
+        });
+        
+        // 執行所有測試
+        function performAllTests(url, key) {
+            // 1. 基本格式檢查
+            testBasicFormat(url, key);
+            
+            // 2. 配置文件分析
+            analyzeConfig();
+            
+            // 3. 網絡連接測試
+            testNetworkConnection(url, key);
+            
+            // 4. 提供故障排除建議
+            provideTroubleshootingAdvice();
+        }
+        
+        // 基本格式檢查
+        function testBasicFormat(url, key) {
+            addTestResult('connectionResult', 'info', '正在進行基本格式檢查...');
+            
+            // URL格式檢查
+            if (isValidUrl(url)) {
+                addTestResult('connectionResult', 'success', '✓ URL格式正確');
+                
+                // 進一步分析URL
+                try {
+                    const urlObj = new URL(url);
+                    addTestResult('connectionResult', 'info', `  主機名: ${urlObj.hostname}`);
+                    addTestResult('connectionResult', 'info', `  路徑: ${urlObj.pathname}`);
+                    
+                    // 檢查是否為Supabase URL
+                    if (urlObj.hostname.endsWith('.supabase.co')) {
+                        addTestResult('connectionResult', 'success', '✓ 確認為Supabase官方域名');
+                    } else {
+                        addTestResult('connectionResult', 'warning', '⚠️ 可能不是標準Supabase域名');
+                    }
+                } catch (error) {
+                    addTestResult('connectionResult', 'error', `✗ URL解析錯誤: ${error.message}`);
+                }
+            } else {
+                addTestResult('connectionResult', 'error', '✗ URL格式不正確，應以https://開頭');
+            }
+            
+            // API密鑰格式檢查
+            if (key.length > 100) {
+                addTestResult('connectionResult', 'success', '✓ API密鑰長度合理');
+                
+                // 檢查JWT格式
+                if (isValidApiKey(key)) {
+                    addTestResult('connectionResult', 'success', '✓ API密鑰格式符合JWT標準');
+                } else {
+                    addTestResult('connectionResult', 'warning', '⚠️ API密鑰格式可能不是標準JWT');
+                }
+                
+                // 檢查是否為匿名密鑰
+                if (key.startsWith('eyJhbGci')) {
+                    addTestResult('connectionResult', 'info', '  密鑰開頭: eyJhbGci...');
+                } else {
+                    addTestResult('connectionResult', 'warning', '⚠️ 密鑰可能不是標準JWT格式');
+                }
+            } else {
+                addTestResult('connectionResult', 'error', '✗ API密鑰長度過短，可能不正確');
+            }
+        }
+        
+        // 配置文件分析
+        function analyzeConfig() {
+            addTestResult('configAnalysis', 'info', '正在分析配置文件...');
+            
+            if (window.config) {
+                addTestResult('configAnalysis', 'success', '✓ 配置文件加載成功');
+                
+                // 檢查配置結構
+                if (window.config.supabase) {
+                    addTestResult('configAnalysis', 'success', '✓ Supabase配置存在');
+                    
+                    const { url, anonKey } = window.config.supabase;
+                    
+                    if (url) {
+                        addTestResult('configAnalysis', 'info', `  URL: ${maskSensitiveInfo(url)}`);
+                    } else {
+                        addTestResult('configAnalysis', 'error', '✗ URL配置缺失');
+                    }
+                    
+                    if (anonKey) {
+                        addTestResult('configAnalysis', 'info', `  API密鑰: ${maskSensitiveInfo(anonKey)}`);
+                    } else {
+                        addTestResult('configAnalysis', 'error', '✗ API密鑰配置缺失');
+                    }
+                } else {
+                    addTestResult('configAnalysis', 'error', '✗ Supabase配置缺失');
+                }
+                
+                // 檢查系統配置
+                if (window.config.system) {
+                    addTestResult('configAnalysis', 'success', '✓ 系統配置存在');
+                    const { name, maxGames, minGames, maxUsers } = window.config.system;
+                    
+                    if (name) addTestResult('configAnalysis', 'info', `  系統名稱: ${name}`);
+                    if (maxGames) addTestResult('configAnalysis', 'info', `  最大遊戲數: ${maxGames}`);
+                    if (minGames) addTestResult('configAnalysis', 'info', `  最小遊戲數: ${minGames}`);
+                    if (maxUsers) addTestResult('configAnalysis', 'info', `  最大用戶數: ${maxUsers}`);
+                }
+            } else {
+                addTestResult('configAnalysis', 'error', '✗ 配置文件加載失敗');
+            }
+        }
+        
+        // 網絡連接測試
+        function testNetworkConnection(url, key) {
+            addTestResult('connectionResult', 'info', '正在進行網絡連接測試...');
+            
+            // 創建簡單的fetch請求來測試連接
+            const testUrl = `${url}/rest/v1/games?select=*&limit=1`;
+            const headers = {
+                'apikey': key,
+                'Authorization': `Bearer ${key}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            };
+            
+            addTestResult('connectionResult', 'info', `  測試URL: ${maskSensitiveInfo(testUrl)}`);
+            
+            // 使用fetch API測試連接
+            fetch(testUrl, {
+                method: 'GET',
+                headers: headers,
+                mode: 'cors',
+                cache: 'no-cache'
+            })
+            .then(response => {
+                if (response.ok) {
+                    addTestResult('connectionResult', 'success', `✓ 網絡請求成功 (狀態碼: ${response.status})`);
+                    
+                    // 嘗試解析響應
+                    return response.json().then(data => {
+                        addTestResult('connectionResult', 'success', `✓ 成功接收數據 (${Array.isArray(data) ? data.length : 1} 條記錄)`);
+                        
+                        // 如果有數據，顯示部分信息
+                        if (Array.isArray(data) && data.length > 0) {
+                            const firstItem = data[0];
+                            const keys = Object.keys(firstItem);
+                            addTestResult('connectionResult', 'info', `  數據字段: ${keys.join(', ')}`);
+                        }
+                    }).catch(error => {
+                        addTestResult('connectionResult', 'warning', `⚠️ 數據解析失敗: ${error.message}`);
+                    });
+                } else {
+                    addTestResult('connectionResult', 'error', `✗ 網絡請求失敗 (狀態碼: ${response.status})`);
+                    
+                    // 常見錯誤代碼解釋
+                    if (response.status === 401) {
+                        addTestResult('connectionResult', 'error', '  原因: API密鑰無效或權限不足');
+                    } else if (response.status === 404) {
+                        addTestResult('connectionResult', 'error', '  原因: 表不存在或路徑錯誤');
+                    } else if (response.status === 429) {
+                        addTestResult('connectionResult', 'error', '  原因: API請求過頻');
+                    } else if (response.status === 500) {
+                        addTestResult('connectionResult', 'error', '  原因: 服務器內部錯誤');
+                    }
+                }
+            })
+            .catch(error => {
+                addTestResult('connectionResult', 'error', `✗ 網絡請求出錯: ${error.message}`);
+                
+                // 常見網絡錯誤解釋
+                if (error.message.includes('Failed to fetch') || error.message.includes('Network')) {
+                    addTestResult('connectionResult', 'error', '  原因: 網絡連接問題或CORS限制');
+                } else if (error.message.includes('timeout')) {
+                    addTestResult('connectionResult', 'error', '  原因: 請求超時');
+                }
+            })
+            .finally(() => {
+                // 恢復按鈕狀態
+                const testBtn = document.getElementById('testBtn');
+                testBtn.disabled = false;
+                testBtn.innerHTML = '<i class="fa fa-check-circle mr-2"></i> 重新測試';
+            });
+        }
+        
+        // 提供故障排除建議
+        function provideTroubleshootingAdvice() {
+            const advice = [
+                {
+                    title: '立即檢查項目',
+                    items: [
+                        '1. 確認Supabase項目是否已在控制台中啟用',
+                        '2. 檢查API密鑰是否為"匿名"密鑰（不是service_role密鑰）',
+                        '3. 確保數據庫表（games, users, records）已創建',
+                        '4. 檢查表的權限設置，匿名用戶需要至少READ權限'
+                    ]
+                },
+                {
+                    title: '配置文件修正',
+                    items: [
+                        '1. 打開 config.js 文件檢查連接信息',
+                        '2. 確保URL格式為: https://your-project.supabase.co',
+                        '3. API密鑰應以eyJhbGci開頭的完整JWT',
+                        '4. 移除任何多餘的空格或特殊字符'
+                    ]
+                },
+                {
+                    title: 'Supabase控制台設置',
+                    items: [
+                        '1. 登錄Supabase控制台 (https://app.supabase.com)',
+                        '2. 進入項目 → 設置 → API',
+                        '3. 複製"匿名"密鑰（不是service_role密鑰）',
+                        '4. 進入數據庫 → 表，確認表存在且有適當權限'
+                    ]
+                },
+                {
+                    title: '快速解決方案',
+                    items: [
+                        '1. 使用 admin-simple.html 跳過數據庫檢查直接登錄',
+                        '2. 檢查網絡連接和防火牆設置',
+                        '3. 清除瀏覽器緩存和Cookie',
+                        '4. 嘗試使用不同的瀏覽器'
+                    ]
+                }
+            ];
+            
+            advice.forEach(section => {
+                const sectionElement = document.createElement('div');
+                sectionElement.innerHTML = `
+                    <h4 class="font-medium text-gray-800 mb-2">${section.title}</h4>
+                    <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+                        ${section.items.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                `;
+                document.getElementById('troubleshooting').appendChild(sectionElement);
+            });
+        }
+        
+        // 工具函數
+        function addTestResult(containerId, type, title, description = '') {
+            const container = document.getElementById(containerId);
+            const resultElement = document.createElement('div');
+            
+            let iconClass = '';
+            let bgClass = '';
+            
+            switch (type) {
+                case 'success':
+                    iconClass = 'fa-check-circle text-success';
+                    bgClass = 'bg-green-50 border-green-200';
+                    break;
+                case 'error':
+                    iconClass = 'fa-exclamation-circle text-danger';
+                    bgClass = 'bg-red-50 border-red-200';
+                    break;
+                case 'warning':
+                    iconClass = 'fa-exclamation-triangle text-warning';
+                    bgClass = 'bg-yellow-50 border-yellow-200';
+                    break;
+                case 'info':
+                default:
+                    iconClass = 'fa-info-circle text-info';
+                    bgClass = 'bg-blue-50 border-blue-200';
+                    break;
+            }
+            
+            resultElement.innerHTML = `
+                <div class="flex items-start p-3 rounded-md border ${bgClass}">
+                    <div class="mr-3 mt-0.5">
+                        <i class="fa ${iconClass}"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-medium">${title}</div>
+                        ${description ? `<div class="text-sm mt-1">${description}</div>` : ''}
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(resultElement);
+        }
+        
+        function isValidUrl(url) {
+            try {
+                const urlObj = new URL(url);
+                return urlObj.protocol === 'https:';
+            } catch {
+                return false;
+            }
+        }
+        
+        function isValidApiKey(key) {
+            // 簡單的JWT格式檢查
+            return key.startsWith('eyJhbGci') && key.split('.').length === 3;
+        }
+        
+        function maskSensitiveInfo(text) {
+            if (!text || text.length < 20) return text;
+            
+            const start = text.substring(0, 8);
+            const end = text.substring(text.length - 8);
+            return `${start}...${end}`;
+        }
+    </script>
+</body>
+</html>

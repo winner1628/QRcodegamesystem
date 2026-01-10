@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR遊戲系統 - 管理控制台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
+    <script src="config.js"></script>
+    <style>
+        .nav-item {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .nav-item:hover {
+            background-color: #4b5563;
+        }
+        .nav-item.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .page-content {
+            display: none;
+        }
+        .page-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex">
+    <!-- 側邊導航 -->
+    <div class="w-64 bg-gray-800 text-white flex-shrink-0">
+        <div class="p-4 border-b border-gray-700">
+            <h1 class="text-xl font-bold flex items-center">
+                <i class="fa fa-qrcode mr-2"></i>
+                管理控制台
+            </h1>
+        </div>
+        
+        <!-- 導航菜單 - 使用div和onclick -->
+        <div class="mt-4">
+            <div class="nav-item active px-4 py-3 flex items-center" onclick="switchPage('dashboard')">
+                <i class="fa fa-dashboard w-6"></i>
+                <span>數據概覽</span>
+            </div>
+            <div class="nav-item px-4 py-3 flex items-center" onclick="switchPage('games')">
+                <i class="fa fa-gamepad w-6"></i>
+                <span>遊戲管理</span>
+            </div>
+            <div class="nav-item px-4 py-3 flex items-center" onclick="switchPage('users')">
+                <i class="fa fa-users w-6"></i>
+                <span>用戶管理</span>
+            </div>
+            <div class="nav-item px-4 py-3 flex items-center" onclick="switchPage('records')">
+                <i class="fa fa-history w-6"></i>
+                <span>記錄查詢</span>
+            </div>
+            <div class="nav-item px-4 py-3 flex items-center" onclick="switchPage('export')">
+                <i class="fa fa-download w-6"></i>
+                <span>數據導出</span>
+            </div>
+            <div class="nav-item px-4 py-3 flex items-center" onclick="switchPage('settings')">
+                <i class="fa fa-cog w-6"></i>
+                <span>系統設置</span>
+            </div>
+        </div>
+        
+        <!-- 登出按鈕 -->
+        <div class="absolute bottom-0 w-64 p-4 border-t border-gray-700">
+            <button onclick="logout()" class="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700 transition-colors">
+                <i class="fa fa-sign-out mr-2"></i> 登出系統
+            </button>
+        </div>
+    </div>
+
+    <!-- 主內容區 -->
+    <div class="flex-1 flex flex-col">
+        <!-- 頂部標題 -->
+        <header class="bg-white shadow-sm p-4">
+            <h2 id="pageTitle" class="text-xl font-semibold text-gray-800">數據概覽</h2>
+        </header>
+        
+        <!-- 內容區域 -->
+        <main class="flex-1 p-6 overflow-y-auto">
+            <!-- 數據概覽頁 -->
+            <div id="dashboard" class="page-content active">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <div class="flex items-center">
+                            <div class="bg-blue-100 p-3 rounded-full">
+                                <i class="fa fa-gamepad text-blue-600 text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm text-gray-600">已設置遊戲</p>
+                                <p class="text-2xl font-bold" id="totalGames">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <div class="flex items-center">
+                            <div class="bg-green-100 p-3 rounded-full">
+                                <i class="fa fa-users text-green-600 text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm text-gray-600">參與用戶</p>
+                                <p class="text-2xl font-bold" id="totalUsers">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <div class="flex items-center">
+                            <div class="bg-yellow-100 p-3 rounded-full">
+                                <i class="fa fa-play-circle text-yellow-600 text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm text-gray-600">今日參與次數</p>
+                                <p class="text-2xl font-bold" id="todayPlays">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <div class="flex items-center">
+                            <div class="bg-red-100 p-3 rounded-full">
+                                <i class="fa fa-gift text-red-600 text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm text-gray-600">禮品發放</p>
+                                <p class="text-2xl font-bold" id="totalGifts">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">快速操作</h3>
+                        <button onclick="refreshData()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                            <i class="fa fa-refresh mr-2"></i>刷新數據
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <button onclick="switchPage('games')" class="border p-4 rounded-lg hover:bg-gray-50 transition-colors flex items-center">
+                            <i class="fa fa-plus-circle text-blue-600 text-xl mr-3"></i>
+                            <span>新增遊戲</span>
+                        </button>
+                        <button onclick="switchPage('users')" class="border p-4 rounded-lg hover:bg-gray-50 transition-colors flex items-center">
+                            <i class="fa fa-user-plus text-green-600 text-xl mr-3"></i>
+                            <span>管理用戶</span>
+                        </button>
+                        <button onclick="switchPage('records')" class="border p-4 rounded-lg hover:bg-gray-50 transition-colors flex items-center">
+                            <i class="fa fa-search text-yellow-600 text-xl mr-3"></i>
+                            <span>查詢記錄</span>
+                        </button>
+                        <button onclick="switchPage('export')" class="border p-4 rounded-lg hover:bg-gray-50 transition-colors flex items-center">
+                            <i class="fa fa-download text-purple-600 text-xl mr-3"></i>
+                            <span>導出數據</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 遊戲管理頁 -->
+            <div id="games" class="page-content">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold">遊戲管理</h3>
+                        <button onclick="showAddGameModal()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                            <i class="fa fa-plus mr-2"></i>新增遊戲
+                        </button>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full border border-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border">遊戲名稱</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border">攤位號碼</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border">參與次數</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border">禮品數量</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border">狀態</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gamesTableBody">
+                                <tr>
+                                    <td colspan="6" class="px-6 py-4 text-center text-gray-500 border">
+                                        <i class="fa fa-spinner fa-spin mr-2"></i>正在加載數據...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 用戶管理頁 -->
+            <div id="users" class="page-content">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold mb-4">用戶管理</h3>
+                    <div id="usersContent">
+                        <p class="text-gray-600">正在加載用戶數據...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 記錄查詢頁 -->
+            <div id="records" class="page-content">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold mb-4">記錄查詢</h3>
+                    <div id="recordsContent">
+                        <p class="text-gray-600">正在加載記錄數據...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 數據導出頁 -->
+            <div id="export" class="page-content">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold mb-4">數據導出</h3>
+                    <div class="space-y-4">
+                        <button onclick="exportGamesData()" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center">
+                            <i class="fa fa-file-text-o mr-2"></i> 導出遊戲數據 (CSV)
+                        </button>
+                        <button onclick="exportUsersData()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center">
+                            <i class="fa fa-users mr-2"></i> 導出用戶數據 (CSV)
+                        </button>
+                        <button onclick="exportRecordsData()" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center">
+                            <i class="fa fa-history mr-2"></i> 導出記錄數據 (CSV)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 系統設置頁 -->
+            <div id="settings" class="page-content">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold mb-4">系統設置</h3>
+                    <div id="settingsContent">
+                        <p class="text-gray-600">正在加載設置...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 新增遊戲模態框 -->
+    <div id="addGameModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 class="text-lg font-semibold mb-4">新增遊戲</h3>
+            <form id="addGameForm" class="space-y-4">
+                <div>
+                    <label for="gameName" class="block text-sm font-medium text-gray-700">遊戲名稱</label>
+                    <input type="text" id="gameName" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="boothNumber" class="block text-sm font-medium text-gray-700">攤位號碼</label>
+                    <input type="text" id="boothNumber" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="gameDescription" class="block text-sm font-medium text-gray-700">遊戲描述</label>
+                    <textarea id="gameDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="hideAddGameModal()" class="px-4 py-2 bg-gray-600 text-white rounded">取消</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 全局變量
+        let supabase;
+        let games = [];
+        let users = [];
+        let records = [];
+        let currentPage = 'dashboard';
+
+        // 頁面加載完成後初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 管理控制台初始化中...');
+            
+            // 檢查登入狀態
+            const isLoggedIn = sessionStorage.getItem('adminLoggedIn') === 'true';
+            if (!isLoggedIn) {
+                alert('請先登入系統');
+                window.location.href = 'admin.html';
+                return;
+            }
+            
+            // 初始化Supabase
+            initializeSupabase();
+            
+            // 初始化事件監聽器
+            initEventListeners();
+            
+            // 加載初始數據
+            loadInitialData();
+            
+            console.log('✅ 管理控制台初始化完成！');
+        });
+
+        // 初始化Supabase
+        function initializeSupabase() {
+            try {
+                if (!window.config || !window.config.supabase) {
+                    throw new Error('配置文件未加載或配置不完整');
+                }
+                
+                supabase = createClient(window.config.supabase.url, window.config.supabase.anonKey);
+                console.log('✅ Supabase初始化成功！');
+                
+                // 測試連接
+                testConnection();
+                
+            } catch (error) {
+                console.error('❌ Supabase初始化失敗:', error);
+                alert('數據庫連接失敗: ' + error.message);
+            }
+        }
+
+        // 測試數據庫連接
+        async function testConnection() {
+            try {
+                const { data, error } = await supabase.from('games').select('*').limit(1);
+                if (error) {
+                    console.warn('⚠️ 連接測試警告:', error.message);
+                } else {
+                    console.log('✅ 數據庫連接測試成功，找到', data.length, '條記錄');
+                }
+            } catch (error) {
+                console.error('❌ 連接測試失敗:', error);
+            }
+        }
+
+        // 初始化事件監聽器
+        function initEventListeners() {
+            // 新增遊戲表單提交
+            document.getElementById('addGameForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addGame();
+            });
+            
+            console.log('✅ 事件監聽器初始化完成');
+        }
+
+        // 加載初始數據
+        async function loadInitialData() {
+            try {
+                await Promise.all([
+                    loadGames(),
+                    loadUsers(),
+                    loadRecords()
+                ]);
+                updateStatistics();
+            } catch (error) {
+                console.error('❌ 加載初始數據失敗:', error);
+            }
+        }
+
+        // 切換頁面
+        function switchPage(pageName) {
+            console.log('🔄 切換到頁面:', pageName);
+            
+            // 隱藏所有頁面
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // 顯示目標頁面
+            const targetPage = document.getElementById(pageName);
+            if (targetPage) {
+                targetPage.classList.add('active');
+                currentPage = pageName;
+            }
+            
+            // 更新導航高亮
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // 高亮當前導航項
+            const targetNavItem = event.currentTarget;
+            if (targetNavItem) {
+                targetNavItem.classList.add('active');
+            }
+            
+            // 更新頁面標題
+            const pageTitles = {
+                'dashboard': '數據概覽',
+                'games': '遊戲管理',
+                'users': '用戶管理',
+                'records': '記錄查詢',
+                'export': '數據導出',
+                'settings': '系統設置'
+            };
+            
+            document.getElementById('pageTitle').textContent = pageTitles[pageName] || '數據概覽';
+            
+            // 根據頁面加載相應數據
+            if (pageName === 'games') {
+                loadGames();
+            } else if (pageName === 'users') {
+                loadUsers();
+            } else if (pageName === 'records') {
+                loadRecords();
+            }
+            
+            console.log('✅ 成功切換到:', pageTitles[pageName]);
+        }
+
+        // 加載遊戲數據
+        async function loadGames() {
+            try {
+                const { data, error } = await supabase.from('games').select('*');
+                if (error) {
+                    console.error('❌ 加載遊戲數據失敗:', error);
+                    games = [];
+                } else {
+                    games = data || [];
+                    console.log('✅ 成功加載', games.length, '個遊戲');
+                }
+                
+                renderGamesTable();
+            } catch (error) {
+                console.error('❌ 加載遊戲時發生錯誤:', error);
+                games = [];
+                renderGamesTable();
+            }
+        }
+
+        // 渲染遊戲表格
+        function renderGamesTable() {
+            const tbody = document.getElementById('gamesTableBody');
+            tbody.innerHTML = '';
+            
+            if (games.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500 border">
+                            <i class="fa fa-info-circle mr-2"></i>暫無遊戲數據
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            games.forEach(game => {
+                const statusBadge = game.status === 'active' 
+                    ? '<span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">正常</span>'
+                    : '<span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">維護中</span>';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 border">${game.name}</td>
+                    <td class="px-6 py-4 border">${game.booth_number}</td>
+                    <td class="px-6 py-4 border">${game.plays || 0}</td>
+                    <td class="px-6 py-4 border">${game.gifts || 0}</td>
+                    <td class="px-6 py-4 border">${statusBadge}</td>
+                    <td class="px-6 py-4 border">
+                        <button onclick="editGame('${game.id}')" class="text-blue-600 hover:text-blue-800 mr-3">
+                            <i class="fa fa-edit"></i> 編輯
+                        </button>
+                        <button onclick="deleteGame('${game.id}')" class="text-red-600 hover:text-red-800">
+                            <i class="fa fa-trash"></i> 刪除
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // 加載用戶數據
+        async function loadUsers() {
+            try {
+                const { data, error } = await supabase.from('users').select('*');
+                if (error) {
+                    console.error('❌ 加載用戶數據失敗:', error);
+                    users = [];
+                } else {
+                    users = data || [];
+                    console.log('✅ 成功加載', users.length, '個用戶');
+                }
+                
+                renderUsersContent();
+            } catch (error) {
+                console.error('❌ 加載用戶時發生錯誤:', error);
+                users = [];
+                renderUsersContent();
+            }
+        }
+
+        // 渲染用戶內容
+        function renderUsersContent() {
+            const content = document.getElementById('usersContent');
+            content.innerHTML = `<p class="text-gray-600">找到 ${users.length} 個用戶</p>`;
+        }
+
+        // 加載記錄數據
+        async function loadRecords() {
+            try {
+                const { data, error } = await supabase.from('game_records').select('*');
+                if (error) {
+                    console.error('❌ 加載記錄數據失敗:', error);
+                    records = [];
+                } else {
+                    records = data || [];
+                    console.log('✅ 成功加載', records.length, '條記錄');
+                }
+                
+                renderRecordsContent();
+            } catch (error) {
+                console.error('❌ 加載記錄時發生錯誤:', error);
+                records = [];
+                renderRecordsContent();
+            }
+        }
+
+        // 渲染記錄內容
+        function renderRecordsContent() {
+            const content = document.getElementById('recordsContent');
+            content.innerHTML = `<p class="text-gray-600">找到 ${records.length} 條記錄</p>`;
+        }
+
+        // 更新統計數據
+        function updateStatistics() {
+            document.getElementById('totalGames').textContent = games.length;
+            document.getElementById('totalUsers').textContent = users.length;
+            
+            const totalPlays = games.reduce((sum, game) => sum + (game.plays || 0), 0);
+            const totalGifts = games.reduce((sum, game) => sum + (game.gifts || 0), 0);
+            
+            document.getElementById('todayPlays').textContent = totalPlays;
+            document.getElementById('totalGifts').textContent = totalGifts;
+        }
+
+        // 刷新數據
+        async function refreshData() {
+            console.log('🔄 刷新數據...');
+            await loadInitialData();
+            showToast('數據刷新成功！');
+        }
+
+        // 顯示新增遊戲模態框
+        function showAddGameModal() {
+            document.getElementById('addGameModal').classList.remove('hidden');
+        }
+
+        // 隱藏新增遊戲模態框
+        function hideAddGameModal() {
+            document.getElementById('addGameModal').classList.add('hidden');
+            document.getElementById('addGameForm').reset();
+        }
+
+        // 新增遊戲
+        async function addGame() {
+            try {
+                const name = document.getElementById('gameName').value.trim();
+                const boothNumber = document.getElementById('boothNumber').value.trim();
+                const description = document.getElementById('gameDescription').value.trim();
+                
+                if (!name || !boothNumber) {
+                    alert('請填寫必填字段！');
+                    return;
+                }
+                
+                const newGame = {
+                    id: 'G' + Date.now().toString().slice(-6),
+                    name,
+                    booth_number: boothNumber,
+                    description,
+                    status: 'active',
+                    plays: 0,
+                    gifts: 0,
+                    created_at: new Date().toISOString()
+                };
+                
+                const { error } = await supabase.from('games').insert(newGame);
+                if (error) {
+                    throw error;
+                }
+                
+                console.log('✅ 新增遊戲成功:', newGame.name);
+                hideAddGameModal();
+                await loadGames();
+                updateStatistics();
+                showToast('新增遊戲成功！');
+                
+            } catch (error) {
+                console.error('❌ 新增遊戲失敗:', error);
+                alert('新增遊戲失敗: ' + error.message);
+            }
+        }
+
+        // 編輯遊戲
+        function editGame(gameId) {
+            console.log('編輯遊戲:', gameId);
+            alert('編輯功能開發中...');
+        }
+
+        // 刪除遊戲
+        async function deleteGame(gameId) {
+            if (!confirm('確定要刪除這個遊戲嗎？')) {
+                return;
+            }
+            
+            try {
+                const { error } = await supabase.from('games').delete().eq('id', gameId);
+                if (error) {
+                    throw error;
+                }
+                
+                console.log('✅ 刪除遊戲成功:', gameId);
+                await loadGames();
+                updateStatistics();
+                showToast('刪除遊戲成功！');
+                
+            } catch (error) {
+                console.error('❌ 刪除遊戲失敗:', error);
+                alert('刪除遊戲失敗: ' + error.message);
+            }
+        }
+
+        // 導出遊戲數據
+        function exportGamesData() {
+            if (games.length === 0) {
+                alert('沒有數據可以導出！');
+                return;
+            }
+            
+            const csvContent = convertToCSV(games);
+            downloadCSV(csvContent, 'games_data.csv');
+            showToast('遊戲數據導出成功！');
+        }
+
+        // 導出用戶數據
+        function exportUsersData() {
+            if (users.length === 0) {
+                alert('沒有數據可以導出！');
+                return;
+            }
+            
+            const csvContent = convertToCSV(users);
+            downloadCSV(csvContent, 'users_data.csv');
+            showToast('用戶數據導出成功！');
+        }
+
+        // 導出記錄數據
+        function exportRecordsData() {
+            if (records.length === 0) {
+                alert('沒有數據可以導出！');
+                return;
+            }
+            
+            const csvContent = convertToCSV(records);
+            downloadCSV(csvContent, 'records_data.csv');
+            showToast('記錄數據導出成功！');
+        }
+
+        // 將數據轉換為CSV格式
+        function convertToCSV(data) {
+            if (data.length === 0) return '';
+            
+            const headers = Object.keys(data[0]);
+            const csvRows = [];
+            
+            // 添加標題行
+            csvRows.push(headers.join(','));
+            
+            // 添加數據行
+            for (const row of data) {
+                const values = headers.map(header => {
+                    const value = row[header] ?? '';
+                    return `"${value.toString().replace(/"/g, '""')}"`;
+                });
+                csvRows.push(values.join(','));
+            }
+            
+            return csvRows.join('\n');
+        }
+
+        // 下載CSV文件
+        function downloadCSV(content, filename) {
+            const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 顯示提示消息
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 3000);
+        }
+
+        // 登出功能
+        function logout() {
+            if (confirm('確定要登出系統嗎？')) {
+                sessionStorage.removeItem('adminLoggedIn');
+                window.location.href = 'admin.html';
+            }
+        }
+
+        // 將函數綁定到全局作用域
+        window.switchPage = switchPage;
+        window.refreshData = refreshData;
+        window.showAddGameModal = showAddGameModal;
+        window.hideAddGameModal = hideAddGameModal;
+        window.editGame = editGame;
+        window.deleteGame = deleteGame;
+        window.exportGamesData = exportGamesData;
+        window.exportUsersData = exportUsersData;
+        window.exportRecordsData = exportRecordsData;
+        window.logout = logout;
+    </script>
+</body>
+</html>

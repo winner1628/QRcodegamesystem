@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR遊戲系統 - 數據庫連接測試</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#64748b',
+                        success: '#10b981',
+                        danger: '#ef4444',
+                        warning: '#f59e0b',
+                        info: '#06b6d4'
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .transition-all-300 {
+                transition: all 0.3s ease;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <!-- 頁面標題 -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">數據庫連接測試工具</h1>
+            <p class="text-gray-600">用於診斷Supabase數據庫連接問題</p>
+        </div>
+        
+        <!-- 測試卡片 -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold text-gray-800">
+                    <i class="fa fa-database text-primary mr-2"></i>
+                    連接配置
+                </h2>
+                <a href="index.html" class="text-primary hover:text-blue-700 transition-all-300">
+                    <i class="fa fa-arrow-left mr-1"></i> 返回首頁
+                </a>
+            </div>
+            
+            <!-- 配置表單 -->
+            <form id="testForm" class="space-y-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Supabase URL
+                        </label>
+                        <input type="text" id="supabaseUrl" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                               placeholder="https://your-project.supabase.co">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Supabase 匿名密鑰
+                        </label>
+                        <input type="text" id="supabaseKey" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                               placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+                    </div>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button type="submit" id="testBtn"
+                            class="px-6 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-all-300">
+                        <i class="fa fa-check-circle mr-2"></i> 開始測試
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- 測試結果 -->
+        <div id="testResults" class="hidden space-y-6">
+            <!-- 連接測試 -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fa fa-plug text-primary mr-2"></i>
+                    連接測試
+                </h3>
+                <div id="connectionResult" class="space-y-3">
+                    <!-- 測試結果將在這裡顯示 -->
+                </div>
+            </div>
+            
+            <!-- 數據庫結構測試 -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fa fa-table text-success mr-2"></i>
+                    數據庫結構測試
+                </h3>
+                <div id="schemaResult" class="space-y-3">
+                    <!-- 結構測試結果將在這裡顯示 -->
+                </div>
+            </div>
+            
+            <!-- 故障排除指南 -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fa fa-lightbulb-o text-warning mr-2"></i>
+                    故障排除指南
+                </h3>
+                <div id="troubleshooting" class="space-y-3">
+                    <!-- 故障排除建議將在這裡顯示 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 配置文件 -->
+    <script src="config.js"></script>
+    
+    <script>
+        // 確保Supabase客戶端已加載
+        if (typeof createClient === 'undefined') {
+            console.error('錯誤：Supabase客戶端庫未加載');
+            document.addEventListener('DOMContentLoaded', function() {
+                alert('錯誤：Supabase客戶端庫未加載，請檢查網絡連接或CDN配置');
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加載配置文件中的設置
+            if (window.config && window.config.supabase) {
+                document.getElementById('supabaseUrl').value = window.config.supabase.url || '';
+                document.getElementById('supabaseKey').value = window.config.supabase.anonKey || '';
+            }
+            
+            const testForm = document.getElementById('testForm');
+            const testBtn = document.getElementById('testBtn');
+            const testResults = document.getElementById('testResults');
+            
+            testForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const url = document.getElementById('supabaseUrl').value.trim();
+                const key = document.getElementById('supabaseKey').value.trim();
+                
+                if (!url || !key) {
+                    alert('請填寫Supabase URL和匿名密鑰！');
+                    return;
+                }
+                
+                // 禁用按鈕，顯示加載狀態
+                testBtn.disabled = true;
+                testBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> 正在測試...';
+                
+                // 顯示結果區域
+                testResults.classList.remove('hidden');
+                
+                try {
+                    // 清除之前的結果
+                    document.getElementById('connectionResult').innerHTML = '';
+                    document.getElementById('schemaResult').innerHTML = '';
+                    document.getElementById('troubleshooting').innerHTML = '';
+                    
+                    // 1. 測試基本連接
+                    await testConnection(url, key);
+                    
+                    // 2. 測試數據庫結構
+                    await testDatabaseSchema(url, key);
+                    
+                    // 3. 提供故障排除建議
+                    provideTroubleshootingAdvice();
+                    
+                } catch (error) {
+                    console.error('測試過程中發生錯誤:', error);
+                    addTestResult('connectionResult', 'error', '測試過程中發生未預期的錯誤', error.message);
+                } finally {
+                    // 恢復按鈕狀態
+                    testBtn.disabled = false;
+                    testBtn.innerHTML = '<i class="fa fa-check-circle mr-2"></i> 重新測試';
+                }
+            });
+        });
+        
+        // 初始化Supabase客戶端
+        function createSupabaseClient(url, key) {
+            try {
+                // 使用全局的createClient函數（來自Supabase CDN）
+                if (typeof createClient === 'undefined') {
+                    throw new Error('Supabase客戶端庫未加載，請檢查CDN連接');
+                }
+                
+                const supabase = createClient(url, key);
+                return supabase;
+            } catch (error) {
+                console.error('創建Supabase客戶端失敗:', error);
+                throw error;
+            }
+        }
+        
+        // 測試基本連接
+        async function testConnection(url, key) {
+            addTestResult('connectionResult', 'info', '正在測試基本連接...');
+            
+            try {
+                // 1. 測試URL格式
+                if (!isValidUrl(url)) {
+                    throw new Error('Supabase URL格式不正確，應以https://開頭');
+                }
+                
+                addTestResult('connectionResult', 'success', '✓ URL格式正確');
+                
+                // 2. 測試API密鑰格式
+                if (!isValidApiKey(key)) {
+                    throw new Error('API密鑰格式不正確，應為JWT格式');
+                }
+                
+                addTestResult('connectionResult', 'success', '✓ API密鑰格式正確');
+                
+                // 3. 測試網絡連接
+                const supabase = createSupabaseClient(url, key);
+                
+                // 測試簡單的請求
+                const startTime = Date.now();
+                const { data, error } = await supabase.from('games').select('*').limit(1);
+                const endTime = Date.now();
+                
+                if (error) {
+                    throw error;
+                }
+                
+                addTestResult('connectionResult', 'success', `✓ 網絡連接成功 (${endTime - startTime}ms)`);
+                addTestResult('connectionResult', 'info', `返回數據: ${JSON.stringify(data)}`);
+                
+                return { success: true, supabase };
+                
+            } catch (error) {
+                addTestResult('connectionResult', 'error', `✗ 連接測試失敗: ${error.message}`);
+                return { success: false, error: error.message };
+            }
+        }
+        
+        // 測試數據庫結構
+        async function testDatabaseSchema(url, key) {
+            addTestResult('schemaResult', 'info', '正在檢查數據庫結構...');
+            
+            try {
+                const supabase = createSupabaseClient(url, key);
+                const tables = ['games', 'users', 'records'];
+                
+                for (const table of tables) {
+                    try {
+                        const { data, error } = await supabase.from(table).select('*').limit(1);
+                        
+                        if (error) {
+                            throw error;
+                        }
+                        
+                        addTestResult('schemaResult', 'success', `✓ 表 '${table}' 可訪問 (${data ? data.length : 0} 條記錄)`);
+                        
+                        // 檢查表結構
+                        if (data && data.length > 0) {
+                            const columns = Object.keys(data[0]);
+                            addTestResult('schemaResult', 'info', `  表結構: ${columns.join(', ')}`);
+                        }
+                        
+                    } catch (error) {
+                        addTestResult('schemaResult', 'error', `✗ 表 '${table}' 訪問失敗: ${error.message}`);
+                    }
+                }
+                
+            } catch (error) {
+                addTestResult('schemaResult', 'error', `✗ 數據庫結構檢查失敗: ${error.message}`);
+            }
+        }
+        
+        // 提供故障排除建議
+        function provideTroubleshootingAdvice() {
+            const advice = [
+                {
+                    title: '常見連接問題',
+                    items: [
+                        '1. 檢查Supabase URL是否正確（應以https://開頭）',
+                        '2. 確認API密鑰是否為匿名密鑰（以eyJhbGci開頭）',
+                        '3. 檢查網絡連接是否穩定',
+                        '4. 確認Supabase項目是否已啟用'
+                    ]
+                },
+                {
+                    title: '數據庫設置檢查',
+                    items: [
+                        '1. 確保已在Supabase控制台中創建了必要的表（games, users, records）',
+                        '2. 檢查表的權限設置，確保匿名用戶有讀寫權限',
+                        '3. 確認數據庫模式是否與應用程序要求匹配'
+                    ]
+                },
+                {
+                    title: '配置文件更新',
+                    items: [
+                        '1. 更新 config.js 文件中的連接信息',
+                        '2. 確保URL和密鑰沒有額外的空格或換行符',
+                        '3. 清除瀏覽器緩存後重新測試'
+                    ]
+                }
+            ];
+            
+            advice.forEach(section => {
+                const sectionElement = document.createElement('div');
+                sectionElement.innerHTML = `
+                    <h4 class="font-medium text-gray-800 mb-2">${section.title}</h4>
+                    <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+                        ${section.items.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                `;
+                document.getElementById('troubleshooting').appendChild(sectionElement);
+            });
+        }
+        
+        // 添加測試結果
+        function addTestResult(containerId, type, title, description = '') {
+            const container = document.getElementById(containerId);
+            const resultElement = document.createElement('div');
+            
+            let iconClass = '';
+            let bgClass = '';
+            
+            switch (type) {
+                case 'success':
+                    iconClass = 'fa-check-circle text-success';
+                    bgClass = 'bg-green-50 border-green-200';
+                    break;
+                case 'error':
+                    iconClass = 'fa-exclamation-circle text-danger';
+                    bgClass = 'bg-red-50 border-red-200';
+                    break;
+                case 'warning':
+                    iconClass = 'fa-exclamation-triangle text-warning';
+                    bgClass = 'bg-yellow-50 border-yellow-200';
+                    break;
+                case 'info':
+                default:
+                    iconClass = 'fa-info-circle text-info';
+                    bgClass = 'bg-blue-50 border-blue-200';
+                    break;
+            }
+            
+            resultElement.innerHTML = `
+                <div class="flex items-start p-3 rounded-md border ${bgClass}">
+                    <div class="mr-3 mt-0.5">
+                        <i class="fa ${iconClass}"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-medium">${title}</div>
+                        ${description ? `<div class="text-sm mt-1">${description}</div>` : ''}
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(resultElement);
+        }
+        
+        // 工具函數
+        function isValidUrl(url) {
+            try {
+                const urlObj = new URL(url);
+                return urlObj.protocol === 'https:';
+            } catch {
+                return false;
+            }
+        }
+        
+        function isValidApiKey(key) {
+            // 簡單的JWT格式檢查
+            return key.startsWith('eyJhbGci') && key.split('.').length === 3;
+        }
+    </script>
+</body>
+</html>
