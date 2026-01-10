@@ -288,6 +288,19 @@
         <div id="pageContent">
             <!-- 数据统计页面 -->
             <div id="dashboardPage" class="page-content">
+                <!-- 快速操作按钮 -->
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold text-white">快速操作</h3>
+                    <div>
+                        <button id="quickAddGameBtn" class="btn-primary mr-2">
+                            <i class="fa fa-plus mr-2"></i>新增遊戲
+                        </button>
+                        <button id="quickAddUserBtn" class="btn-primary">
+                            <i class="fa fa-user-plus mr-2"></i>新增使用者
+                        </button>
+                    </div>
+                </div>
+                
                 <div class="grid md:grid-cols-4 gap-6 mb-6">
                     <div class="stat-card text-center p-6">
                         <div class="stat-number text-blue-300" id="totalGames">0</div>
@@ -307,7 +320,7 @@
                     </div>
                 </div>
                 <div class="card">
-                    <h3 class="text-lg font-bold mb-4">最近遊戲記錄</h3>
+                    <h3 class="text-lg font-bold mb-4 text-white">最近遊戲記錄</h3>
                     <div class="table-container">
                         <table class="table">
                             <thead>
@@ -320,7 +333,7 @@
                                 </tr>
                             </thead>
                             <tbody id="recentRecords">
-                                <tr><td colspan="5" class="text-center text-gray-500">暂无数据</td></tr>
+                                <tr><td colspan="5" class="text-center text-gray-300">暂无数据</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -586,12 +599,14 @@
 
             // 游戏管理相关
             document.getElementById('addGameBtn').addEventListener('click', () => openGameModal());
+            document.getElementById('quickAddGameBtn').addEventListener('click', () => openGameModal());
             document.getElementById('closeGameModal').addEventListener('click', () => closeGameModal());
             document.getElementById('cancelGameBtn').addEventListener('click', () => closeGameModal());
             document.getElementById('gameForm').addEventListener('submit', (e) => handleGameSubmit(e));
 
             // 用户管理相关
             document.getElementById('addUserBtn').addEventListener('click', () => openUserModal());
+            document.getElementById('quickAddUserBtn').addEventListener('click', () => openUserModal());
             document.getElementById('closeUserModal').addEventListener('click', () => closeUserModal());
             document.getElementById('cancelUserBtn').addEventListener('click', () => closeUserModal());
             document.getElementById('userForm').addEventListener('submit', (e) => handleUserSubmit(e));

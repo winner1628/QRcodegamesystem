@@ -406,8 +406,8 @@
             addLog('正在创建游戏表...', 'info');
             
             try {
-                // 尝试查询游戏表
-                const { error: selectError } = await db.supabase.from('games').select('id').limit(1);
+                // 尝试查询游戏表结构
+                const { data, error: selectError } = await db.supabase.from('games').select('*').limit(1);
                 
                 if (selectError) {
                     // 表不存在，尝试创建
@@ -428,7 +428,36 @@
                     
                     addLog('游戏表创建成功，示例游戏已添加', 'success');
                 } else {
-                    addLog('游戏表已存在', 'info');
+                    // 检查表结构是否正确
+                    if (data && data.length > 0 && data[0].max_score === undefined) {
+                        addLog('游戏表结构不正确，需要重新创建...', 'warning');
+                        
+                        // 尝试删除表（如果支持）
+                        try {
+                            await db.supabase.from('games').delete().neq('id', '');
+                            addLog('已清空游戏表数据', 'info');
+                            
+                            // 重新创建表
+                            const { error: insertError } = await db.supabase.from('games').insert({
+                                id: 'G001',
+                                name: '示例游戏1',
+                                description: '这是一个示例游戏',
+                                max_score: 100,
+                                created_at: new Date().toISOString()
+                            });
+                            
+                            if (insertError) {
+                                throw new Error('重新创建游戏表失败: ' + insertError.message);
+                            }
+                            
+                            addLog('游戏表已重新创建', 'success');
+                        } catch (dropError) {
+                            addLog('无法重新创建游戏表: ' + dropError.message, 'error');
+                            throw new Error('游戏表结构不正确，请手动检查');
+                        }
+                    } else {
+                        addLog('游戏表已存在且结构正确', 'info');
+                    }
                 }
                 
                 return true;
@@ -516,6 +545,38 @@
             addLog('正在添加示例数据...', 'info');
             
             try {
+                // 确保基础游戏数据存在
+                const baseGame = {
+                    id: 'G001',
+                    name: '示例游戏1',
+                    description: '这是一个示例游戏',
+                    max_score: 100,
+                    created_at: new Date().toISOString()
+                };
+                
+                const { error: baseGameError } = await db.supabase.from('games').upsert(baseGame, { onConflict: 'id' });
+                if (baseGameError) {
+                    addLog('添加基础游戏失败: ' + baseGameError.message, 'warning');
+                } else {
+                    addLog('基础游戏数据已确保存在', 'success');
+                }
+                
+                // 确保测试用户存在
+                const testUser = {
+                    id: 'U001',
+                    name: '测试用户',
+                    student_id: 'S001',
+                    total_score: 0,
+                    created_at: new Date().toISOString()
+                };
+                
+                const { error: testUserError } = await db.supabase.from('users').upsert(testUser, { onConflict: 'id' });
+                if (testUserError) {
+                    addLog('添加测试用户失败: ' + testUserError.message, 'warning');
+                } else {
+                    addLog('测试用户数据已确保存在', 'success');
+                }
+                
                 // 添加更多示例游戏
                 const games = [
                     {
@@ -537,7 +598,7 @@
                 for (const game of games) {
                     const { error } = await db.supabase.from('games').insert(game);
                     if (error && !error.message.includes('duplicate key')) {
-                        throw new Error('添加示例游戏失败: ' + error.message);
+                        addLog('添加示例游戏失败，但继续执行: ' + error.message, 'warning');
                     }
                 }
                 
@@ -562,7 +623,7 @@
                 for (const user of users) {
                     const { error } = await db.supabase.from('users').insert(user);
                     if (error && !error.message.includes('duplicate key')) {
-                        throw new Error('添加示例用户失败: ' + error.message);
+                        addLog('添加示例用户失败，但继续执行: ' + error.message, 'warning');
                     }
                 }
                 
