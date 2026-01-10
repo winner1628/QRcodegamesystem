@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理員登入 - QR碼遊戲系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            min-height: 100vh;
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 15px 0 rgba(102, 126, 234, 0.4);
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px 0 rgba(102, 126, 234, 0.6);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: rgba(102, 126, 234, 0.5);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        .login-title {
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 2rem;
+        }
+
+        .back-button {
+            color: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .default-account {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 12px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .label-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="container mx-auto px-4">
+        <div class="max-w-md mx-auto">
+            <!-- 登录卡片 -->
+            <div class="glass-card p-8">
+                <div class="text-center mb-6">
+                    <h1 class="login-title">管理員登入</h1>
+                    <p class="login-subtitle">請輸入管理員帳號和密碼</p>
+                </div>
+
+                <!-- 登录表单 -->
+                <form id="loginForm" class="space-y-4">
+                    <div>
+                        <label for="username" class="label-text">使用者名稱</label>
+                        <input type="text" id="username" name="username" class="form-input" placeholder="請輸入使用者名稱" required>
+                        <div id="usernameError" class="error-message"></div>
+                    </div>
+                    <div>
+                        <label for="password" class="label-text">密碼</label>
+                        <input type="password" id="password" name="password" class="form-input" placeholder="請輸入密碼" required>
+                        <div id="passwordError" class="error-message"></div>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn-primary">
+                            <i class="fa fa-sign-in mr-2"></i>登入
+                        </button>
+                    </div>
+                </form>
+
+                <!-- 错误信息显示 -->
+                <div id="loginError" class="mt-4 text-center text-red-400 hidden"></div>
+
+                <!-- 返回首页 -->
+                <div class="mt-6 text-center">
+                    <button onclick="window.location.href='index.html'" class="back-button">
+                        <i class="fa fa-arrow-left mr-1"></i>返回首頁
+                    </button>
+                </div>
+            </div>
+
+            <!-- 默认账号提示 -->
+            <div class="mt-4 text-center">
+                <div class="default-account text-white text-sm">
+                    <p>預設帳號：admin / admin123</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // 导入模块
+        import './js/config.js';
+        import './js/database.js';
+        import './js/auth.js';
+
+        // 登录逻辑
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginForm = document.getElementById('loginForm');
+            const authManager = new AuthManager();
+
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // 清除之前的错误信息
+                document.getElementById('usernameError').textContent = '';
+                document.getElementById('passwordError').textContent = '';
+                document.getElementById('loginError').classList.add('hidden');
+
+                // 获取表单数据
+                const username = document.getElementById('username').value.trim();
+                const password = document.getElementById('password').value.trim();
+
+                // 简单验证
+                let isValid = true;
+                if (!username) {
+                    document.getElementById('usernameError').textContent = '請輸入使用者名稱';
+                    isValid = false;
+                }
+                if (!password) {
+                    document.getElementById('passwordError').textContent = '請輸入密碼';
+                    isValid = false;
+                }
+
+                if (!isValid) return;
+
+                // 显示加载状态
+                const submitBtn = loginForm.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>登入中...';
+                submitBtn.disabled = true;
+
+                try {
+                    // 执行登录
+                    const result = await authManager.adminLogin(username, password);
+                    
+                    if (result.success) {
+                        // 登录成功，跳转到管理界面
+                        window.location.href = 'admin-main.html';
+                    } else {
+                        // 登录失败，显示错误信息
+                        document.getElementById('loginError').textContent = result.message;
+                        document.getElementById('loginError').classList.remove('hidden');
+                    }
+                } catch (error) {
+                    console.error('登录失败:', error);
+                    document.getElementById('loginError').textContent = '登入失敗，請稍後重試';
+                    document.getElementById('loginError').classList.remove('hidden');
+                } finally {
+                    // 恢复按钮状态
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

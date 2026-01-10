@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理員控制台 - QR碼遊戲系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            min-height: 100vh;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 15px 0 rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px 0 rgba(102, 126, 234, 0.6);
+        }
+
+        .menu-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .menu-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .menu-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .menu-description {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .menu-arrow {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.2rem;
+            margin-top: 1rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- 顶部导航栏 -->
+    <nav class="glass-card m-4 p-4 flex justify-between items-center">
+        <div class="flex items-center">
+            <i class="fa fa-gamepad text-2xl text-white mr-3"></i>
+            <h1 class="text-xl font-bold text-white">QR碼遊戲系統管理員</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <span class="text-white mr-4">管理員</span>
+            <button id="logoutBtn" class="btn-primary">
+                <i class="fa fa-sign-out mr-2"></i>登出
+            </button>
+        </div>
+    </nav>
+
+    <!-- 主要内容 -->
+    <div class="container mx-auto px-4">
+        <!-- 快速统计 -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="stat-card">
+                <div class="stat-number text-blue-300" id="totalGames">0</div>
+                <div class="stat-label">遊戲總數</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number text-green-300" id="totalUsers">0</div>
+                <div class="stat-label">使用者總數</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number text-purple-300" id="totalRecords">0</div>
+                <div class="stat-label">遊戲記錄</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number text-orange-300" id="totalScore">0</div>
+                <div class="stat-label">總分數</div>
+            </div>
+        </div>
+
+        <!-- 功能菜单 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- 数据统计 -->
+            <div class="menu-card" onclick="window.location.href='admin-dashboard.html'">
+                <div>
+                    <div class="menu-icon">
+                        <i class="fa fa-bar-chart"></i>
+                    </div>
+                    <div class="menu-title">數據統計</div>
+                    <div class="menu-description">查看系統整體數據統計和分析報告</div>
+                </div>
+                <div class="menu-arrow">
+                    <i class="fa fa-arrow-right"></i>
+                </div>
+            </div>
+
+            <!-- 游戏管理 -->
+            <div class="menu-card" onclick="window.location.href='admin-games.html'">
+                <div>
+                    <div class="menu-icon">
+                        <i class="fa fa-gamepad"></i>
+                    </div>
+                    <div class="menu-title">遊戲管理</div>
+                    <div class="menu-description">新增、編輯、刪除和管理所有遊戲信息</div>
+                </div>
+                <div class="menu-arrow">
+                    <i class="fa fa-arrow-right"></i>
+                </div>
+            </div>
+
+            <!-- 用户管理 -->
+            <div class="menu-card" onclick="window.location.href='admin-users.html'">
+                <div>
+                    <div class="menu-icon">
+                        <i class="fa fa-users"></i>
+                    </div>
+                    <div class="menu-title">使用者管理</div>
+                    <div class="menu-description">新增、編輯、刪除和管理所有使用者信息</div>
+                </div>
+                <div class="menu-arrow">
+                    <i class="fa fa-arrow-right"></i>
+                </div>
+            </div>
+
+            <!-- 数据导出 -->
+            <div class="menu-card" onclick="window.location.href='admin-export.html'">
+                <div>
+                    <div class="menu-icon">
+                        <i class="fa fa-download"></i>
+                    </div>
+                    <div class="menu-title">數據匯出</div>
+                    <div class="menu-description">匯出系統數據為CSV格式，方便後續分析</div>
+                </div>
+                <div class="menu-arrow">
+                    <i class="fa fa-arrow-right"></i>
+                </div>
+            </div>
+
+            <!-- 系统设置 -->
+            <div class="menu-card" onclick="window.location.href='admin-settings.html'">
+                <div>
+                    <div class="menu-icon">
+                        <i class="fa fa-cog"></i>
+                    </div>
+                    <div class="menu-title">系統設置</div>
+                    <div class="menu-description">管理系統參數、安全設置和其他配置</div>
+                </div>
+                <div class="menu-arrow">
+                    <i class="fa fa-arrow-right"></i>
+                </div>
+            </div>
+
+            <!-- 数据库工具 -->
+            <div class="menu-card" onclick="window.location.href='setup-database.html'">
+                <div>
+                    <div class="menu-icon">
+                        <i class="fa fa-database"></i>
+                    </div>
+                    <div class="menu-title">數據庫工具</div>
+                    <div class="menu-description">初始化、重置和維護數據庫</div>
+                </div>
+                <div class="menu-arrow">
+                    <i class="fa fa-arrow-right"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // 导入模块
+        import './js/config.js';
+        import './js/database.js';
+        import './js/auth.js';
+
+        // 全局变量
+        let authManager = new AuthManager();
+        let db = new DatabaseManager();
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('管理员控制台加载完成');
+            
+            // 检查登录状态
+            authManager.enforceAdminLogin();
+            
+            // 加载统计数据
+            loadStatistics();
+            
+            // 绑定事件
+            bindEvents();
+        });
+
+        // 绑定事件
+        function bindEvents() {
+            // 登出按钮
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                authManager.logout();
+            });
+        }
+
+        // 加载统计数据
+        async function loadStatistics() {
+            try {
+                // 获取游戏总数
+                const gamesResult = await db.supabase.from('games').select('*');
+                document.getElementById('totalGames').textContent = gamesResult.data ? gamesResult.data.length : 0;
+                
+                // 获取用户总数
+                const usersResult = await db.supabase.from('users').select('*');
+                document.getElementById('totalUsers').textContent = usersResult.data ? usersResult.data.length : 0;
+                
+                // 获取记录总数
+                const recordsResult = await db.supabase.from('game_records').select('*');
+                document.getElementById('totalRecords').textContent = recordsResult.data ? recordsResult.data.length : 0;
+                
+                // 获取总分
+                const scoreResult = await db.supabase.from('game_records').select('score');
+                if (scoreResult.data && scoreResult.data.length > 0) {
+                    const totalScore = scoreResult.data.reduce((sum, record) => sum + (record.score || 0), 0);
+                    document.getElementById('totalScore').textContent = totalScore;
+                } else {
+                    document.getElementById('totalScore').textContent = 0;
+                }
+            } catch (error) {
+                console.error('加载统计数据失败:', error);
+            }
+        }
+    </script>
+</body>
+</html>
