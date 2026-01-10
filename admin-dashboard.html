@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员控制台 - QR码游戏系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+        }
+        .sidebar {
+            @apply bg-gray-800 text-white w-64 min-h-screen;
+        }
+        .sidebar-menu {
+            @apply py-2;
+        }
+        .sidebar-item {
+            @apply flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white cursor-pointer transition-colors duration-300;
+        }
+        .sidebar-item.active {
+            @apply bg-blue-600 text-white;
+        }
+        .sidebar-item i {
+            @apply mr-3;
+        }
+        .main-content {
+            @apply flex-1 p-6 bg-gray-100;
+        }
+        .btn-primary {
+            @apply bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors duration-300;
+        }
+        .btn-secondary {
+            @apply bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition-colors duration-300;
+        }
+        .btn-danger {
+            @apply bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors duration-300;
+        }
+        .card {
+            @apply bg-white rounded-lg shadow-lg p-6 border border-gray-200;
+        }
+        .form-input {
+            @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+        }
+        .table-container {
+            @apply overflow-x-auto;
+        }
+        .table {
+            @apply min-w-full bg-white;
+        }
+        .table th {
+            @apply bg-gray-100 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+        }
+        .table td {
+            @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+        }
+        .table tr {
+            @apply border-b;
+        }
+        .table tr:hover {
+            @apply bg-gray-50;
+        }
+        .modal {
+            @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden;
+        }
+        .modal-content {
+            @apply bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4;
+        }
+        .toast {
+            @apply fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300;
+        }
+        .toast.show {
+            @apply translate-x-0;
+        }
+        .toast.error {
+            @apply bg-red-500;
+        }
+    </style>
+</head>
+<body class="flex">
+    <!-- 侧边栏 -->
+    <aside class="sidebar">
+        <div class="p-6 text-center">
+            <h1 class="text-xl font-bold">管理员控制台</h1>
+            <p class="text-sm text-gray-400">QR码游戏系统</p>
+        </div>
+        <nav class="sidebar-menu">
+            <div class="sidebar-item active" data-page="dashboard">
+                <i class="fa fa-dashboard"></i>
+                <span>数据统计</span>
+            </div>
+            <div class="sidebar-item" data-page="games">
+                <i class="fa fa-gamepad"></i>
+                <span>游戏管理</span>
+            </div>
+            <div class="sidebar-item" data-page="users">
+                <i class="fa fa-users"></i>
+                <span>用户管理</span>
+            </div>
+            <div class="sidebar-item" data-page="export">
+                <i class="fa fa-download"></i>
+                <span>数据导出</span>
+            </div>
+            <div class="sidebar-item" data-page="settings">
+                <i class="fa fa-cog"></i>
+                <span>系统设置</span>
+            </div>
+        </nav>
+        <div class="absolute bottom-0 w-64 p-4">
+            <button id="logoutBtn" class="w-full btn-secondary">
+                <i class="fa fa-sign-out mr-2"></i>退出登录
+            </button>
+        </div>
+    </aside>
+
+    <!-- 主内容区域 -->
+    <main class="main-content">
+        <!-- 页面标题 -->
+        <div class="mb-6">
+            <h2 id="pageTitle" class="text-2xl font-bold text-gray-800">数据统计</h2>
+            <p id="pageSubtitle" class="text-gray-600">系统概览数据</p>
+        </div>
+
+        <!-- 页面内容 -->
+        <div id="pageContent">
+            <!-- 数据统计页面 -->
+            <div id="dashboardPage" class="page-content">
+                <div class="grid md:grid-cols-4 gap-6 mb-6">
+                    <div class="card text-center">
+                        <div class="text-3xl font-bold text-blue-600 mb-2" id="totalGames">0</div>
+                        <div class="text-gray-600">游戏总数</div>
+                    </div>
+                    <div class="card text-center">
+                        <div class="text-3xl font-bold text-green-600 mb-2" id="totalUsers">0</div>
+                        <div class="text-gray-600">用户总数</div>
+                    </div>
+                    <div class="card text-center">
+                        <div class="text-3xl font-bold text-purple-600 mb-2" id="totalRecords">0</div>
+                        <div class="text-gray-600">游戏记录</div>
+                    </div>
+                    <div class="card text-center">
+                        <div class="text-3xl font-bold text-orange-600 mb-2" id="totalScore">0</div>
+                        <div class="text-gray-600">总分数</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 class="text-lg font-bold mb-4">最近游戏记录</h3>
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>记录ID</th>
+                                    <th>用户ID</th>
+                                    <th>游戏ID</th>
+                                    <th>分数</th>
+                                    <th>记录时间</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentRecords">
+                                <tr><td colspan="5" class="text-center text-gray-500">暂无数据</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 游戏管理页面 -->
+            <div id="gamesPage" class="page-content hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold">游戏列表</h3>
+                    <button id="addGameBtn" class="btn-primary">
+                        <i class="fa fa-plus mr-2"></i>添加游戏
+                    </button>
+                </div>
+                <div class="card">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>游戏ID</th>
+                                    <th>游戏名称</th>
+                                    <th>游戏描述</th>
+                                    <th>最大分数</th>
+                                    <th>创建时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gamesList">
+                                <tr><td colspan="6" class="text-center text-gray-500">暂无游戏数据</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 用户管理页面 -->
+            <div id="usersPage" class="page-content hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold">用户列表</h3>
+                    <div>
+                        <button id="addUserBtn" class="btn-primary mr-2">
+                            <i class="fa fa-plus mr-2"></i>添加用户
+                        </button>
+                        <button id="importUsersBtn" class="btn-secondary">
+                            <i class="fa fa-upload mr-2"></i>批量导入
+                        </button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>用户ID</th>
+                                    <th>用户姓名</th>
+                                    <th>总分</th>
+                                    <th>创建时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersList">
+                                <tr><td colspan="5" class="text-center text-gray-500">暂无用户数据</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 数据导出页面 -->
+            <div id="exportPage" class="page-content hidden">
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="card text-center">
+                        <h3 class="text-lg font-bold mb-4">导出游戏数据</h3>
+                        <p class="text-gray-600 mb-4">导出所有游戏的详细信息</p>
+                        <button id="exportGamesBtn" class="btn-primary">
+                            <i class="fa fa-download mr-2"></i>导出CSV
+                        </button>
+                    </div>
+                    <div class="card text-center">
+                        <h3 class="text-lg font-bold mb-4">导出用户数据</h3>
+                        <p class="text-gray-600 mb-4">导出所有用户的详细信息</p>
+                        <button id="exportUsersBtn" class="btn-primary">
+                            <i class="fa fa-download mr-2"></i>导出CSV
+                        </button>
+                    </div>
+                    <div class="card text-center">
+                        <h3 class="text-lg font-bold mb-4">导出记录数据</h3>
+                        <p class="text-gray-600 mb-4">导出所有游戏记录</p>
+                        <button id="exportRecordsBtn" class="btn-primary">
+                            <i class="fa fa-download mr-2"></i>导出CSV
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 系统设置页面 -->
+            <div id="settingsPage" class="page-content hidden">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="card">
+                        <h3 class="text-lg font-bold mb-4">修改密码</h3>
+                        <form id="changePasswordForm" class="space-y-4">
+                            <div>
+                                <label for="currentPassword" class="block text-gray-700">当前密码</label>
+                                <input type="password" id="currentPassword" class="form-input" placeholder="请输入当前密码">
+                            </div>
+                            <div>
+                                <label for="newPassword" class="block text-gray-700">新密码</label>
+                                <input type="password" id="newPassword" class="form-input" placeholder="请输入新密码">
+                            </div>
+                            <div>
+                                <label for="confirmPassword" class="block text-gray-700">确认新密码</label>
+                                <input type="password" id="confirmPassword" class="form-input" placeholder="请再次输入新密码">
+                            </div>
+                            <button type="submit" class="btn-primary">
+                                <i class="fa fa-save mr-2"></i>保存修改
+                            </button>
+                        </form>
+                    </div>
+                    <div class="card">
+                        <h3 class="text-lg font-bold mb-4">系统维护</h3>
+                        <div class="space-y-4">
+                            <div class="p-4 bg-yellow-50 border border-yellow-300 rounded-lg">
+                                <h4 class="font-bold text-yellow-800 mb-2">⚠️ 警告</h4>
+                                <p class="text-yellow-700">清空所有数据将删除系统中的所有游戏、用户和记录数据，此操作不可恢复！</p>
+                            </div>
+                            <button id="clearDataBtn" class="btn-danger w-full">
+                                <i class="fa fa-trash mr-2"></i>清空所有数据
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 添加/编辑游戏模态框 -->
+    <div id="gameModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="gameModalTitle" class="text-lg font-bold">添加游戏</h3>
+                <button id="closeGameModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <form id="gameForm" class="space-y-4">
+                <input type="hidden" id="gameId">
+                <div>
+                    <label for="gameName" class="block text-gray-700">游戏名称</label>
+                    <input type="text" id="gameName" class="form-input" placeholder="请输入游戏名称" required>
+                </div>
+                <div>
+                    <label for="gameDescription" class="block text-gray-700">游戏描述</label>
+                    <textarea id="gameDescription" class="form-input" rows="3" placeholder="请输入游戏描述"></textarea>
+                </div>
+                <div>
+                    <label for="maxScore" class="block text-gray-700">最大分数</label>
+                    <input type="number" id="maxScore" class="form-input" placeholder="请输入最大分数" required>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" id="cancelGameBtn" class="btn-secondary">取消</button>
+                    <button type="submit" class="btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 添加/编辑用户模态框 -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="userModalTitle" class="text-lg font-bold">添加用户</h3>
+                <button id="closeUserModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <form id="userForm" class="space-y-4">
+                <input type="hidden" id="userId">
+                <div>
+                    <label for="userName" class="block text-gray-700">用户姓名</label>
+                    <input type="text" id="userName" class="form-input" placeholder="请输入用户姓名" required>
+                </div>
+                <div>
+                    <label for="userStudentId" class="block text-gray-700">学号/ID</label>
+                    <input type="text" id="userStudentId" class="form-input" placeholder="请输入学号或ID" required>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" id="cancelUserBtn" class="btn-secondary">取消</button>
+                    <button type="submit" class="btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 确认模态框 -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h3 id="confirmModalTitle" class="text-lg font-bold mb-4">确认操作</h3>
+            <p id="confirmModalMessage" class="text-gray-600 mb-6">您确定要执行此操作吗？</p>
+            <div class="flex justify-end space-x-2">
+                <button id="cancelConfirmBtn" class="btn-secondary">取消</button>
+                <button id="confirmBtn" class="btn-danger">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div id="toast" class="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script type="module">
+        // 导入模块
+        import './js/config.js';
+        import './js/database.js';
+        import './js/auth.js';
+
+        // 全局变量
+        let currentPage = 'dashboard';
+        let db = new DatabaseManager();
+        let auth = new AuthManager();
+        let currentEditId = null;
+        let confirmCallback = null;
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 检查登录状态
+            auth.enforceAdminLogin();
+            
+            // 初始化数据
+            await loadDashboardData();
+            await loadGames();
+            await loadUsers();
+            
+            // 绑定事件
+            bindEvents();
+        });
+
+        // 绑定事件
+        function bindEvents() {
+            // 侧边栏导航
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const page = item.dataset.page;
+                    switchPage(page);
+                });
+            });
+
+            // 退出登录
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                auth.logout();
+            });
+
+            // 游戏管理相关
+            document.getElementById('addGameBtn').addEventListener('click', () => openGameModal());
+            document.getElementById('closeGameModal').addEventListener('click', () => closeGameModal());
+            document.getElementById('cancelGameBtn').addEventListener('click', () => closeGameModal());
+            document.getElementById('gameForm').addEventListener('submit', (e) => handleGameSubmit(e));
+
+            // 用户管理相关
+            document.getElementById('addUserBtn').addEventListener('click', () => openUserModal());
+            document.getElementById('closeUserModal').addEventListener('click', () => closeUserModal());
+            document.getElementById('cancelUserBtn').addEventListener('click', () => closeUserModal());
+            document.getElementById('userForm').addEventListener('submit', (e) => handleUserSubmit(e));
+            document.getElementById('importUsersBtn').addEventListener('click', () => importUsers());
+
+            // 数据导出相关
+            document.getElementById('exportGamesBtn').addEventListener('click', () => exportData('games'));
+            document.getElementById('exportUsersBtn').addEventListener('click', () => exportData('users'));
+            document.getElementById('exportRecordsBtn').addEventListener('click', () => exportData('records'));
+
+            // 系统设置相关
+            document.getElementById('changePasswordForm').addEventListener('submit', (e) => handlePasswordChange(e));
+            document.getElementById('clearDataBtn').addEventListener('click', () => confirmClearData());
+
+            // 确认模态框
+            document.getElementById('cancelConfirmBtn').addEventListener('click', () => closeConfirmModal());
+            document.getElementById('confirmBtn').addEventListener('click', () => handleConfirm());
+            document.getElementById('cancelConfirmBtn').addEventListener('click', () => closeConfirmModal());
+        }
+
+        // 切换页面
+        function switchPage(page) {
+            // 更新侧边栏选中状态
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`[data-page="${page}"]`).classList.add('active');
+
+            // 隐藏所有页面
+            document.querySelectorAll('.page-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            // 显示目标页面
+            document.getElementById(`${page}Page`).classList.remove('hidden');
+
+            // 更新页面标题
+            updatePageTitle(page);
+
+            // 更新当前页面
+            currentPage = page;
+
+            // 根据页面加载数据
+            if (page === 'dashboard') {
+                loadDashboardData();
+            }
+        }
+
+        // 更新页面标题
+        function updatePageTitle(page) {
+            const titles = {
+                'dashboard': { title: '数据统计', subtitle: '系统概览数据' },
+                'games': { title: '游戏管理', subtitle: '管理所有游戏' },
+                'users': { title: '用户管理', subtitle: '管理所有用户' },
+                'export': { title: '数据导出', subtitle: '导出系统数据' },
+                'settings': { title: '系统设置', subtitle: '系统配置和维护' }
+            };
+
+            document.getElementById('pageTitle').textContent = titles[page].title;
+            document.getElementById('pageSubtitle').textContent = titles[page].subtitle;
+        }
+
+        // 加载仪表盘数据
+        async function loadDashboardData() {
+            try {
+                const stats = await db.getGameStatistics();
+                document.getElementById('totalGames').textContent = stats.totalGames;
+                document.getElementById('totalUsers').textContent = stats.totalUsers;
+                document.getElementById('totalRecords').textContent = stats.totalRecords;
+                document.getElementById('totalScore').textContent = stats.totalScore;
+
+                // 加载最近记录
+                const records = await db.supabase.from('game_records')
+                    .select('*')
+                    .order('recorded_at', { ascending: false })
+                    .limit(10);
+                
+                const tbody = document.getElementById('recentRecords');
+                if (records.data && records.data.length > 0) {
+                    tbody.innerHTML = records.data.map(record => `
+                        <tr>
+                            <td>${record.id}</td>
+                            <td>${record.user_id}</td>
+                            <td>${record.game_id}</td>
+                            <td>${record.score}</td>
+                            <td>${new Date(record.recorded_at).toLocaleString()}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">暂无数据</td></tr>';
+                }
+            } catch (error) {
+                console.error('加载仪表盘数据失败:', error);
+                showToast('加载数据失败', 'error');
+            }
+        }
+
+        // 加载游戏列表
+        async function loadGames() {
+            try {
+                const games = await db.getAllGames();
+                const tbody = document.getElementById('gamesList');
+                
+                if (games.length > 0) {
+                    tbody.innerHTML = games.map(game => `
+                        <tr>
+                            <td>${game.id}</td>
+                            <td>${game.name}</td>
+                            <td>${game.description || '-'}</td>
+                            <td>${game.max_score}</td>
+                            <td>${new Date(game.created_at).toLocaleString()}</td>
+                            <td>
+                                <button class="text-blue-600 hover:text-blue-800 mr-2" onclick="editGame('${game.id}')">
+                                    <i class="fa fa-edit"></i>
+                                </button>
+                                <button class="text-red-600 hover:text-red-800" onclick="deleteGame('${game.id}')">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">暂无游戏数据</td></tr>';
+                }
+            } catch (error) {
+                console.error('加载游戏列表失败:', error);
+                showToast('加载游戏列表失败', 'error');
+            }
+        }
+
+        // 加载用户列表
+        async function loadUsers() {
+            try {
+                const users = await db.getAllUsers();
+                const tbody = document.getElementById('usersList');
+                
+                if (users.length > 0) {
+                    tbody.innerHTML = users.map(user => `
+                        <tr>
+                            <td>${user.id}</td>
+                            <td>${user.name}</td>
+                            <td>${user.total_score}</td>
+                            <td>${new Date(user.created_at).toLocaleString()}</td>
+                            <td>
+                                <button class="text-blue-600 hover:text-blue-800 mr-2" onclick="editUser('${user.id}')">
+                                    <i class="fa fa-edit"></i>
+                                </button>
+                                <button class="text-red-600 hover:text-red-800" onclick="deleteUser('${user.id}')">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">暂无用户数据</td></tr>';
+                }
+            } catch (error) {
+                console.error('加载用户列表失败:', error);
+                showToast('加载用户列表失败', 'error');
+            }
+        }
+
+        // 显示Toast提示
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.textContent = message;
+            toast.className = `toast ${type === 'error' ? 'error' : ''}`;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // 打开游戏模态框
+        function openGameModal(gameId = null) {
+            const modal = document.getElementById('gameModal');
+            const title = document.getElementById('gameModalTitle');
+            const form = document.getElementById('gameForm');
+            
+            if (gameId) {
+                title.textContent = '编辑游戏';
+                currentEditId = gameId;
+                // 加载游戏数据
+                loadGameForEdit(gameId);
+            } else {
+                title.textContent = '添加游戏';
+                currentEditId = null;
+                form.reset();
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        // 关闭游戏模态框
+        function closeGameModal() {
+            document.getElementById('gameModal').classList.add('hidden');
+            document.getElementById('gameForm').reset();
+            currentEditId = null;
+        }
+
+        // 加载游戏数据进行编辑
+        async function loadGameForEdit(gameId) {
+            try {
+                const games = await db.getAllGames();
+                const game = games.find(g => g.id === gameId);
+                
+                if (game) {
+                    document.getElementById('gameId').value = game.id;
+                    document.getElementById('gameName').value = game.name;
+                    document.getElementById('gameDescription').value = game.description || '';
+                    document.getElementById('maxScore').value = game.max_score;
+                }
+            } catch (error) {
+                console.error('加载游戏数据失败:', error);
+                showToast('加载游戏数据失败', 'error');
+            }
+        }
+
+        // 处理游戏表单提交
+        async function handleGameSubmit(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('gameName').value.trim();
+            const description = document.getElementById('gameDescription').value.trim();
+            const maxScore = parseInt(document.getElementById('maxScore').value);
+            
+            if (!name || !maxScore) {
+                showToast('请填写必填字段', 'error');
+                return;
+            }
+            
+            const gameData = {
+                name,
+                description,
+                max_score: maxScore
+            };
+            
+            try {
+                if (currentEditId) {
+                    // 更新游戏
+                    const success = await db.updateGame(currentEditId, gameData);
+                    if (success) {
+                        showToast('游戏更新成功');
+                        closeGameModal();
+                        await loadGames();
+                        await loadDashboardData();
+                    } else {
+                        showToast('游戏更新失败', 'error');
+                    }
+                } else {
+                    // 添加游戏
+                    const success = await db.addGame(gameData);
+                    if (success) {
+                        showToast('游戏添加成功');
+                        closeGameModal();
+                        await loadGames();
+                        await loadDashboardData();
+                    } else {
+                        showToast('游戏添加失败', 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('保存游戏失败:', error);
+                showToast('保存游戏失败', 'error');
+            }
+        }
+
+        // 打开用户模态框
+        function openUserModal(userId = null) {
+            const modal = document.getElementById('userModal');
+            const title = document.getElementById('userModalTitle');
+            const form = document.getElementById('userForm');
+            
+            if (userId) {
+                title.textContent = '编辑用户';
+                currentEditId = userId;
+                // 加载用户数据
+                loadUserForEdit(userId);
+            } else {
+                title.textContent = '添加用户';
+                currentEditId = null;
+                form.reset();
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        // 关闭用户模态框
+        function closeUserModal() {
+            document.getElementById('userModal').classList.add('hidden');
+            document.getElementById('userForm').reset();
+            currentEditId = null;
+        }
+
+        // 加载用户数据进行编辑
+        async function loadUserForEdit(userId) {
+            try {
+                const users = await db.getAllUsers();
+                const user = users.find(u => u.id === userId);
+                
+                if (user) {
+                    document.getElementById('userId').value = user.id;
+                    document.getElementById('userName').value = user.name;
+                    document.getElementById('userStudentId').value = user.student_id || '';
+                }
+            } catch (error) {
+                console.error('加载用户数据失败:', error);
+                showToast('加载用户数据失败', 'error');
+            }
+        }
+
+        // 处理用户表单提交
+        async function handleUserSubmit(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('userName').value.trim();
+            const studentId = document.getElementById('userStudentId').value.trim();
+            
+            if (!name || !studentId) {
+                showToast('请填写必填字段', 'error');
+                return;
+            }
+            
+            const userId = currentEditId || studentId;
+            const userData = {
+                name,
+                student_id: studentId
+            };
+            
+            try {
+                if (currentEditId) {
+                    // 更新用户
+                    const success = await db.updateUser(currentEditId, userData);
+                    if (success) {
+                        showToast('用户更新成功');
+                        closeUserModal();
+                        await loadUsers();
+                        await loadDashboardData();
+                    } else {
+                        showToast('用户更新失败', 'error');
+                    }
+                } else {
+                    // 添加用户
+                    const success = await db.addUser({ id: userId, ...userData });
+                    if (success) {
+                        showToast('用户添加成功');
+                        closeUserModal();
+                        await loadUsers();
+                        await loadDashboardData();
+                    } else {
+                        showToast('用户添加失败', 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('保存用户失败:', error);
+                showToast('保存用户失败', 'error');
+            }
+        }
+
+        // 打开确认模态框
+        function openConfirmModal(title, message, callback) {
+            document.getElementById('confirmModalTitle').textContent = title;
+            document.getElementById('confirmModalMessage').textContent = message;
+            document.getElementById('confirmModal').classList.remove('hidden');
+            confirmCallback = callback;
+        }
+
+        // 关闭确认模态框
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
+            confirmCallback = null;
+        }
+
+        // 处理确认操作
+        async function handleConfirm() {
+            if (confirmCallback) {
+                await confirmCallback();
+            }
+            closeConfirmModal();
+        }
+
+        // 编辑游戏
+        function editGame(gameId) {
+            openGameModal(gameId);
+        }
+
+        // 删除游戏
+        function deleteGame(gameId) {
+            openConfirmModal(
+                '删除游戏',
+                '您确定要删除这个游戏吗？相关的游戏记录也会被删除。',
+                async () => {
+                    try {
+                        const success = await db.deleteGame(gameId);
+                        if (success) {
+                            showToast('游戏删除成功');
+                            await loadGames();
+                            await loadDashboardData();
+                        } else {
+                            showToast('游戏删除失败', 'error');
+                        }
+                    } catch (error) {
+                        console.error('删除游戏失败:', error);
+                        showToast('删除游戏失败', 'error');
+                    }
+                }
+            );
+        }
+
+        // 编辑用户
+        function editUser(userId) {
+            openUserModal(userId);
+        }
+
+        // 删除用户
+        function deleteUser(userId) {
+            openConfirmModal(
+                '删除用户',
+                '您确定要删除这个用户吗？相关的游戏记录也会被删除。',
+                async () => {
+                    try {
+                        const success = await db.deleteUser(userId);
+                        if (success) {
+                            showToast('用户删除成功');
+                            await loadUsers();
+                            await loadDashboardData();
+                        } else {
+                            showToast('用户删除失败', 'error');
+                        }
+                    } catch (error) {
+                        console.error('删除用户失败:', error);
+                        showToast('删除用户失败', 'error');
+                    }
+                }
+            );
+        }
+
+        // 批量导入用户
+        function importUsers() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.csv';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const csv = e.target.result;
+                        const lines = csv.split('\n');
+                        const users = [];
+                        
+                        // 跳过标题行
+                        for (let i = 1; i < lines.length; i++) {
+                            const line = lines[i].trim();
+                            if (!line) continue;
+                            
+                            const [id, name, studentId] = line.split(',');
+                            if (id && name) {
+                                users.push({
+                                    id: id.trim(),
+                                    name: name.trim(),
+                                    student_id: studentId ? studentId.trim() : ''
+                                });
+                            }
+                        }
+                        
+                        if (users.length > 0) {
+                            const success = await db.bulkAddUsers(users);
+                            if (success) {
+                                showToast(`成功导入 ${users.length} 个用户`);
+                                await loadUsers();
+                                await loadDashboardData();
+                            } else {
+                                showToast('用户导入失败', 'error');
+                            }
+                        } else {
+                            showToast('未找到有效的用户数据', 'error');
+                        }
+                    } catch (error) {
+                        console.error('导入用户失败:', error);
+                        showToast('导入用户失败', 'error');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        // 导出数据
+        async function exportData(type) {
+            try {
+                const csv = await db.exportToCSV(type);
+                if (csv) {
+                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    const url = URL.createObjectURL(blob);
+                    
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', `${type}_export_${new Date().toISOString().split('T')[0]}.csv`);
+                    link.style.visibility = 'hidden';
+                    
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    showToast('数据导出成功');
+                }
+            } catch (error) {
+                console.error('导出数据失败:', error);
+                showToast('导出数据失败', 'error');
+            }
+        }
+
+        // 修改密码
+        async function handlePasswordChange(e) {
+            e.preventDefault();
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                showToast('请填写所有密码字段', 'error');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                showToast('两次输入的新密码不一致', 'error');
+                return;
+            }
+            
+            // 验证当前密码
+            const isValid = await auth.adminLogin('admin', currentPassword);
+            if (!isValid.success) {
+                showToast('当前密码错误', 'error');
+                return;
+            }
+            
+            try {
+                const success = await db.updateAdminPassword(newPassword);
+                if (success) {
+                    showToast('密码修改成功');
+                    document.getElementById('changePasswordForm').reset();
+                } else {
+                    showToast('密码修改失败', 'error');
+                }
+            } catch (error) {
+                console.error('修改密码失败:', error);
+                showToast('修改密码失败', 'error');
+            }
+        }
+
+        // 确认清空数据
+        function confirmClearData() {
+            openConfirmModal(
+                '清空所有数据',
+                '您确定要清空所有数据吗？此操作不可恢复！',
+                async () => {
+                    try {
+                        const success = await db.clearAllData();
+                        if (success) {
+                            showToast('数据清空成功');
+                            await loadDashboardData();
+                            await loadGames();
+                            await loadUsers();
+                        } else {
+                            showToast('数据清空失败', 'error');
+                        }
+                    } catch (error) {
+                        console.error('清空数据失败:', error);
+                        showToast('清空数据失败', 'error');
+                    }
+                }
+            );
+        }
+
+        // 全局函数
+        window.editGame = editGame;
+        window.deleteGame = deleteGame;
+        window.editUser = editUser;
+        window.deleteUser = deleteUser;
+    </script>
+</body>
+</html>

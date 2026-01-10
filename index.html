@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR码游戏系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+        }
+        .btn-primary {
+            @apply bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors duration-300;
+        }
+        .btn-secondary {
+            @apply bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition-colors duration-300;
+        }
+        .card {
+            @apply bg-white rounded-lg shadow-lg p-6 border border-gray-200;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-12">
+        <!-- 标题区域 -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">QR码游戏系统</h1>
+            <p class="text-xl text-gray-600">高效管理摊位游戏，轻松记录玩家成绩</p>
+        </div>
+
+        <!-- 功能介绍卡片 -->
+        <div class="grid md:grid-cols-3 gap-8 mb-12">
+            <div class="card text-center">
+                <div class="text-4xl text-blue-600 mb-4">
+                    <i class="fa fa-qrcode"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">QR码快速登录</h3>
+                <p class="text-gray-600">扫描QR码即可快速登录系统，无需手动输入账号密码</p>
+            </div>
+            <div class="card text-center">
+                <div class="text-4xl text-green-600 mb-4">
+                    <i class="fa fa-trophy"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">游戏成绩管理</h3>
+                <p class="text-gray-600">实时记录和统计游戏成绩，支持多种游戏类型</p>
+            </div>
+            <div class="card text-center">
+                <div class="text-4xl text-purple-600 mb-4">
+                    <i class="fa fa-users"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">用户管理</h3>
+                <p class="text-gray-600">支持批量导入用户，管理最多300名玩家</p>
+            </div>
+        </div>
+
+        <!-- 登录按钮区域 -->
+        <div class="text-center">
+            <div class="inline-block mr-4">
+                <button onclick="window.location.href='admin-login.html'" class="btn-primary">
+                    <i class="fa fa-lock mr-2"></i>管理员登录
+                </button>
+            </div>
+            <div class="inline-block">
+                <button onclick="window.location.href='user-login.html'" class="btn-secondary">
+                    <i class="fa fa-user mr-2"></i>用户登录
+                </button>
+            </div>
+        </div>
+
+        <!-- 系统信息 -->
+        <div class="mt-12 text-center text-gray-500 text-sm">
+            <p>支持游戏数量：2-30个 | 支持用户数量：最多300人</p>
+            <p class="mt-2">© 2024 QR码游戏系统 - 为活动管理而生</p>
+        </div>
+    </div>
+
+    <script type="module">
+        // 导入配置
+        import './js/config.js';
+        
+        // 初始化数据库
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const db = new DatabaseManager();
+                await db.initializeDatabase();
+                console.log('数据库初始化成功');
+            } catch (error) {
+                console.error('数据库初始化失败:', error);
+            }
+        });
+    </script>
+</body>
+</html>
