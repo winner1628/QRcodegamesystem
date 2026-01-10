@@ -402,27 +402,10 @@
             //     startQRCodeScan();
             // });
 
-            // 成绩模态框
-            document.getElementById('closeScoreModal').addEventListener('click', () => {
-                closeScoreModal();
-            });
-
-            document.getElementById('cancelScoreBtn').addEventListener('click', () => {
-                closeScoreModal();
-            });
-
             // 成绩表单提交
             document.getElementById('manualScoreForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 await submitManualScore();
-            });
-
-            // 点击模态框外部关闭
-            window.addEventListener('click', (e) => {
-                const modal = document.getElementById('scoreModal');
-                if (e.target === modal) {
-                    closeScoreModal();
-                }
             });
         }
 
@@ -446,8 +429,6 @@
         }
 
         // QR code scanning functionality removed due to camera issues
-                document.getElementById('gameId').value = game.id;
-                document.getElementById('gameName').value = game.name;
                 document.getElementById('score').value = '';
                 document.getElementById('scoreModal').style.display = 'block';
                 
