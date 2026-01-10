@@ -10,22 +10,43 @@ class DatabaseManager {
             // 检查并创建管理员表
             const { error: adminError } = await this.supabase.from('admins').select('id').limit(1);
             if (adminError) {
+                console.log('管理员表不存在，创建默认管理员...');
                 // 表不存在，创建默认管理员
-                await this.supabase.from('admins').insert({
+                const { error: insertError } = await this.supabase.from('admins').insert({
                     username: window.AppConfig.DEFAULT_ADMIN.username,
                     password: this.hashPassword(window.AppConfig.DEFAULT_ADMIN.password),
                     created_at: new Date().toISOString()
                 });
+                
+                if (insertError) {
+                    console.error('创建默认管理员失败:', insertError);
+                    // 如果是表不存在的错误，可能需要先创建表
+                    console.log('尝试创建表结构...');
+                    // 这里可以添加创建表的逻辑，如果Supabase需要的话
+                } else {
+                    console.log('默认管理员创建成功');
+                }
+            } else {
+                console.log('管理员表已存在');
             }
 
             // 确保游戏表存在
-            await this.supabase.from('games').select('id').limit(1);
+            const { error: gamesError } = await this.supabase.from('games').select('id').limit(1);
+            if (gamesError) {
+                console.log('游戏表不存在');
+            }
             
             // 确保用户表存在
-            await this.supabase.from('users').select('id').limit(1);
+            const { error: usersError } = await this.supabase.from('users').select('id').limit(1);
+            if (usersError) {
+                console.log('用户表不存在');
+            }
             
             // 确保记录表存在
-            await this.supabase.from('game_records').select('id').limit(1);
+            const { error: recordsError } = await this.supabase.from('game_records').select('id').limit(1);
+            if (recordsError) {
+                console.log('记录表不存在');
+            }
 
             return true;
         } catch (error) {
@@ -41,17 +62,43 @@ class DatabaseManager {
 
     // 验证管理员登录
     async verifyAdmin(username, password) {
-        const { data, error } = await this.supabase
-            .from('admins')
-            .select('*')
-            .eq('username', username)
-            .single();
+        try {
+            console.log('验证管理员登录:', username);
+            const { data, error } = await this.supabase
+                .from('admins')
+                .select('*')
+                .eq('username', username)
+                .single();
 
-        if (error || !data) {
+            console.log('查询结果:', { data, error });
+
+            if (error) {
+                console.error('查询管理员失败:', error);
+                // 如果是找不到数据的错误，返回false
+                if (error.code === 'PGRST116') { // Supabase的"找不到数据"错误码
+                    return false;
+                }
+                // 其他错误，尝试初始化数据库
+                await this.initializeDatabase();
+                return false;
+            }
+
+            if (!data) {
+                console.log('未找到管理员数据');
+                return false;
+            }
+
+            const hashedPassword = this.hashPassword(password);
+            console.log('密码验证:', { stored: data.password, input: hashedPassword });
+            
+            const isValid = data.password === hashedPassword;
+            console.log('登录验证结果:', isValid);
+            
+            return isValid;
+        } catch (error) {
+            console.error('验证管理员登录时发生异常:', error);
             return false;
         }
-
-        return data.password === this.hashPassword(password);
     }
 
     // 更新管理员密码
