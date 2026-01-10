@@ -116,12 +116,22 @@
         function displayConfig() {
             try {
                 const config = window.AppConfig;
-                document.getElementById('dbUrl').textContent = config.supabase.url;
-                document.getElementById('apiKey').textContent = config.supabase.key.substring(0, 10) + '...';
-                document.getElementById('defaultAdmin').textContent = config.DEFAULT_ADMIN.username + '/' + config.DEFAULT_ADMIN.password;
-                log('配置信息加载成功', 'info');
+                if (config && config.supabase) {
+                    document.getElementById('dbUrl').textContent = config.supabase.url || '未配置';
+                    document.getElementById('apiKey').textContent = (config.supabase.key || '').substring(0, 10) + '...';
+                    document.getElementById('defaultAdmin').textContent = (config.DEFAULT_ADMIN ? `${config.DEFAULT_ADMIN.username}/${config.DEFAULT_ADMIN.password}` : '未配置');
+                    log('配置信息加载成功', 'info');
+                } else {
+                    log('配置信息不完整', 'error');
+                    document.getElementById('dbUrl').textContent = '未配置';
+                    document.getElementById('apiKey').textContent = '未配置';
+                    document.getElementById('defaultAdmin').textContent = '未配置';
+                }
             } catch (error) {
                 log('配置信息加载失败: ' + error.message, 'error');
+                document.getElementById('dbUrl').textContent = '加载失败';
+                document.getElementById('apiKey').textContent = '加载失败';
+                document.getElementById('defaultAdmin').textContent = '加载失败';
             }
         }
 
