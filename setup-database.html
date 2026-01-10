@@ -134,6 +134,11 @@
                 supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 addLog('Supabase客户端初始化成功', 'success');
                 addLog('准备创建数据库表结构...', 'info');
+                addLog('请确保您已在Supabase控制台创建了必要的表', 'warning');
+                addLog('表结构要求：admins(id,username,password,created_at)', 'info');
+                addLog('表结构要求：games(id,name,description,max_score,created_at)', 'info');
+                addLog('表结构要求：users(id,name,student_id,total_score,created_at)', 'info');
+                addLog('表结构要求：game_records(id,user_id,game_id,score,recorded_at)', 'info');
             } catch (error) {
                 addLog('Supabase客户端初始化失败: ' + error.message, 'error');
             }
@@ -147,26 +152,24 @@
             if (isSettingUp) return;
             
             isSettingUp = true;
-            addLog('开始创建数据库表结构...', 'info');
+            addLog('开始初始化数据库数据...', 'info');
             
             try {
-                // 步骤1：清理现有数据
-                await cleanupExistingData();
-                
-                // 步骤2：添加管理员数据
+                // 步骤1：添加管理员数据
                 await addAdminData();
                 
-                // 步骤3：添加游戏数据
+                // 步骤2：添加游戏数据
                 await addGameData();
                 
-                // 步骤4：添加用户数据
+                // 步骤3：添加用户数据
                 await addUserData();
                 
-                // 步骤5：添加游戏记录数据
-                await addGameRecordData();
+                // 步骤4：验证数据库连接
+                await verifyDatabaseConnection();
                 
                 addLog('数据库设置完成！', 'success');
                 addLog('系统已准备就绪，可以开始使用', 'success');
+                addLog('请使用 admin/admin123 登录系统', 'success');
                 
                 // 显示完成信息
                 setTimeout(() => {
@@ -176,37 +179,10 @@
                 
             } catch (error) {
                 addLog('设置失败: ' + error.message, 'error');
+                addLog('请检查Supabase表结构是否正确创建', 'warning');
+                addLog('或联系管理员获取帮助', 'warning');
             } finally {
                 isSettingUp = false;
-            }
-        }
-
-        // 清理现有数据
-        async function cleanupExistingData() {
-            addLog('正在清理现有数据...', 'info');
-            
-            try {
-                // 尝试清理各个表的数据
-                const tables = ['game_records', 'users', 'games', 'admins'];
-                
-                for (const table of tables) {
-                    try {
-                        // 使用limit来限制删除数量，避免UUID错误
-                        const { error } = await supabase.from(table).delete().limit(1000);
-                        if (error) {
-                            addLog(`清理表 ${table} 时出错: ${error.message}`, 'warning');
-                        } else {
-                            addLog(`表 ${table} 数据清理成功`, 'success');
-                        }
-                    } catch (error) {
-                        addLog(`清理表 ${table} 失败，但继续执行: ${error.message}`, 'warning');
-                    }
-                }
-                
-                return true;
-            } catch (error) {
-                addLog('清理现有数据失败: ' + error.message, 'error');
-                throw error;
             }
         }
 
@@ -215,6 +191,14 @@
             addLog('正在添加管理员数据...', 'info');
             
             try {
+                // 先查询是否已有管理员
+                const { data: existingAdmins } = await supabase.from('admins').select('*');
+                
+                if (existingAdmins && existingAdmins.length > 0) {
+                    addLog('管理员数据已存在，跳过添加', 'info');
+                    return true;
+                }
+                
                 const adminData = {
                     id: 'admin1',
                     username: 'admin',
@@ -229,6 +213,7 @@
                 }
                 
                 addLog('管理员数据添加成功', 'success');
+                addLog('默认账号: admin / admin123', 'success');
                 return true;
             } catch (error) {
                 addLog('添加管理员数据失败: ' + error.message, 'error');
@@ -241,26 +226,34 @@
             addLog('正在添加游戏数据...', 'info');
             
             try {
+                // 先查询是否已有游戏数据
+                const { data: existingGames } = await supabase.from('games').select('*');
+                
+                if (existingGames && existingGames.length > 0) {
+                    addLog('游戏数据已存在，跳过添加', 'info');
+                    return true;
+                }
+                
                 const games = [
                     {
                         id: 'G001',
-                        name: '示例游戏1',
-                        description: '这是一个示例游戏',
-                        max_score: 100,
-                        created_at: new Date().toISOString()
-                    },
-                    {
-                        id: 'G002',
                         name: '投篮游戏',
                         description: '经典的投篮游戏，看谁投得更准',
                         max_score: 200,
                         created_at: new Date().toISOString()
                     },
                     {
-                        id: 'G003',
+                        id: 'G002',
                         name: '套圈游戏',
                         description: '传统套圈游戏，套中即可得分',
                         max_score: 150,
+                        created_at: new Date().toISOString()
+                    },
+                    {
+                        id: 'G003',
+                        name: '猜谜游戏',
+                        description: '有趣的猜谜游戏，考验智力',
+                        max_score: 100,
                         created_at: new Date().toISOString()
                     }
                 ];
@@ -274,7 +267,7 @@
                             addLog(`游戏 "${game.name}" 添加成功`, 'success');
                         }
                     } catch (error) {
-                        addLog(`添加游戏 "${game.name}" 时出错: ${error.message}`, 'warning');
+                        addLog(`添加游戏时出错: ${error.message}`, 'warning');
                     }
                 }
                 
@@ -290,24 +283,32 @@
             addLog('正在添加用户数据...', 'info');
             
             try {
+                // 先查询是否已有用户数据
+                const { data: existingUsers } = await supabase.from('users').select('*');
+                
+                if (existingUsers && existingUsers.length > 0) {
+                    addLog('用户数据已存在，跳过添加', 'info');
+                    return true;
+                }
+                
                 const users = [
                     {
                         id: 'U001',
-                        name: '测试用户',
+                        name: '张三',
                         student_id: 'S001',
                         total_score: 0,
                         created_at: new Date().toISOString()
                     },
                     {
                         id: 'U002',
-                        name: '张三',
+                        name: '李四',
                         student_id: 'S002',
                         total_score: 0,
                         created_at: new Date().toISOString()
                     },
                     {
                         id: 'U003',
-                        name: '李四',
+                        name: '王五',
                         student_id: 'S003',
                         total_score: 0,
                         created_at: new Date().toISOString()
@@ -323,7 +324,7 @@
                             addLog(`用户 "${user.name}" 添加成功`, 'success');
                         }
                     } catch (error) {
-                        addLog(`添加用户 "${user.name}" 时出错: ${error.message}`, 'warning');
+                        addLog(`添加用户时出错: ${error.message}`, 'warning');
                     }
                 }
                 
@@ -334,44 +335,28 @@
             }
         }
 
-        // 添加游戏记录数据
-        async function addGameRecordData() {
-            addLog('正在添加游戏记录数据...', 'info');
+        // 验证数据库连接
+        async function verifyDatabaseConnection() {
+            addLog('正在验证数据库连接...', 'info');
             
             try {
-                const records = [
-                    {
-                        id: 'R001',
-                        user_id: 'U001',
-                        game_id: 'G001',
-                        score: 50,
-                        recorded_at: new Date().toISOString()
-                    },
-                    {
-                        id: 'R002',
-                        user_id: 'U002',
-                        game_id: 'G002',
-                        score: 80,
-                        recorded_at: new Date().toISOString()
-                    }
-                ];
+                // 测试各个表的连接
+                const tables = ['admins', 'games', 'users'];
                 
-                for (const record of records) {
-                    try {
-                        const { error } = await supabase.from('game_records').insert(record);
-                        if (error) {
-                            addLog(`添加游戏记录失败: ${error.message}`, 'warning');
-                        } else {
-                            addLog(`游戏记录添加成功`, 'success');
-                        }
-                    } catch (error) {
-                        addLog(`添加游戏记录时出错: ${error.message}`, 'warning');
+                for (const table of tables) {
+                    const { data, error } = await supabase.from(table).select('*').limit(1);
+                    
+                    if (error) {
+                        addLog(`验证表 ${table} 失败: ${error.message}`, 'error');
+                        throw new Error(`数据库表 ${table} 连接失败`);
+                    } else {
+                        addLog(`表 ${table} 连接成功`, 'success');
                     }
                 }
                 
                 return true;
             } catch (error) {
-                addLog('添加游戏记录数据失败: ' + error.message, 'error');
+                addLog('数据库连接验证失败: ' + error.message, 'error');
                 throw error;
             }
         }
