@@ -291,19 +291,46 @@ class DatabaseManager {
 
     // 获取游戏统计数据
     async getGameStatistics() {
-        const { data: games } = await this.getAllGames();
-        const { data: users } = await this.getAllUsers();
-        
-        const { data: records } = await this.supabase
-            .from('game_records')
-            .select('*');
-
-        return {
-            totalGames: games.length,
-            totalUsers: users.length,
-            totalRecords: records.length,
-            totalScore: records.reduce((sum, record) => sum + record.score, 0)
-        };
+        try {
+            console.log('获取游戏统计数据...');
+            
+            // 获取游戏数据
+            const gamesResult = await this.supabase.from('games').select('*');
+            const games = gamesResult.data || [];
+            console.log('游戏数据:', games);
+            
+            // 获取用户数据
+            const usersResult = await this.supabase.from('users').select('*');
+            const users = usersResult.data || [];
+            console.log('用户数据:', users);
+            
+            // 获取记录数据
+            const recordsResult = await this.supabase.from('game_records').select('*');
+            const records = recordsResult.data || [];
+            console.log('记录数据:', records);
+            
+            // 计算总分
+            const totalScore = records.reduce((sum, record) => {
+                const score = parseInt(record.score) || 0;
+                return sum + score;
+            }, 0);
+            
+            return {
+                totalGames: games.length,
+                totalUsers: users.length,
+                totalRecords: records.length,
+                totalScore: totalScore
+            };
+        } catch (error) {
+            console.error('获取游戏统计数据失败:', error);
+            // 返回默认值
+            return {
+                totalGames: 0,
+                totalUsers: 0,
+                totalRecords: 0,
+                totalScore: 0
+            };
+        }
     }
 
     // 清空所有数据
