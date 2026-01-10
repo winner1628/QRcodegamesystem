@@ -1,212 +1,133 @@
-# QR遊戲系統 - 攤位遊戲二維碼記錄系統
+# QR碼遊戲系統使用說明
 
-## 系統介紹
+## 系統概述
+這是一個使用QR碼記錄攤位遊戲的Web應用程式，支援管理2-30個攤位遊戲和約300名使用者，使用GitHub+Vercel+Supabase作為技術棧。
 
-QR遊戲系統是一個專為活動組織者設計的攤位遊戲管理平台，通過二維碼技術簡化遊戲記錄流程，提高活動效率。
+## 系統要求
+- 現代Web瀏覽器（Chrome、Firefox、Safari、Edge等）
+- 網路連線
+- 攝影機（用於掃描QR碼）
 
-### 主要功能
+## 主要功能
+1. **管理員功能**
+   - 遊戲管理：新增、編輯、刪除遊戲
+   - 使用者管理：新增、編輯、刪除使用者，批量匯入使用者
+   - 數據統計：查看遊戲和使用者數據統計
+   - 數據匯出：匯出遊戲、使用者和記錄數據
 
-- **二維碼掃描**：用戶可使用手機攝像頭掃描攤位二維碼參與遊戲
-- **遊戲管理**：支持2-30個攤位遊戲的設置和管理
-- **用戶管理**：可導入約300名用戶信息，支持用戶登入和參與記錄
-- **記錄查詢**：即時記錄遊戲成績和禮品發放情況
-- **數據統計**：提供直觀的數據統計和分析功能
-- **數據導出**：支持將參與記錄、用戶數據等導出為CSV格式
+2. **使用者功能**
+   - 掃描QR碼登入
+   - 記錄遊戲成績
+   - 查看個人遊戲記錄
 
-## 技術架構
-
-- **前端**：HTML5, CSS3, JavaScript, Tailwind CSS v3
-- **後端**：Node.js (Vercel Serverless Functions)
-- **數據庫**：Supabase PostgreSQL
-- **部署平台**：Vercel
-- **版本控制**：GitHub
-
-## 快速開始
-
-### 前置要求
-
-- GitHub 帳號
-- Vercel 帳號
-- Supabase 帳號
-- 現代化的Web瀏覽器
-
-### 安裝步驟
-
-1. **克隆代碼庫**
-
-```bash
-git clone https://github.com/your-username/qr-game-system.git
-cd qr-game-system
-```
-
-2. **配置Supabase數據庫**
-
-- 登錄Supabase創建新項目
-- 創建以下表結構：
-
-```sql
--- 用戶表
-CREATE TABLE users (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    group_name TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- 遊戲表
-CREATE TABLE games (
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
-    booth_number TEXT NOT NULL,
-    description TEXT,
-    status TEXT DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- 參與記錄表
-CREATE TABLE records (
-    id SERIAL PRIMARY KEY,
-    user_id TEXT REFERENCES users(id),
-    game_id INTEGER REFERENCES games(id),
-    score TEXT,
-    gift TEXT,
-    operator TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- 禮品表
-CREATE TABLE gifts (
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
-    quantity INTEGER DEFAULT 0,
-    game_id INTEGER REFERENCES games(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-3. **配置環境變量**
-
-在 `config.js` 文件中配置您的Supabase信息：
-
-```javascript
-const config = {
-  supabase: {
-    url: 'https://your-project-url.supabase.co',
-    anonKey: 'your-anon-key'
-  }
-};
-```
-
-4. **部署到Vercel**
-
-- 登錄Vercel
-- 連接您的GitHub代碼庫
-- 按照提示完成部署配置
-- 部署完成後，您將獲得一個公開的URL
-
+## 系統訪問
 ### 本地開發
-
-1. **安裝依賴**
-
+1. 啟動本地伺服器：
 ```bash
-npm install
+cd qr-game-system-complete
+python3 -m http.server 8000
 ```
 
-2. **啟動開發服務器**
+2. 在瀏覽器中訪問：`http://localhost:8000`
 
-```bash
-npm run dev
-```
+### 生產環境
+- 部署到Vercel後訪問對應的URL
 
-3. **打開瀏覽器**
+## 登入方式
+### 管理員登入
+1. 訪問：`http://localhost:8000/admin-login.html`
+2. 預設帳號：
+   - 使用者名稱：admin
+   - 密碼：admin123
 
-訪問 `http://localhost:3000`
+### 使用者登入
+1. 訪問：`http://localhost:8000/user-login.html`
+2. 選擇登入方式：
+   - 掃描使用者QR碼
+   - 輸入使用者ID和姓名
 
-## 使用指南
+## 診斷和修復工具
+系統提供了多種診斷和修復工具：
 
-### 管理員操作
+1. **系統診斷工具** (`diagnosis-tool.html`)
+   - 全面檢測系統功能狀態
+   - 測試資料庫連線、表結構和核心功能
+   - 提供詳細的診斷報告和修復建議
 
-1. **管理員登入**
-   - 訪問 `/admin.html`
-   - 使用默認帳號：`admin`，密碼：`admin123`（生產環境請修改）
+2. **詳細調試工具** (`debug-tool.html`)
+   - 系統診斷和問題排查
+   - 測試資料庫連線、初始化資料庫
+   - 檢查和建立管理員帳號
+   - 測試登入功能
 
-2. **管理功能**
-   - **數據概覽**：查看系統整體數據統計
-   - **遊戲管理**：添加、編輯、刪除遊戲
-   - **用戶管理**：導入、管理用戶信息
-   - **記錄查詢**：查詢和管理參與記錄
-   - **數據導出**：導出各種數據報表
-   - **系統設置**：配置系統參數
+3. **資料庫測試工具** (`db-test.html`)
+   - 資料庫連線和帳號測試
+   - 管理員帳號資訊查看
+   - 登入測試和密碼驗證
+   - 密碼重設功能
 
-### 用戶操作
+4. **管理員修復工具** (`fix-admin.html`)
+   - 修復管理員帳號問題
+   - 四步式自動修復流程
 
-1. **用戶登入**
-   - 訪問 `/user.html`
-   - 輸入用戶ID和姓名
+5. **應急登入工具** (`emergency-login.html`)
+   - 資料庫不可用時的緊急訪問
+   - 跳過資料庫驗證直接登入
 
-2. **參與遊戲**
-   - 點擊"開始掃描"按鈕
-   - 將攝像頭對準攤位二維碼
-   - 系統自動識別並記錄參與信息
-   - 完成參與後可獲得相應獎品
+## 常見問題解決
+### 1. 無法連線資料庫
+- 檢查`js/config.js`中的Supabase配置
+- 使用系統診斷工具測試連線
+- 確認API金鑰和URL是否正確
 
-## 系統特色
+### 2. 管理員登入失敗
+- 使用管理員修復工具重設帳號
+- 檢查資料庫中管理員表的結構
+- 使用應急登入工具臨時訪問
 
-- **響應式設計**：支持桌面端和移動端
-- **即時反饋**：操作結果實時反饋
-- **數據安全**：使用Supabase安全存儲數據
-- **易於部署**：支持Vercel一鍵部署
-- **開源免費**：完全開源，可自由定制
+### 3. 無法掃描QR碼
+- 確保瀏覽器有權限訪問攝影機
+- 使用HTTPS協議（生產環境）
+- 檢查攝影機是否正常工作
 
-## 故障排除
+### 4. 功能按鈕不工作
+- 檢查瀏覽器控制台是否有錯誤
+- 確認資料庫連線正常
+- 使用系統診斷工具檢測功能狀態
 
-### 常見問題
+## 資料結構
+### 遊戲表 (games)
+- id: 遊戲ID
+- name: 遊戲名稱
+- description: 遊戲描述
+- max_score: 最大分數
+- created_at: 建立時間
 
-1. **攝像頭無法啟用**
-   - 檢查瀏覽器是否有攝像頭訪問權限
-   - 確保設備攝像頭正常工作
-   - 檢查網絡連接是否穩定
+### 使用者表 (users)
+- id: 使用者ID
+- name: 使用者姓名
+- student_id: 學號/ID
+- total_score: 總分
+- created_at: 建立時間
 
-2. **二維碼無法識別**
-   - 確保二維碼清晰可見
-   - 調整攝像頭與二維碼的距離
-   - 檢查二維碼格式是否正確
+### 遊戲記錄表 (game_records)
+- id: 記錄ID
+- user_id: 使用者ID
+- game_id: 遊戲ID
+- score: 分數
+- recorded_at: 記錄時間
 
-3. **數據無法保存**
-   - 檢查Supabase配置是否正確
-   - 確認網絡連接正常
-   - 查看瀏覽器控制台是否有錯誤信息
+### 管理員表 (admins)
+- id: 管理員ID
+- username: 使用者名稱
+- password_hash: 密碼雜湊
+- created_at: 建立時間
 
-### 支持
+## 安全注意事項
+1. 生產環境中請修改預設管理員密碼
+2. 使用HTTPS協議保護資料傳輸
+3. 定期備份資料庫
+4. 限制管理員帳號的使用
 
-如果您遇到任何問題，請提交Issue到GitHub代碼庫，我們將盡快回應。
-
-## 貢獻指南
-
-歡迎提交Pull Request來改進這個項目。在提交之前，請確保：
-
-1. 代碼風格一致
-2. 添加了必要的測試
-3. 更新了相關文檔
-4. 描述了您的更改內容
-
-## 許可證
-
-本項目採用MIT許可證。詳細信息請參閱LICENSE文件。
-
-## 更新日誌
-
-### v1.0.0 (2025-01-15)
-
-- 初始版本發布
-- 實現基本的二維碼掃描功能
-- 支持遊戲管理和用戶管理
-- 提供數據統計和導出功能
-
-## 致謝
-
-感謝所有為此項目做出貢獻的開發者和用戶！
-
----
-
-**注意**：本系統僅供學習和非商業用途使用。在生產環境中使用時，請確保遵守相關法律法規。
+## 技術支援
+如有問題，請使用系統提供的診斷工具進行排查，或聯繫技術支援。
