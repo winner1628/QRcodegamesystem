@@ -343,12 +343,18 @@
             addLog('正在测试数据库连接...', 'info');
             
             try {
-                const result = await db.supabase.from('information_schema.tables')
-                    .select('table_name')
-                    .limit(1);
+                // 直接测试我们需要的表，而不是information_schema.tables
+                // 尝试查询一个简单的表
+                const result = await db.supabase.from('admins').select('*').limit(1);
                 
                 if (result.error) {
-                    throw new Error('连接失败: ' + result.error.message);
+                    // 如果是表不存在的错误，这是正常的，说明需要创建表
+                    if (result.error.code === 'PGRST116' || result.error.message.includes('relation')) {
+                        addLog('数据库连接成功，但表结构不存在，需要创建', 'warning');
+                        return true;
+                    } else {
+                        throw new Error('连接失败: ' + result.error.message);
+                    }
                 }
                 
                 addLog('数据库连接成功！', 'success');
