@@ -89,9 +89,14 @@ class DatabaseManager {
             }
 
             const hashedPassword = this.hashPassword(password);
-            console.log('密码验证:', { stored: data.password, input: hashedPassword });
+            console.log('密码验证:', { 
+                storedPassword: data.password ? data.password.substring(0, 10) + '...' : 'undefined',
+                storedPasswordHash: data.password_hash ? data.password_hash.substring(0, 10) + '...' : 'undefined',
+                input: hashedPassword.substring(0, 10) + '...'
+            });
             
-            const isValid = data.password === hashedPassword;
+            // 检查两个可能的密码字段
+            const isValid = data.password === hashedPassword || data.password_hash === hashedPassword;
             console.log('登录验证结果:', isValid);
             
             return isValid;
@@ -103,10 +108,27 @@ class DatabaseManager {
 
     // 更新管理员密码
     async updateAdminPassword(newPassword) {
-        const { error } = await this.supabase
-            .from('admins')
-            .update({ password: this.hashPassword(newPassword) })
-            .eq('username', 'admin');
+        const hashedPassword = this.hashPassword(newPassword);
+        
+        // 检查数据库中存在哪个密码字段
+        const { data } = await this.supabase.from('admins').select('*').eq('username', 'admin').single();
+        
+        let error;
+        if (data && data.password !== undefined) {
+            // 使用 password 字段
+            const result = await this.supabase
+                .from('admins')
+                .update({ password: hashedPassword })
+                .eq('username', 'admin');
+            error = result.error;
+        } else {
+            // 使用 password_hash 字段
+            const result = await this.supabase
+                .from('admins')
+                .update({ password_hash: hashedPassword })
+                .eq('username', 'admin');
+            error = result.error;
+        }
 
         return !error;
     }
