@@ -240,13 +240,15 @@
         // 测试管理员登录
         async function testAdminLogin() {
             try {
-                const admin = await authManager.login('admin', 'admin123');
-                if (admin) {
+                const adminResult = await authManager.login('admin', 'admin123');
+                if (adminResult.success) {
                     addTestResult('success', '✅ 管理员登录成功');
                     authManager.logout(); // 立即登出
                     return true;
+                } else {
+                    addTestResult('error', `❌ 管理员登录失败: ${adminResult.message}`);
+                    return false;
                 }
-                return false;
             } catch (error) {
                 addTestResult('error', `❌ 管理员登录测试失败: ${error.message}`);
                 return false;
@@ -260,10 +262,15 @@
                 const users = await dbManager.getAllUsers();
                 if (users && users.length > 0) {
                     const testUser = users[0];
-                    authManager.loginAsUser(testUser);
-                    addTestResult('success', `✅ 用户登录成功: ${testUser.name}`);
-                    authManager.logout(); // 立即登出
-                    return true;
+                    const loginResult = await authManager.loginAsUser(testUser.id);
+                    if (loginResult.success) {
+                        addTestResult('success', `✅ 用户登录成功: ${testUser.name}`);
+                        authManager.logout(); // 立即登出
+                        return true;
+                    } else {
+                        addTestResult('error', `❌ 用户登录失败: ${loginResult.message}`);
+                        return false;
+                    }
                 } else {
                     addTestResult('info', 'ℹ️ 没有用户数据，跳过用户登录测试');
                     return true;
