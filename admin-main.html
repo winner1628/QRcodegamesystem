@@ -302,8 +302,15 @@
                     throw new Error('获取用户列表失败: ' + usersError.message);
                 }
 
+                // 批量更新用户总分
                 for (const user of users) {
-                    await db.supabase.from('users').update({ total_score: 0 }).eq('id', user.id);
+                    const { error: updateError } = await db.supabase.from('users')
+                        .update({ total_score: 0 })
+                        .eq('id', user.id);
+                    
+                    if (updateError) {
+                        console.error(`更新用户 ${user.id} 总分失败:`, updateError);
+                    }
                 }
 
                 showMessage('所有記錄已清空', 'success');
@@ -318,35 +325,45 @@
         async function exportAllData() {
             try {
                 // 获取所有数据
-                const games = await db.supabase.from('games').select('*');
-                const users = await db.supabase.from('users').select('*');
-                const records = await db.supabase.from('game_records').select('*');
+                const { data: games, error: gamesError } = await db.supabase.from('games').select('*');
+                const { data: users, error: usersError } = await db.supabase.from('users').select('*');
+                const { data: records, error: recordsError } = await db.supabase.from('game_records').select('*');
 
-                // 准备CSV数据
-                const csvData = {
-                    games: convertToCSV(games.data || [], ['id', 'name', 'description', 'max_score', 'created_at']),
-                    users: convertToCSV(users.data || [], ['id', 'name', 'student_id', 'total_score', 'created_at']),
-                    records: convertToCSV(records.data || [], ['id', 'user_id', 'game_id', 'score', 'recorded_at'])
-                };
+                if (gamesError || usersError || recordsError) {
+                    throw new Error('获取数据失败');
+                }
 
-                // 创建ZIP文件
-                const zipContent = {
-                    'games.csv': csvData.games,
-                    'users.csv': csvData.users,
-                    'game_records.csv': csvData.records,
-                    'export_summary.txt': `导出时间: ${new Date().toLocaleString()}\n游戏数量: ${games.data?.length || 0}\n用户数量: ${users.data?.length || 0}\n记录数量: ${records.data?.length || 0}`
-                };
+                // 导出游戏数据
+                const gamesCSV = convertToCSV(games || [], ['id', 'name', 'description', 'max_score', 'created_at']);
+                downloadCSV(gamesCSV, 'games.csv');
 
-                // 下载文件
-                const zipBlob = new Blob([JSON.stringify(zipContent)], { type: 'application/json' });
-                const url = URL.createObjectURL(zipBlob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `qr_game_system_export_${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                // 导出用户数据
+                const usersCSV = convertToCSV(users || [], ['id', 'name', 'student_id', 'total_score', 'created_at']);
+                downloadCSV(usersCSV, 'users.csv');
+
+                // 导出记录数据
+                const recordsCSV = convertToCSV(records || [], ['id', 'user_id', 'game_id', 'score', 'recorded_at']);
+                downloadCSV(recordsCSV, 'game_records.csv');
+
+                showMessage('數據導出成功', 'success');
+            } catch (error) {
+                console.error('导出数据失败:', error);
+                showMessage('導出數據失敗: ' + error.message, 'error');
+            }
+        }
+
+        // 下载CSV文件
+        function downloadCSV(csvContent, filename) {
+            const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
 
                 showMessage('數據導出成功', 'success');
             } catch (error) {

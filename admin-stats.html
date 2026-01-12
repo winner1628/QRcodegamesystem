@@ -200,15 +200,18 @@
         async function loadStatistics() {
             try {
                 // 获取游戏总数
-                const games = await db.getAllGames();
+                const { data: games, error: gamesError } = await db.supabase.from('games').select('*');
+                if (gamesError) throw gamesError;
                 document.getElementById('totalGames').textContent = games.length;
 
                 // 获取用户总数
-                const users = await db.getAllUsers();
+                const { data: users, error: usersError } = await db.supabase.from('users').select('*');
+                if (usersError) throw usersError;
                 document.getElementById('totalUsers').textContent = users.length;
 
                 // 获取记录总数
-                const records = await db.getAllGameRecords();
+                const { data: records, error: recordsError } = await db.supabase.from('game_records').select('*');
+                if (recordsError) throw recordsError;
                 document.getElementById('totalRecords').textContent = records.length;
 
                 // 计算平均分数
@@ -239,8 +242,11 @@
         // 初始化游戏参与度图表
         async function initGameParticipationChart() {
             try {
-                const games = await db.getAllGames();
-                const records = await db.getAllGameRecords();
+                const { data: games, error: gamesError } = await db.supabase.from('games').select('*');
+                if (gamesError) throw gamesError;
+                
+                const { data: records, error: recordsError } = await db.supabase.from('game_records').select('*');
+                if (recordsError) throw recordsError;
                 
                 // 统计每个游戏的参与次数
                 const gameParticipation = {};
@@ -286,30 +292,32 @@
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                ticks: { color: 'rgba(255, 255, 255, 0.8)' },
-                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                                ticks: { color: 'rgba(0, 0, 0, 0.8)' },
+                                grid: { color: 'rgba(0, 0, 0, 0.1)' }
                             },
                             x: {
-                                ticks: { color: 'rgba(255, 255, 255, 0.8)' },
-                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                                ticks: { color: 'rgba(0, 0, 0, 0.8)' },
+                                grid: { color: 'rgba(0, 0, 0, 0.1)' }
                             }
                         },
                         plugins: {
                             legend: {
-                                labels: { color: 'rgba(255, 255, 255, 0.8)' }
+                                labels: { color: 'rgba(0, 0, 0, 0.8)' }
                             }
                         }
                     }
                 });
             } catch (error) {
                 console.error('初始化游戏参与度图表失败:', error);
+                showMessage('加載遊戲參與度圖表失敗', 'error');
             }
         }
 
         // 初始化用户分数分布图表
         async function initUserScoreChart() {
             try {
-                const users = await db.getAllUsers();
+                const { data: users, error: usersError } = await db.supabase.from('users').select('*');
+                if (usersError) throw usersError;
                 
                 // 按分数排序
                 users.sort((a, b) => b.total_score - a.total_score);
@@ -341,23 +349,24 @@
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                ticks: { color: 'rgba(255, 255, 255, 0.8)' },
-                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                                ticks: { color: 'rgba(0, 0, 0, 0.8)' },
+                                grid: { color: 'rgba(0, 0, 0, 0.1)' }
                             },
                             x: {
-                                ticks: { color: 'rgba(255, 255, 255, 0.8)' },
-                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                                ticks: { color: 'rgba(0, 0, 0, 0.8)' },
+                                grid: { color: 'rgba(0, 0, 0, 0.1)' }
                             }
                         },
                         plugins: {
                             legend: {
-                                labels: { color: 'rgba(255, 255, 255, 0.8)' }
+                                labels: { color: 'rgba(0, 0, 0, 0.8)' }
                             }
                         }
                     }
                 });
             } catch (error) {
                 console.error('初始化用户分数分布图表失败:', error);
+                showMessage('加載用戶分數分佈圖表失敗', 'error');
             }
         }
 
