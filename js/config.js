@@ -39,10 +39,12 @@ window.AppConfig = {
 };
 
 // 初始化 Supabase 客户端
-if (!window.supabase) {
-    const { createClient } = window.supabase;
+if (!window.supabase && typeof createClient !== 'undefined') {
     window.supabase = createClient(
         window.AppConfig.supabase.url,
         window.AppConfig.supabase.key
     );
+    console.log('Supabase 客户端初始化成功');
+} else if (!window.supabase) {
+    console.error('Supabase createClient 函数未找到');
 }

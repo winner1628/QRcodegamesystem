@@ -2,6 +2,9 @@
 class DatabaseManager {
     constructor() {
         this.supabase = window.supabase;
+        if (!this.supabase) {
+            console.error('Supabase 客户端未初始化');
+        }
     }
 
     // 初始化数据库表
