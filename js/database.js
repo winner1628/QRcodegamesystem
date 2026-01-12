@@ -198,8 +198,94 @@ class DatabaseManager {
         return !error;
     }
 
+    // 测试数据库连接
+    async testConnection() {
+        try {
+            console.log('测试数据库连接...');
+            // 尝试执行一个简单的查询来测试连接
+            const { data, error } = await this.supabase.from('admins').select('id').limit(1);
+            
+            if (error) {
+                console.error('数据库连接测试失败:', error);
+                return false;
+            }
+            
+            console.log('数据库连接测试成功');
+            return true;
+        } catch (error) {
+            console.error('数据库连接测试异常:', error);
+            return false;
+        }
+    }
+
+    // 生成游戏ID
+    async generateGameId() {
+        try {
+            console.log('生成游戏ID...');
+            const { data, error } = await this.supabase
+                .from('games')
+                .select('id')
+                .order('id', { ascending: false })
+                .limit(1);
+
+            if (error) {
+                console.error('获取游戏ID失败:', error);
+                return 'G000001'; // 默认值
+            }
+
+            if (data && data.length > 0) {
+                const lastId = data[0].id;
+                const number = parseInt(lastId.substring(1)) + 1;
+                return `G${number.toString().padStart(6, '0')}`;
+            } else {
+                return 'G000001'; // 第一个游戏
+            }
+        } catch (error) {
+            console.error('生成游戏ID异常:', error);
+            return 'G000001';
+        }
+    }
+
+    // 生成用户ID
+    async generateUserId() {
+        try {
+            console.log('生成用户ID...');
+            const { data, error } = await this.supabase
+                .from('users')
+                .select('id')
+                .order('id', { ascending: false })
+                .limit(1);
+
+            if (error) {
+                console.error('获取用户ID失败:', error);
+                return 'U000001'; // 默认值
+            }
+
+            if (data && data.length > 0) {
+                const lastId = data[0].id;
+                const number = parseInt(lastId.substring(1)) + 1;
+                return `U${number.toString().padStart(6, '0')}`;
+            } else {
+                return 'U000001'; // 第一个用户
+            }
+        } catch (error) {
+            console.error('生成用户ID异常:', error);
+            return 'U000001';
+        }
+    }
+
     // 批量添加用户
     async bulkAddUsers(users) {
+        const { error } = await this.supabase
+            .from('users')
+            .insert(users.map(user => ({
+                ...user,
+                created_at: new Date().toISOString(),
+                total_score: 0
+            })));
+
+        return !error;
+    }
         const { error } = await this.supabase
             .from('users')
             .insert(users.map(user => ({

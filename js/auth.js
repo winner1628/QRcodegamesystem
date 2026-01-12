@@ -40,6 +40,16 @@ class AuthManager {
         }
     }
 
+    // 管理员登录（别名方法，用于测试）
+    async login(username, password) {
+        return this.adminLogin(username, password);
+    }
+
+    // 用户登录（别名方法，用于测试）
+    async loginAsUser(userId) {
+        return this.userLogin(userId);
+    }
+
     // 登出
     logout() {
         sessionStorage.clear();
