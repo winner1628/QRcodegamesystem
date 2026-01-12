@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>數據統計 - QR碼遊戲系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4/dist/umd/supabase.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+            color: #333333;
+        }
+
+        .sidebar {
+            background: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 250px;
+            transition: all 0.3s ease;
+        }
+
+        .main-content {
+            margin-left: 250px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #6b7280;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            margin: 2px 0;
+        }
+
+        .nav-link:hover {
+            background: #f3f4f6;
+            color: #3b82f6;
+        }
+
+        .nav-link.active {
+            background: #eff6ff;
+            color: #3b82f6;
+            border-left-color: #3b82f6;
+        }
+
+        .nav-link i {
+            width: 20px;
+            margin-right: 10px;
+        }
+
+        .top-bar {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #3b82f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 16px;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            font-weight: bold;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            font-weight: bold;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            font-weight: bold;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            border: 1px solid #d1d5db;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            background: #f9fafb;
+            font-weight: bold;
+            color: #374151;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .badge-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .badge-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .badge-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .progress-bar {
+            width: 100%;
+            background: #e5e7eb;
+            border-radius: 12px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            height: 100%;
+            border-radius: 12px;
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 侧边栏 -->
+    <div class="sidebar">
+        <div class="p-4 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-blue-600">管理控制台</h2>
+            <p class="text-sm text-gray-500">QR碼遊戲系統</p>
+        </div>
+        
+        <nav class="mt-4">
+            <a href="admin-main.html" class="nav-link" data-target="admin-main.html">
+                <i class="fa fa-dashboard"></i>
+                <span>控制台</span>
+            </a>
+            <a href="admin-games.html" class="nav-link" data-target="admin-games.html">
+                <i class="fa fa-gamepad"></i>
+                <span>遊戲管理</span>
+            </a>
+            <a href="admin-users.html" class="nav-link" data-target="admin-users.html">
+                <i class="fa fa-users"></i>
+                <span>用戶管理</span>
+            </a>
+            <a href="admin-stats.html" class="nav-link active" data-target="admin-stats.html">
+                <i class="fa fa-bar-chart"></i>
+                <span>數據統計</span>
+            </a>
+            <div class="border-t border-gray-200 my-4"></div>
+            <a href="#" class="nav-link" id="logoutBtn">
+                <i class="fa fa-sign-out"></i>
+                <span>退出登入</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- 主内容区域 -->
+    <div class="main-content">
+        <!-- 顶部栏 -->
+        <div class="top-bar">
+            <div>
+                <h1 class="text-xl font-bold">數據統計</h1>
+                <p class="text-sm text-gray-500">詳細的系統數據分析</p>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fa fa-user"></i>
+                </div>
+                <div>
+                    <div class="font-medium" id="adminName">管理員</div>
+                    <div class="text-sm text-gray-500">在線</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 内容区域 -->
+        <div class="p-6">
+            <!-- 数据概览卡片 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <div class="card text-center">
+                    <div class="text-3xl font-bold text-blue-600" id="totalGames">0</div>
+                    <div class="text-sm text-gray-500">總遊戲數</div>
+                </div>
+                <div class="card text-center">
+                    <div class="text-3xl font-bold text-green-600" id="totalUsers">0</div>
+                    <div class="text-sm text-gray-500">總用戶數</div>
+                </div>
+                <div class="card text-center">
+                    <div class="text-3xl font-bold text-yellow-600" id="totalRecords">0</div>
+                    <div class="text-sm text-gray-500">總記錄數</div>
+                </div>
+                <div class="card text-center">
+                    <div class="text-3xl font-bold text-purple-600" id="avgScore">0</div>
+                    <div class="text-sm text-gray-500">平均得分</div>
+                </div>
+            </div>
+
+            <!-- 数据操作 -->
+            <div class="card mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="card-title mb-0">
+                        <i class="fa fa-cogs mr-2"></i>數據操作
+                    </div>
+                    <div>
+                        <button id="exportDataBtn" class="btn-primary mr-2">
+                            <i class="fa fa-download mr-2"></i>導出數據
+                        </button>
+                        <button id="clearRecordsBtn" class="btn-danger">
+                            <i class="fa fa-trash mr-2"></i>清空記錄
+                        </button>
+                        <button id="refreshStatsBtn" class="btn-secondary ml-2">
+                            <i class="fa fa-refresh mr-2"></i>刷新數據
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 游戏统计 -->
+            <div class="card mb-6">
+                <div class="card-title">
+                    <i class="fa fa-gamepad mr-2"></i>遊戲參與統計
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>遊戲名稱</th>
+                                <th>參與人數</th>
+                                <th>參與次數</th>
+                                <th>平均分數</th>
+                                <th>參與度</th>
+                            </tr>
+                        </thead>
+                        <tbody id="statsTable">
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-gray-500">
+                                    <i class="fa fa-spinner fa-spin mr-2"></i>加載中...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 排行榜 -->
+            <div class="card mb-6">
+                <div class="card-title">
+                    <i class="fa fa-trophy mr-2"></i>用戶排行榜
+                </div>
+                <div id="rankingsList">
+                    <div class="text-center py-4 text-gray-500">
+                        <i class="fa fa-spinner fa-spin mr-2"></i>加載中...
+                    </div>
+                </div>
+            </div>
+
+            <!-- 图表分析 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- 游戏参与度图表 -->
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fa fa-pie-chart mr-2"></i>遊戲參與度分佈
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="participationChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 分数分布图表 -->
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fa fa-line-chart mr-2"></i>分數分佈趨勢
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="scoreChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/database.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/admin.js"></script>
+    <script>
+        // 全局变量
+        let adminManager = new AdminManager();
+        let dbManager = new DatabaseManager();
+        let participationChart = null;
+        let scoreChart = null;
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('数据统计页面加载完成');
+            
+            try {
+                // 初始化管理员界面
+                await adminManager.initializeAdminInterface();
+                
+                // 初始化统计
+                await adminManager.initializeStatistics();
+                
+                // 初始化图表
+                setTimeout(() => {
+                    initializeCharts();
+                }, 500);
+                
+                // 绑定数据操作事件
+                bindDataEvents();
+                
+            } catch (error) {
+                console.error('初始化失败:', error);
+                adminManager.showMessage('初始化失敗，請刷新頁面重試', 'error');
+            }
+        });
+
+        // 绑定数据操作事件
+        function bindDataEvents() {
+            // 导出数据按钮
+            const exportBtn = document.getElementById('exportDataBtn');
+            if (exportBtn) {
+                exportBtn.addEventListener('click', async () => {
+                    await adminManager.exportData();
+                });
+            }
+
+            // 清空记录按钮
+            const clearBtn = document.getElementById('clearRecordsBtn');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', async () => {
+                    await adminManager.clearRecords();
+                });
+            }
+
+            // 刷新数据按钮
+            const refreshBtn = document.getElementById('refreshStatsBtn');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', async () => {
+                    await adminManager.loadStatistics();
+                    initializeCharts();
+                    adminManager.showMessage('數據已刷新', 'success');
+                });
+            }
+        }
+
+        // 初始化图表
+        function initializeCharts() {
+            initializeParticipationChart();
+            initializeScoreChart();
+        }
+
+        // 初始化参与度图表
+        function initializeParticipationChart() {
+            const ctx = document.getElementById('participationChart');
+            if (!ctx) return;
+
+            // 准备数据
+            const statistics = JSON.parse(localStorage.getItem('dashboard_statistics') || '[]');
+            const labels = statistics.map(stat => stat.game_name);
+            const data = statistics.map(stat => stat.total_records);
+            const backgroundColors = [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
+                '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+            ];
+
+            // 创建图表
+            if (participationChart) {
+                participationChart.destroy();
+            }
+
+            participationChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: backgroundColors.slice(0, labels.length),
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: '遊戲參與次數分佈',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 初始化分数图表
+        function initializeScoreChart() {
+            const ctx = document.getElementById('scoreChart');
+            if (!ctx) return;
+
+            // 准备数据
+            const statistics = JSON.parse(localStorage.getItem('dashboard_statistics') || '[]');
+            const labels = statistics.map(stat => stat.game_name);
+            const avgScores = statistics.map(stat => stat.average_score);
+            const maxScores = statistics.map(stat => {
+                // 获取游戏的最高分
+                const game = stat;
+                return game.max_score || 100;
+            });
+
+            // 创建图表
+            if (scoreChart) {
+                scoreChart.destroy();
+            }
+
+            scoreChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '平均分數',
+                            data: avgScores,
+                            backgroundColor: '#3b82f6',
+                            borderColor: '#2563eb',
+                            borderWidth: 1
+                        },
+                        {
+                            label: '最高分',
+                            data: maxScores,
+                            backgroundColor: '#10b981',
+                            borderColor: '#059669',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '分數'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '遊戲'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: '平均分數與最高分對比',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 页面卸载时的清理
+        window.addEventListener('beforeunload', () => {
+            if (participationChart) {
+                participationChart.destroy();
+            }
+            if (scoreChart) {
+                scoreChart.destroy();
+            }
+        });
+    </script>
+</body>
+</html>

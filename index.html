@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR碼遊戲系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4/dist/umd/supabase.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            color: #333333;
+        }
+
+        .glass-card {
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            font-size: 1.125rem;
+            color: #6b7280;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+
+        .card-text {
+            color: #6b7280;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            color: #3b82f6;
+            margin-bottom: 1rem;
+        }
+
+        .footer {
+            color: #6b7280;
+            text-align: center;
+            margin-top: 2rem;
+            padding: 1rem 0;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4">
+    <div class="container mx-auto">
+        <div class="text-center mb-8 mt-12">
+            <h1 class="title">QR碼遊戲系統</h1>
+            <p class="subtitle">基於QR碼的攤位遊戲記分系統</p>
+        </div>
+
+        <div class="max-w-4xl mx-auto">
+            <!-- 登录选择卡片 -->
+            <div class="glass-card p-8 mb-8">
+                <div class="text-center mb-6">
+                    <h2 class="card-title">請選擇登入方式</h2>
+                    <p class="card-text">管理員可以管理遊戲和用戶，用戶可以記錄遊戲成績</p>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-4 justify-center">
+                    <button onclick="window.location.href='admin-login.html'" class="btn-primary flex-1 py-3">
+                        <i class="fa fa-user-circle mr-2"></i>管理員登入
+                    </button>
+                    <button onclick="window.location.href='user-login.html'" class="btn-secondary flex-1 py-3">
+                        <i class="fa fa-users mr-2"></i>用戶登入
+                    </button>
+                </div>
+            </div>
+
+            <!-- 功能特点 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="glass-card p-6 text-center">
+                    <div class="feature-icon">
+                        <i class="fa fa-qrcode"></i>
+                    </div>
+                    <h3 class="card-title">QR碼掃描</h3>
+                    <p class="card-text">快速掃描QR碼進行登入和記錄成績</p>
+                </div>
+
+                <div class="glass-card p-6 text-center">
+                    <div class="feature-icon">
+                        <i class="fa fa-trophy"></i>
+                    </div>
+                    <h3 class="card-title">成績管理</h3>
+                    <p class="card-text">實時記錄和查詢遊戲成績</p>
+                </div>
+
+                <div class="glass-card p-6 text-center">
+                    <div class="feature-icon">
+                        <i class="fa fa-bar-chart"></i>
+                    </div>
+                    <h3 class="card-title">數據統計</h3>
+                    <p class="card-text">詳細的數據分析和排行榜</p>
+                </div>
+            </div>
+
+            <!-- 系统信息 -->
+            <div class="glass-card p-6">
+                <div class="text-center">
+                    <h3 class="card-title">系統信息</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="text-sm text-gray-500">版本</div>
+                            <div class="font-bold" id="systemVersion">1.0.0</div>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="text-sm text-gray-500">支持設備</div>
+                            <div class="font-bold">PC/手機/平板</div>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="text-sm text-gray-500">遊戲數量</div>
+                            <div class="font-bold" id="totalGames">0</div>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="text-sm text-gray-500">用戶容量</div>
+                            <div class="font-bold">300+</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer mt-12">
+            <p>&copy; 2024 QR碼遊戲系統. 保留所有權利.</p>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/database.js"></script>
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('系统首页加载完成');
+            
+            try {
+                // 初始化数据库
+                const dbManager = new DatabaseManager();
+                await dbManager.initializeDatabase();
+                
+                // 加载系统信息
+                await loadSystemInfo();
+            } catch (error) {
+                console.error('初始化失败:', error);
+            }
+        });
+
+        // 加载系统信息
+        async function loadSystemInfo() {
+            try {
+                const dbManager = new DatabaseManager();
+                const games = await dbManager.getAllGames();
+                
+                document.getElementById('totalGames').textContent = games.length;
+                document.getElementById('systemVersion').textContent = window.AppConfig.SYSTEM.version;
+            } catch (error) {
+                console.error('加载系统信息失败:', error);
+            }
+        }
+    </script>
+</body>
+</html>

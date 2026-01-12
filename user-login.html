@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用戶登入 - QR碼遊戲系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4/dist/umd/supabase.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            color: #333333;
+        }
+
+        .glass-card {
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #ffffff;
+            color: #333333;
+            transition: all 0.3s ease;
+        }
+
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-label {
+            color: #374151;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .login-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .login-subtitle {
+            color: #6b7280;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .error-message {
+            color: #dc2626;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        .success-message {
+            color: #10b981;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        .back-link {
+            color: #3b82f6;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: #2563eb;
+            text-decoration: underline;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            color: #6b7280;
+        }
+
+        .tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+
+        .tab:hover {
+            color: #3b82f6;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .qr-placeholder {
+            text-align: center;
+            padding: 40px 20px;
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            background: #f9fafb;
+        }
+
+        .scan-hint {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .scan-hint p {
+            margin: 0.5rem 0;
+            color: #0369a1;
+            font-size: 0.875rem;
+        }
+
+        .permission-denied {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 6px;
+            padding: 12px;
+            color: #dc2626;
+            font-size: 0.875rem;
+            text-align: center;
+        }
+
+        #qr-reader {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        #qr-reader-results {
+            min-height: 40px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full">
+        <!-- 返回首页链接 -->
+        <div class="text-center mb-6">
+            <a href="index.html" class="back-link">
+                <i class="fa fa-arrow-left mr-2"></i>返回首頁
+            </a>
+        </div>
+
+        <!-- 登录卡片 -->
+        <div class="glass-card p-8">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa fa-qrcode text-white text-3xl"></i>
+                </div>
+                <h1 class="login-title">用戶登入</h1>
+                <p class="login-subtitle">請掃描QR碼或輸入用戶ID登入</p>
+            </div>
+
+            <!-- 标签页 -->
+            <div class="flex border-b border-gray-200 mb-6">
+                <div class="tab active" data-tab="qr-scan">
+                    <i class="fa fa-qrcode mr-2"></i>掃描登入
+                </div>
+                <div class="tab" data-tab="manual-input">
+                    <i class="fa fa-keyboard-o mr-2"></i>手動輸入
+                </div>
+            </div>
+
+            <!-- 扫描登录 -->
+            <div id="qr-scan-content" class="tab-content active">
+                <div class="qr-scanner-container mb-6">
+                    <div id="qr-reader" class="w-full mb-4">
+                        <!-- QR码扫描器将在这里初始化 -->
+                        <div class="qr-placeholder">
+                            <i class="fa fa-qrcode text-4xl text-gray-400 mb-4"></i>
+                            <p class="text-gray-600">正在初始化攝像頭...</p>
+                        </div>
+                    </div>
+                    <div id="qr-reader-results" class="text-center mb-4"></div>
+                </div>
+                
+                <div class="scan-hint mb-6">
+                    <p class="mb-2"><i class="fa fa-info-circle mr-2"></i>請掃描包含用戶ID的QR碼</p>
+                    <p><i class="fa fa-code mr-2"></i>QR碼格式：user:用戶ID 或 直接輸入用戶ID</p>
+                </div>
+
+                <!-- 权限被拒绝提示 -->
+                <div id="permission-denied" class="permission-denied hidden mb-6">
+                    <i class="fa fa-exclamation-triangle mr-2"></i>
+                    攝像頭訪問被拒絕，請檢查瀏覽器權限設置
+                </div>
+            </div>
+
+            <!-- 手动输入 -->
+            <div id="manual-input-content" class="tab-content">
+                <form id="loginForm" class="space-y-4">
+                    <div>
+                        <label for="userId" class="form-label">
+                            <i class="fa fa-id-card mr-2"></i>用戶ID
+                        </label>
+                        <input type="text" id="userId" name="userId" class="form-input" 
+                               placeholder="請輸入用戶ID (例如: U000001)" required>
+                        <div id="userIdError" class="error-message"></div>
+                    </div>
+
+                    <!-- 错误消息显示区域 -->
+                    <div id="loginError" class="error-message text-center"></div>
+
+                    <div class="text-center">
+                        <button type="submit" class="btn-primary w-full py-3">
+                            <i class="fa fa-sign-in mr-2"></i>登入
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 加载状态 -->
+            <div id="loading" class="hidden text-center mt-4">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                <p class="text-gray-600 mt-2">正在處理中...</p>
+            </div>
+        </div>
+
+        <!-- 系统信息 -->
+        <div class="text-center mt-6 text-sm text-gray-500">
+            <p>QR碼遊戲系統 v1.0.0</p>
+            <p class="mt-1">© 2024 保留所有權利</p>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/database.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/user.js"></script>
+    <script>
+        // 全局变量
+        let authManager = new AuthManager();
+        let userManager = new UserManager();
+        let html5QrcodeScanner = null;
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('用户登录页面加载完成');
+            
+            // 绑定标签页切换事件
+            bindTabEvents();
+            
+            // 绑定表单事件
+            bindLoginEvents();
+            
+            // 检查是否已登录
+            checkLoginStatus();
+            
+            // 初始化QR码扫描器
+            setTimeout(() => {
+                initializeQRScanner();
+            }, 1000);
+        });
+
+        // 绑定标签页事件
+        function bindTabEvents() {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // 移除所有活动状态
+                    tabs.forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // 添加当前活动状态
+                    tab.classList.add('active');
+                    const targetContent = document.getElementById(tab.getAttribute('data-tab') + '-content');
+                    if (targetContent) {
+                        targetContent.classList.add('active');
+                        
+                        // 如果切换到扫描标签，重新初始化扫描器
+                        if (tab.getAttribute('data-tab') === 'qr-scan') {
+                            setTimeout(() => {
+                                initializeQRScanner();
+                            }, 100);
+                        }
+                    }
+                });
+            });
+        }
+
+        // 绑定登录事件
+        function bindLoginEvents() {
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    await handleManualLogin();
+                });
+            }
+
+            // 输入框验证
+            const userIdInput = document.getElementById('userId');
+            if (userIdInput) {
+                userIdInput.addEventListener('input', () => {
+                    document.getElementById('userIdError').textContent = '';
+                    document.getElementById('loginError').textContent = '';
+                });
+            }
+        }
+
+        // 检查登录状态
+        function checkLoginStatus() {
+            if (authManager.isUserLoggedIn()) {
+                console.log('用户已登录，跳转到控制台');
+                window.location.href = 'user-dashboard.html';
+            }
+        }
+
+        // 初始化QR码扫描器
+        function initializeQRScanner() {
+            try {
+                const qrReader = document.getElementById('qr-reader');
+                if (!qrReader) return;
+
+                // 清空之前的内容
+                qrReader.innerHTML = '';
+
+                if (typeof Html5Qrcode === 'undefined') {
+                    console.error('QR码扫描器库未加载');
+                    qrReader.innerHTML = `
+                        <div class="qr-placeholder">
+                            <i class="fa fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+                            <p class="text-red-600">QR碼掃描器加載失敗</p>
+                            <p class="text-sm text-gray-500 mt-2">請刷新頁面重試</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                console.log('初始化QR码扫描器...');
+                
+                // 创建扫描器实例
+                html5QrcodeScanner = new Html5Qrcode('qr-reader', {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1
+                });
+
+                // 开始扫描
+                html5QrcodeScanner.start(
+                    { facingMode: 'environment' },
+                    {
+                        fps: 10,
+                        qrbox: { width: 250, height: 250 },
+                        aspectRatio: 1
+                    },
+                    async (qrCodeMessage) => {
+                        console.log('扫描到QR码:', qrCodeMessage);
+                        
+                        // 停止扫描
+                        try {
+                            await html5QrcodeScanner.stop();
+                        } catch (error) {
+                            console.error('停止扫描失败:', error);
+                        }
+
+                        // 处理QR码
+                        await handleQRCodeLogin(qrCodeMessage);
+                    },
+                    (errorMessage) => {
+                        // 扫描错误，继续扫描
+                        console.log('扫描错误:', errorMessage);
+                    }
+                ).catch(err => {
+                    console.error('启动扫描器失败:', err);
+                    
+                    // 显示权限被拒绝提示
+                    if (err.message && err.message.includes('permission denied')) {
+                        document.getElementById('permission-denied').classList.remove('hidden');
+                    }
+                    
+                    qrReader.innerHTML = `
+                        <div class="qr-placeholder">
+                            <i class="fa fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+                            <p class="text-red-600">啟動攝像頭失敗</p>
+                            <p class="text-sm text-gray-500 mt-2">請檢查瀏覽器權限設置</p>
+                            <button onclick="initializeQRScanner()" class="btn-secondary mt-4">
+                                <i class="fa fa-refresh mr-2"></i>重新啟動
+                            </button>
+                        </div>
+                    `;
+                });
+
+            } catch (error) {
+                console.error('初始化QR码扫描器失败:', error);
+                document.getElementById('qr-reader').innerHTML = `
+                    <div class="qr-placeholder">
+                        <i class="fa fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+                        <p class="text-red-600">初始化掃描器失敗</p>
+                        <p class="text-sm text-gray-500 mt-2">請刷新頁面重試</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 处理QR码登录
+        async function handleQRCodeLogin(qrCodeMessage) {
+            try {
+                // 显示加载状态
+                showLoading(true);
+
+                // 解析QR码数据
+                const parsed = authManager.parseQRCodeData(qrCodeMessage);
+                
+                if (!parsed) {
+                    showMessage('無效的QR碼格式', 'error');
+                    showLoading(false);
+                    
+                    // 重新开始扫描
+                    setTimeout(() => {
+                        initializeQRScanner();
+                    }, 1000);
+                    return;
+                }
+
+                if (parsed.type === 'user') {
+                    console.log('用户登录:', parsed.id);
+                    
+                    // 执行用户登录
+                    const result = await authManager.userLogin(parsed.id);
+                    
+                    if (result.success) {
+                        showMessage(result.message, 'success');
+                        
+                        // 延迟跳转
+                        setTimeout(() => {
+                            window.location.href = 'user-dashboard.html';
+                        }, 1000);
+                    } else {
+                        showMessage(result.message, 'error');
+                        showLoading(false);
+                        
+                        // 重新开始扫描
+                        setTimeout(() => {
+                            initializeQRScanner();
+                        }, 1000);
+                    }
+                } else {
+                    showMessage('不是有效的用戶QR碼', 'error');
+                    showLoading(false);
+                    
+                    // 重新开始扫描
+                    setTimeout(() => {
+                        initializeQRScanner();
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error('处理QR码登录失败:', error);
+                showMessage('處理QR碼失敗，請重試', 'error');
+                showLoading(false);
+                
+                // 重新开始扫描
+                setTimeout(() => {
+                    initializeQRScanner();
+                }, 1000);
+            }
+        }
+
+        // 处理手动登录
+        async function handleManualLogin() {
+            try {
+                const userId = document.getElementById('userId').value.trim();
+                
+                // 验证输入
+                if (!validateUserId(userId)) {
+                    return;
+                }
+
+                // 显示加载状态
+                showLoading(true);
+
+                // 执行登录
+                console.log('手动用户登录:', userId);
+                const result = await authManager.userLogin(userId);
+
+                // 隐藏加载状态
+                showLoading(false);
+
+                // 处理登录结果
+                if (result.success) {
+                    showMessage(result.message, 'success');
+                    
+                    // 延迟跳转
+                    setTimeout(() => {
+                        window.location.href = 'user-dashboard.html';
+                    }, 1000);
+                } else {
+                    document.getElementById('loginError').textContent = result.message;
+                    showMessage(result.message, 'error');
+                }
+            } catch (error) {
+                console.error('手动登录失败:', error);
+                showLoading(false);
+                document.getElementById('loginError').textContent = '登入過程中出現錯誤，請稍後重試';
+                showMessage('登入失敗，請稍後重試', 'error');
+            }
+        }
+
+        // 验证用户ID
+        function validateUserId(userId) {
+            let isValid = true;
+
+            if (!userId) {
+                document.getElementById('userIdError').textContent = '請輸入用戶ID';
+                isValid = false;
+            } else if (!window.AppConfig.REGEX.USER_ID.test(userId)) {
+                document.getElementById('userIdError').textContent = '用戶ID格式錯誤，正確格式：U000001';
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        // 显示加载状态
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            if (loading) {
+                loading.classList.toggle('hidden', !show);
+            }
+        }
+
+        // 显示消息
+        function showMessage(message, type = 'info') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg transform transition-all duration-300 ease-in-out ${
+                type === 'success' ? 'bg-green-500 text-white' :
+                type === 'error' ? 'bg-red-500 text-white' :
+                'bg-blue-500 text-white'
+            }`;
+            messageDiv.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fa fa-${
+                        type === 'success' ? 'check-circle' :
+                        type === 'error' ? 'exclamation-circle' :
+                        'info-circle'
+                    } mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+
+            document.body.appendChild(messageDiv);
+
+            setTimeout(() => {
+                messageDiv.style.opacity = '0';
+                messageDiv.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (messageDiv.parentNode) {
+                        messageDiv.parentNode.removeChild(messageDiv);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // 页面卸载时清理
+        window.addEventListener('beforeunload', () => {
+            if (html5QrcodeScanner) {
+                try {
+                    html5QrcodeScanner.stop();
+                } catch (error) {
+                    console.error('停止扫描器失败:', error);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
