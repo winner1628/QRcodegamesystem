@@ -211,7 +211,7 @@
                 </div>
 
                 <!-- 标签页 -->
-                <div class="flex border-b border-white border-opacity-20 mb-6">
+                <div class="flex border-b border-gray-200 mb-6">
                     <div class="tab active" data-tab="qr-scan">
                         <i class="fa fa-qrcode mr-2"></i>掃描登入
                     </div>
@@ -226,8 +226,8 @@
                         <div id="qr-reader" class="w-full mb-4">
                             <!-- QR码扫描器将在这里初始化 -->
                             <div class="qr-placeholder">
-                                <i class="fa fa-qrcode text-4xl text-white text-opacity-50 mb-4"></i>
-                                <p class="text-white text-opacity-70">正在初始化攝像頭...</p>
+                                <i class="fa fa-qrcode text-4xl text-gray-400 mb-4"></i>
+                                <p class="text-gray-600">正在初始化攝像頭...</p>
                             </div>
                         </div>
                         <div id="qr-reader-results" class="text-center mb-4"></div>
@@ -283,6 +283,7 @@
 
         // 全局变量
         let authManager = new AuthManager();
+        let dbManager = new DatabaseManager();
         let html5QrcodeScanner = null;
         let isScannerInitialized = false;
 
