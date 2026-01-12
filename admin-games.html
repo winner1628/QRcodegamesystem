@@ -22,12 +22,160 @@
         }
 
         .glass-card {
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.18);
             box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            color: #333;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            background: white;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        .form-input::placeholder {
+            color: #999;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .form-label {
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 15px;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: #333;
+        }
+
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            color: #333;
+        }
+
+        th {
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 15px 0 rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px 0 rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            border: 1px solid #ddd;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+            font-weight: bold;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 15px 0 rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px 0 rgba(255, 107, 107, 0.6);
+        }
+
+        .btn-edit {
+            background: linear-gradient(45deg, #4ecdc4 0%, #44a08d 100%);
+            color: white;
+            font-weight: bold;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 15px 0 rgba(78, 205, 196, 0.4);
+        }
+
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px 0 rgba(78, 205, 196, 0.6);
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        .success-message {
+            color: #28a745;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            color: #333;
+        }
+
+        .modal-header {
+            border-bottom: 1px solid #eee;
+            color: #333;
+        }
+
+        .modal-footer {
+            border-top: 1px solid #eee;
         }
 
         .btn-primary {
@@ -206,7 +354,7 @@
             <button onclick="window.location.href='admin-main.html'" class="btn-secondary mr-4">
                 <i class="fa fa-arrow-left mr-2"></i>返回主頁
             </button>
-            <h1 class="text-xl font-bold text-white">遊戲管理</h1>
+            <h1 class="text-xl font-bold text-gray-800">遊戲管理</h1>
         </div>
         <div class="flex items-center space-x-4">
             <button id="addGameBtn" class="btn-primary">
@@ -221,7 +369,7 @@
     <!-- 主要内容 -->
     <div class="container mx-auto px-4">
         <div class="glass-card p-6">
-            <h2 class="text-2xl font-bold text-white mb-6">遊戲列表</h2>
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">遊戲列表</h2>
             
             <div class="card mb-6">
                 <div class="table-container">
@@ -244,7 +392,7 @@
             </div>
 
             <div class="text-center" id="noGamesMessage" style="display: none;">
-                <p class="text-white text-lg">暫無遊戲數據</p>
+                <p class="text-gray-800 text-lg">暫無遊戲數據</p>
                 <button id="addFirstGameBtn" class="btn-primary mt-4">
                     <i class="fa fa-plus mr-2"></i>新增第一個遊戲
                 </button>
@@ -306,16 +454,50 @@
 
         // 绑定事件
         function bindEvents() {
+            console.log('绑定游戏管理页面事件');
+            
             // 新增游戏按钮
-            document.getElementById('addGameBtn').addEventListener('click', () => openGameModal());
-            document.getElementById('addFirstGameBtn').addEventListener('click', () => openGameModal());
+            const addGameBtn = document.getElementById('addGameBtn');
+            if (addGameBtn) {
+                addGameBtn.addEventListener('click', () => {
+                    console.log('点击新增游戏按钮');
+                    openGameModal();
+                });
+            }
+            
+            const addFirstGameBtn = document.getElementById('addFirstGameBtn');
+            if (addFirstGameBtn) {
+                addFirstGameBtn.addEventListener('click', () => {
+                    console.log('点击新增第一个游戏按钮');
+                    openGameModal();
+                });
+            }
             
             // 模态框关闭按钮
-            document.getElementById('closeGameModal').addEventListener('click', () => closeGameModal());
-            document.getElementById('cancelGameBtn').addEventListener('click', () => closeGameModal());
+            const closeGameModal = document.getElementById('closeGameModal');
+            if (closeGameModal) {
+                closeGameModal.addEventListener('click', () => {
+                    console.log('点击关闭模态框按钮');
+                    closeGameModal();
+                });
+            }
+            
+            const cancelGameBtn = document.getElementById('cancelGameBtn');
+            if (cancelGameBtn) {
+                cancelGameBtn.addEventListener('click', () => {
+                    console.log('点击取消按钮');
+                    closeGameModal();
+                });
+            }
             
             // 游戏表单提交
-            document.getElementById('gameForm').addEventListener('submit', (e) => handleGameSubmit(e));
+            const gameForm = document.getElementById('gameForm');
+            if (gameForm) {
+                gameForm.addEventListener('submit', (e) => {
+                    console.log('提交游戏表单');
+                    handleGameSubmit(e);
+                });
+            }
             
             // 点击模态框外部关闭
             window.addEventListener('click', (e) => {
@@ -324,6 +506,8 @@
                     closeGameModal();
                 }
             });
+            
+            console.log('事件绑定完成');
         }
 
         // 加载游戏数据

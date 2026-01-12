@@ -249,8 +249,9 @@
                 <div id="manual-input-content" class="tab-content">
                     <form id="loginForm" class="space-y-4">
                         <div>
-                            <label for="userId" class="label-text">用户ID</label>
-                            <input type="text" id="userId" name="userId" class="form-input" placeholder="請輸入用戶ID" required>
+                            <label for="userId" class="form-label">用戶ID</label>
+                            <input type="text" id="userId" name="userId" class="form-input" 
+                                   placeholder="請輸入用戶ID (例如: U000001)" required>
                             <div id="userIdError" class="error-message"></div>
                         </div>
                         <div class="text-center">
@@ -329,6 +330,163 @@
         function bindLoginEvents() {
             const loginForm = document.getElementById('loginForm');
             if (loginForm) {
+                loginForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    await handleManualLogin();
+                });
+            }
+        }
+
+        // 初始化QR码扫描器
+        function initializeQRScanner() {
+            try {
+                // 动态加载QR码扫描库
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+                script.onload = () => {
+                    startQRCodeScanner();
+                };
+                script.onerror = () => {
+                    console.error('QR码扫描库加载失败');
+                    showQRScannerError('QR碼掃描器加載失敗，請使用手動輸入');
+                };
+                document.head.appendChild(script);
+            } catch (error) {
+                console.error('初始化QR码扫描器失败:', error);
+                showQRScannerError('QR碼掃描器初始化失敗，請使用手動輸入');
+            }
+        }
+
+        // 启动QR码扫描器
+        function startQRCodeScanner() {
+            try {
+                const qrReader = document.getElementById('qr-reader');
+                if (!qrReader) {
+                    console.error('未找到QR码扫描容器');
+                    return;
+                }
+
+                // 清空占位符
+                qrReader.innerHTML = '';
+
+                // 创建扫描器实例
+                html5QrcodeScanner = new Html5Qrcode('qr-reader');
+
+                // 配置扫描选项
+                const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+                // 开始扫描
+                html5QrcodeScanner.start(
+                    { facingMode: 'environment' },
+                    config,
+                    handleQRCodeScanResult
+                ).then(() => {
+                    console.log('QR码扫描器启动成功');
+                    isScannerInitialized = true;
+                }).catch((err) => {
+                    console.error('QR码扫描器启动失败:', err);
+                    showQRScannerError('掃描器初始化失敗，請重試或使用手動輸入');
+                });
+            } catch (error) {
+                console.error('启动QR码扫描器失败:', error);
+                showQRScannerError('掃描器啟動失敗，請使用手動輸入');
+            }
+        }
+
+        // 处理QR码扫描结果
+        function handleQRCodeScanResult(decodedText, decodedResult) {
+            console.log('QR码扫描结果:', decodedText);
+            
+            try {
+                // 解析QR码内容
+                let userId = decodedText;
+                if (decodedText.startsWith('user:')) {
+                    userId = decodedText.substring(5);
+                }
+                
+                // 验证用户ID格式
+                if (!userId || !userId.startsWith('U')) {
+                    showQRScannerError('無效的QR碼格式，請掃描包含用戶ID的QR碼');
+                    return;
+                }
+                
+                // 显示扫描成功信息
+                document.getElementById('qr-reader-results').innerHTML = 
+                    `<p class="text-green-400">QR碼掃描成功！正在登入...</p>`;
+                
+                // 执行登录
+                performUserLogin(userId);
+                
+            } catch (error) {
+                console.error('处理QR码扫描结果失败:', error);
+                showQRScannerError('處理QR碼失敗，請重試');
+            }
+        }
+
+        // 显示QR扫描器错误
+        function showQRScannerError(message) {
+            document.getElementById('qr-reader-results').innerHTML = 
+                `<p class="text-red-400">${message}</p>`;
+        }
+
+        // 处理手动登录
+        async function handleManualLogin() {
+            const userIdInput = document.getElementById('userId');
+            const userIdError = document.getElementById('userIdError');
+            
+            const userId = userIdInput.value.trim();
+            
+            // 验证用户ID
+            if (!userId) {
+                userIdError.textContent = '請輸入用戶ID';
+                return;
+            }
+            
+            if (!userId.startsWith('U')) {
+                userIdError.textContent = '用戶ID格式錯誤，應以U開頭';
+                return;
+            }
+            
+            userIdError.textContent = '';
+            
+            // 执行登录
+            await performUserLogin(userId);
+        }
+
+        // 执行用户登录
+        async function performUserLogin(userId) {
+            try {
+                console.log('执行用户登录:', userId);
+                
+                // 验证用户是否存在
+                const user = await dbManager.getUserById(userId);
+                if (!user) {
+                    showLoginError('用戶不存在');
+                    return;
+                }
+                
+                // 保存登录状态
+                authManager.loginAsUser(user);
+                
+                // 跳转到用户控制台
+                window.location.href = 'user-dashboard.html';
+                
+            } catch (error) {
+                console.error('用户登录失败:', error);
+                showLoginError('登入失敗，請稍後重試');
+            }
+        }
+
+        // 显示登录错误
+        function showLoginError(message) {
+            const loginError = document.getElementById('loginError');
+            loginError.textContent = message;
+            loginError.classList.remove('hidden');
+            
+            setTimeout(() => {
+                loginError.classList.add('hidden');
+            }, 3000);
+        }
                 loginForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     await handleManualLogin();

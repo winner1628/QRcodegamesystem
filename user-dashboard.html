@@ -383,49 +383,85 @@
 
         // 绑定事件
         function bindEvents() {
+            console.log('绑定事件开始');
+            
             // 标签页切换
-            document.querySelectorAll('.tab').forEach(tab => {
+            const tabs = document.querySelectorAll('.tab');
+            console.log('找到标签页数量:', tabs.length);
+            tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
                     const tabId = tab.dataset.tab;
+                    console.log('点击标签页:', tabId);
                     switchTab(tabId);
                 });
             });
 
             // 登出按钮
-            document.getElementById('logoutBtn').addEventListener('click', () => {
-                authManager.logout();
-                window.location.href = 'user-login.html';
-            });
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', () => {
+                    console.log('点击登出按钮');
+                    authManager.logout();
+                    window.location.href = 'user-login.html';
+                });
+            }
 
-            // 开始扫描按钮
-            // document.getElementById('startScanBtn').addEventListener('click', () => {
-            //     startQRCodeScan();
-            // });
-
-            // 成绩表单提交
-            document.getElementById('manualScoreForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                await submitManualScore();
-            });
+            // 手动成绩表单提交
+            const manualScoreForm = document.getElementById('manualScoreForm');
+            if (manualScoreForm) {
+                manualScoreForm.addEventListener('submit', async (e) => {
+                    console.log('提交手动成绩表单');
+                    e.preventDefault();
+                    await submitManualScore();
+                });
+            }
+            
+            console.log('事件绑定完成');
         }
 
         // 切换标签页
         function switchTab(tabId) {
+            console.log('尝试切换到标签页:', tabId);
+            
             // 隐藏所有内容
-            document.querySelectorAll('.tab-content').forEach(content => {
+            const allContents = document.querySelectorAll('.tab-content');
+            console.log('找到的内容区域数量:', allContents.length);
+            allContents.forEach(content => {
                 content.classList.remove('active');
             });
             
             // 移除所有标签的激活状态
-            document.querySelectorAll('.tab').forEach(tab => {
+            const allTabs = document.querySelectorAll('.tab');
+            console.log('找到的标签数量:', allTabs.length);
+            allTabs.forEach(tab => {
                 tab.classList.remove('active');
             });
             
             // 显示选中的内容
-            document.getElementById(`${tabId}-content`).classList.add('active');
+            const targetContent = document.getElementById(`${tabId}-content`);
+            if (targetContent) {
+                targetContent.classList.add('active');
+                console.log('成功显示内容:', `${tabId}-content`);
+            } else {
+                console.error('未找到内容元素:', `${tabId}-content`);
+                // 尝试查找所有可能的内容元素
+                allContents.forEach(content => {
+                    console.log('可用的内容元素:', content.id);
+                });
+            }
             
             // 激活选中的标签
-            document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+            const targetTab = document.querySelector(`[data-tab="${tabId}"]`);
+            if (targetTab) {
+                targetTab.classList.add('active');
+                console.log('成功激活标签:', tabId);
+            } else {
+                console.error('未找到标签元素:', tabId);
+                // 尝试查找所有可能的标签元素
+                allTabs.forEach(tab => {
+                    console.log('可用的标签元素:', tab.dataset.tab);
+                });
+            }
         }
 
         // QR code scanning functionality removed due to camera issues
