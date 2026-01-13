@@ -196,38 +196,77 @@
             try {
                 addLog('正在初始化 Supabase 客戶端...', 'info');
                 
-                // 尝试不同的方式访问 createClient 函数
-                let createClientFn = null;
-                
-                // 方式1: 全局作用域
-                if (typeof createClient !== 'undefined') {
-                    createClientFn = createClient;
-                }
-                // 方式2: window 对象
-                else if (window.createClient) {
-                    createClientFn = window.createClient;
-                }
-                // 方式3: Supabase 对象
-                else if (window.Supabase && window.Supabase.createClient) {
-                    createClientFn = window.Supabase.createClient;
-                }
-                
-                if (createClientFn) {
-                    supabaseClient = createClientFn(config.supabaseUrl, config.supabaseKey);
-                    addLog('Supabase 客戶端初始化成功', 'success');
-                    updateConnectionStatus(true);
-                } else {
-                    addLog('錯誤: createClient 函數未找到', 'error');
-                    updateConnectionStatus(false, 'createClient 函數未找到');
+                // 检查 window.supabase 对象
+                if (window.supabase && typeof window.supabase === 'object') {
+                    addLog('找到 window.supabase 对象，檢查其結構...', 'info');
                     
-                    // 显示调试信息
-                    console.log('全局变量:', Object.keys(window).filter(k => k.includes('supabase')));
-                    console.log('createClient 类型:', typeof createClient);
+                    // 记录 supabase 对象的结构
+                    const supabaseKeys = Object.keys(window.supabase);
+                    addLog(`window.supabase 屬性: ${supabaseKeys.join(', ')}`, 'info');
+                    
+                    // 尝试直接使用 window.supabase
+                    supabaseClient = window.supabase;
+                    addLog('直接使用 window.supabase 作為客戶端', 'success');
+                    updateConnectionStatus(true);
+                    
+                    // 测试客户端是否可用
+                    testSupabaseClient();
+                } else {
+                    addLog('未找到可用的 Supabase 客戶端', 'error');
+                    updateConnectionStatus(false, 'Supabase 客戶端未找到');
+                    
+                    // 显示详细调试信息
+                    const debugInfo = [];
+                    for (let key in window) {
+                        if (key.toLowerCase().includes('supabase')) {
+                            const value = window[key];
+                            const type = typeof value;
+                            debugInfo.push(`${key}: ${type}`);
+                            if (type === 'object' && value !== null) {
+                                debugInfo.push(`  -> 屬性: ${Object.keys(value).join(', ')}`);
+                            }
+                        }
+                    }
+                    addLog('Supabase 相關全局變量:', 'info');
+                    debugInfo.forEach(info => addLog(info, 'info'));
                 }
             } catch (error) {
                 console.error('初始化 Supabase 失敗:', error);
                 addLog(`初始化 Supabase 失敗: ${error.message}`, 'error');
                 updateConnectionStatus(false, error.message);
+            }
+        }
+        
+        // 测试 Supabase 客户端是否可用
+        async function testSupabaseClient() {
+            try {
+                addLog('正在測試 Supabase 客戶端...', 'info');
+                
+                if (!supabaseClient) {
+                    addLog('客戶端未初始化', 'error');
+                    return;
+                }
+                
+                // 尝试一个简单的操作，比如查询版本信息
+                const startTime = Date.now();
+                
+                // 直接尝试访问一个表，看看是否会自动创建
+                const { data, error } = await supabaseClient.from('test_connection').select('*').limit(1);
+                
+                const endTime = Date.now();
+                
+                if (error) {
+                    if (error.code === '42P01') { // relation does not exist
+                        addLog(`客戶端操作成功！表不存在 (${endTime - startTime}ms)`, 'success');
+                    } else {
+                        addLog(`客戶端操作失敗: ${error.message}`, 'error');
+                    }
+                } else {
+                    addLog(`客戶端操作成功！返回 ${data.length} 條記錄 (${endTime - startTime}ms)`, 'success');
+                }
+                
+            } catch (error) {
+                addLog(`測試客戶端出錯: ${error.message}`, 'error');
             }
         }
 
