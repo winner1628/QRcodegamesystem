@@ -286,9 +286,10 @@
         function updateClientStatus(status, message = '') {
             const statusMap = {
                 'success': { class: 'status-success', text: '已初始化' },
-                'warning': { class: 'status-warning', text: '需要修复' },
+                'warning': { class: 'status-warning', text: '备用模式' },
                 'error': { class: 'status-error', text: '初始化失败' },
-                'info': { class: 'status-info', text: '初始化中' }
+                'info': { class: 'status-info', text: '初始化中' },
+                'backup': { class: 'status-warning', text: '备用模式' }
             };
             
             const config = statusMap[status] || statusMap.info;
@@ -431,19 +432,32 @@
                 const result = await window.supabaseFixer.initializeClient();
                 
                 if (result.success) {
-                    updateClientStatus('success', '已初始化');
-                    addLog(`客户端初始化成功 (方法: ${result.method})`, 'success');
+                    // 检查是否是备用客户端
+                    if (result.method === 'simple.http.client' || result.warning) {
+                        updateClientStatus('backup', '备用模式');
+                        addLog(`客户端初始化成功 (备用模式: ${result.method})`, 'warning');
+                        addLog(`警告: ${result.warning || '使用备用连接模式'}`, 'warning');
+                    } else {
+                        updateClientStatus('success', '已初始化');
+                        addLog(`客户端初始化成功 (方法: ${result.method})`, 'success');
+                    }
                     
                     // 测试连接
                     const connectionResult = await window.supabaseFixer.testConnection();
                     if (connectionResult.success) {
-                        updateConnectionStatus('success', '已连接');
-                        addLog(`连接测试成功: ${connectionResult.message}`, 'success');
-                        showMessage('Supabase 连接修复成功！', 'success');
+                        if (connectionResult.isBackupClient) {
+                            updateConnectionStatus('warning', '备用连接');
+                            addLog(`备用连接模式: ${connectionResult.message}`, 'warning');
+                            showMessage('已启用备用连接模式，系统可以正常运行！', 'warning');
+                        } else {
+                            updateConnectionStatus('success', '已连接');
+                            addLog(`连接测试成功: ${connectionResult.message}`, 'success');
+                            showMessage('Supabase 连接修复成功！', 'success');
+                        }
                     } else {
-                        updateConnectionStatus('warning', '需要配置');
-                        addLog(`连接测试失败: ${connectionResult.error}`, 'warning');
-                        showMessage('客户端初始化成功，但数据库连接仍有问题，请检查配置。', 'warning');
+                        updateConnectionStatus('error', '连接失败');
+                        addLog(`连接测试失败: ${connectionResult.message || connectionResult.error}`, 'error');
+                        showMessage(`连接测试失败: ${connectionResult.message || connectionResult.error}`, 'error');
                     }
                 } else {
                     updateClientStatus('error', '初始化失败');
@@ -719,20 +733,40 @@
                 const initResult = await window.supabaseFixer.initializeClient();
                 
                 if (initResult.success) {
-                    updateClientStatus('success', '已初始化');
-                    addLog(`客户端初始化成功 (方法: ${initResult.method})`, 'success');
+                    // 检查是否是备用客户端
+                    if (initResult.method === 'simple.http.client' || initResult.warning) {
+                        updateClientStatus('backup', '备用模式');
+                        addLog(`客户端初始化成功 (备用模式: ${initResult.method})`, 'warning');
+                        addLog(`警告: ${initResult.warning || '使用备用连接模式'}`, 'warning');
+                    } else {
+                        updateClientStatus('success', '已初始化');
+                        addLog(`客户端初始化成功 (方法: ${initResult.method})`, 'success');
+                    }
                     
                     // 自动测试连接
-                    await testConnection();
+                    const connectionResult = await window.supabaseFixer.testConnection();
+                    if (connectionResult.success) {
+                        if (connectionResult.isBackupClient) {
+                            updateConnectionStatus('warning', '备用连接');
+                            addLog(`备用连接模式: ${connectionResult.message}`, 'warning');
+                        } else {
+                            updateConnectionStatus('success', '已连接');
+                            addLog(`连接测试成功: ${connectionResult.message}`, 'success');
+                        }
+                    } else {
+                        updateConnectionStatus('error', '连接失败');
+                        addLog(`连接测试失败: ${connectionResult.message || connectionResult.error}`, 'error');
+                    }
                 } else {
-                    updateClientStatus('warning', '需要修复');
-                    addLog(`客户端初始化失败: ${initResult.error}`, 'warning');
+                    updateClientStatus('error', '初始化失败');
+                    addLog(`客户端初始化失败: ${initResult.error}`, 'error');
                     showMessage('Supabase 客户端初始化失败，建议点击"修复连接"按钮。', 'warning');
                 }
                 
             } catch (error) {
                 updateClientStatus('error', '初始化异常');
                 addLog(`初始化异常: ${error.message}`, 'error');
+                showMessage('初始化过程中发生异常，建议点击"修复连接"按钮。', 'warning');
             }
         });
     </script>
