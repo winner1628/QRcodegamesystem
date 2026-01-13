@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>直接测试 - QR码游戏系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4/dist/umd/supabase.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+            color: #333333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        .log-container {
+            background: #1e293b;
+            color: #f1f5f9;
+            border-radius: 8px;
+            padding: 16px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .log-entry {
+            margin-bottom: 4px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #334155;
+        }
+        .log-success { color: #10b981; }
+        .log-error { color: #ef4444; }
+        .log-info { color: #60a5fa; }
+        .log-warning { color: #f59e0b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">直接测试</h1>
+            <p class="text-gray-600">QR码游戏系统 - 直接测试 Supabase SDK</p>
+        </div>
+
+        <!-- SDK 状态 -->
+        <div class="card">
+            <h2 class="text-xl font-bold mb-4">Supabase SDK 状态</h2>
+            <div class="mb-4">
+                <p><strong>SDK 加载状态:</strong> <span id="sdkStatus">正在检查...</span></p>
+                <p><strong>createClient 函数:</strong> <span id="createClientStatus">未找到</span></p>
+            </div>
+            <button id="testSdkBtn" class="btn btn-primary">
+                测试 SDK 功能
+            </button>
+        </div>
+
+        <!-- 连接测试 -->
+        <div class="card">
+            <h2 class="text-xl font-bold mb-4">数据库连接测试</h2>
+            <button id="testConnectionBtn" class="btn btn-primary">
+                测试数据库连接
+            </button>
+        </div>
+
+        <!-- 登录测试 -->
+        <div class="card">
+            <h2 class="text-xl font-bold mb-4">登录测试</h2>
+            <div class="space-y-4">
+                <button id="testAdminLoginBtn" class="btn btn-primary">
+                    测试管理员登录 (admin/admin123)
+                </button>
+                <button id="testUserLoginBtn" class="btn btn-primary">
+                    测试用户登录 (U000001)
+                </button>
+            </div>
+        </div>
+
+        <!-- 系统日志 -->
+        <div class="card">
+            <h2 class="text-xl font-bold mb-4">系统日志</h2>
+            <div class="log-container" id="logContainer">
+                <div class="log-entry log-info">系统初始化完成，开始测试...</div>
+            </div>
+        </div>
+
+        <!-- 返回首页 -->
+        <div class="text-center mt-8">
+            <a href="index.html" class="text-blue-600 hover:text-blue-800 font-medium">
+                返回首页
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // 配置信息
+        const config = {
+            supabaseUrl: 'https://vphihqysgdhdnuszybib.supabase.co',
+            supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwaGlocXlzZ2RoZG51c3p5YmlrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcyNzY3MzI4MiwiZXhwIjoyMDQzMjQ5MjgyfQ.H4YdUeGx3e8jKzZ4qQ4qQ4qQ4qQ4qQ4qQ4qQ4qQ4qQ4qQ'
+        };
+
+        // 全局变量
+        let supabase = null;
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            log('info', '页面加载完成，开始初始化...');
+            
+            // 立即检查 SDK 状态
+            checkSdkStatus();
+            
+            // 绑定事件
+            document.getElementById('testSdkBtn').addEventListener('click', testSdk);
+            document.getElementById('testConnectionBtn').addEventListener('click', testConnection);
+            document.getElementById('testAdminLoginBtn').addEventListener('click', testAdminLogin);
+            document.getElementById('testUserLoginBtn').addEventListener('click', testUserLogin);
+        });
+
+        // 检查 SDK 状态
+        function checkSdkStatus() {
+            log('info', '检查 Supabase SDK 状态...');
+            
+            // 检查 createClient 函数
+            const createClientExists = typeof createClient !== 'undefined';
+            document.getElementById('createClientStatus').textContent = createClientExists ? '找到' : '未找到';
+            document.getElementById('createClientStatus').className = createClientExists ? 'text-green-600' : 'text-red-600';
+            
+            if (createClientExists) {
+                log('success', '找到 createClient 函数');
+                document.getElementById('sdkStatus').textContent = '加载成功';
+                document.getElementById('sdkStatus').className = 'text-green-600';
+            } else {
+                log('error', '未找到 createClient 函数');
+                document.getElementById('sdkStatus').textContent = '加载失败';
+                document.getElementById('sdkStatus').className = 'text-red-600';
+                
+                // 尝试从 window 对象获取
+                if (window.createClient) {
+                    log('success', '从 window.createClient 找到函数');
+                    document.getElementById('createClientStatus').textContent = '找到 (window)';
+                    document.getElementById('createClientStatus').className = 'text-green-600';
+                }
+            }
+        }
+
+        // 测试 SDK 功能
+        function testSdk() {
+            log('info', '开始测试 SDK 功能...');
+            
+            try {
+                // 检查 createClient 函数
+                if (typeof createClient === 'function') {
+                    log('success', 'createClient 是一个函数');
+                    log('info', '函数 toString():', createClient.toString().substring(0, 200) + '...');
+                } else {
+                    log('error', 'createClient 不是一个函数，类型:', typeof createClient);
+                }
+                
+                // 尝试创建客户端
+                try {
+                    log('info', '尝试创建 Supabase 客户端...');
+                    supabase = createClient(config.supabaseUrl, config.supabaseKey);
+                    
+                    if (supabase) {
+                        log('success', '成功创建 Supabase 客户端');
+                        log('info', '客户端类型:', typeof supabase);
+                        log('info', '客户端属性:', Object.keys(supabase).join(', '));
+                        
+                        if (typeof supabase.from === 'function') {
+                            log('success', 'from 方法存在且类型正确');
+                        } else {
+                            log('error', 'from 方法不存在或类型错误:', typeof supabase.from);
+                        }
+                    } else {
+                        log('error', '创建的客户端为 null 或 undefined');
+                    }
+                } catch (createError) {
+                    log('error', '创建客户端时发生异常:', createError.message);
+                    log('error', '异常堆栈:', createError.stack);
+                }
+                
+            } catch (error) {
+                log('error', '测试 SDK 功能时发生异常:', error.message);
+            }
+        }
+
+        // 测试数据库连接
+        async function testConnection() {
+            log('info', '开始测试数据库连接...');
+            
+            try {
+                // 确保客户端已创建
+                if (!supabase) {
+                    log('info', '客户端未创建，尝试创建...');
+                    supabase = createClient(config.supabaseUrl, config.supabaseKey);
+                }
+                
+                if (!supabase || typeof supabase.from !== 'function') {
+                    log('error', '客户端未就绪或 from 方法不存在');
+                    return;
+                }
+                
+                // 测试查询
+                log('info', '尝试查询 admins 表...');
+                const { data, error } = await supabase
+                    .from('admins')
+                    .select('*')
+                    .limit(1);
+                
+                if (!error && data) {
+                    log('success', '成功查询 admins 表，找到', data.length, '条记录');
+                    if (data.length > 0) {
+                        log('info', '管理员数据:', JSON.stringify(data[0], null, 2));
+                    }
+                } else {
+                    log('error', '查询失败:', error?.message);
+                    if (error) {
+                        log('error', '错误详情:', JSON.stringify(error, null, 2));
+                    }
+                }
+                
+            } catch (error) {
+                log('error', '连接测试异常:', error.message);
+                log('error', '异常堆栈:', error.stack);
+            }
+        }
+
+        // 测试管理员登录
+        async function testAdminLogin() {
+            log('info', '开始测试管理员登录...');
+            
+            try {
+                if (!supabase) {
+                    supabase = createClient(config.supabaseUrl, config.supabaseKey);
+                }
+                
+                const username = 'admin';
+                const password = 'admin123';
+                const hashedPassword = btoa(password);
+                
+                log('info', `验证管理员: ${username}`);
+                log('info', '密码Base64编码:', hashedPassword);
+                
+                const { data, error } = await supabase
+                    .from('admins')
+                    .select('*')
+                    .eq('username', username)
+                    .single();
+                
+                if (!error && data) {
+                    log('success', '找到管理员用户:', data.username);
+                    log('info', '数据库中存储的密码:', data.password);
+                    
+                    if (data.password === hashedPassword) {
+                        log('success', '密码验证成功！管理员登录测试通过');
+                    } else {
+                        log('error', '密码验证失败：数据库密码 vs 输入密码编码');
+                    }
+                } else {
+                    log('error', '未找到用户:', error?.message);
+                    
+                    // 尝试列出所有管理员
+                    const { data: allAdmins, error: listError } = await supabase
+                        .from('admins')
+                        .select('*');
+                    
+                    if (!listError && allAdmins) {
+                        log('info', '找到', allAdmins.length, '个管理员');
+                        allAdmins.forEach(admin => {
+                            log('info', '管理员用户名:', admin.username);
+                        });
+                    }
+                }
+                
+            } catch (error) {
+                log('error', '管理员登录测试异常:', error.message);
+            }
+        }
+
+        // 测试用户登录
+        async function testUserLogin() {
+            log('info', '开始测试用户登录...');
+            
+            try {
+                if (!supabase) {
+                    supabase = createClient(config.supabaseUrl, config.supabaseKey);
+                }
+                
+                const userId = 'U000001';
+                
+                log('info', `验证用户: ${userId}`);
+                
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', userId)
+                    .single();
+                
+                if (!error && data) {
+                    log('success', '找到用户:', data.id, data.username);
+                    log('info', '用户数据:', JSON.stringify(data, null, 2));
+                    log('success', '用户登录测试通过！');
+                } else {
+                    log('error', '未找到用户:', error?.message);
+                    
+                    // 尝试列出所有用户
+                    const { data: allUsers, error: listError } = await supabase
+                        .from('users')
+                        .select('*')
+                        .limit(5);
+                    
+                    if (!listError && allUsers) {
+                        log('info', '找到', allUsers.length, '个用户');
+                        allUsers.forEach(user => {
+                            log('info', '用户ID:', user.id, '用户名:', user.username);
+                        });
+                    }
+                }
+                
+            } catch (error) {
+                log('error', '用户登录测试异常:', error.message);
+            }
+        }
+
+        // 记录日志
+        function log(type, ...messages) {
+            const logContainer = document.getElementById('logContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            
+            const messageText = messages.map(msg => 
+                typeof msg === 'object' ? JSON.stringify(msg) : String(msg)
+            ).join(' ');
+            
+            logEntry.innerHTML = `[${timestamp}] ${messageText}`;
+            
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            
+            // 限制日志条目数量
+            const logEntries = logContainer.querySelectorAll('.log-entry');
+            if (logEntries.length > 100) {
+                logEntries[0].remove();
+            }
+        }
+    </script>
+</body>
+</html>

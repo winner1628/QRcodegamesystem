@@ -235,7 +235,6 @@
                 if (typeof createClient === 'undefined') {
                     log('error', '未找到 Supabase createClient 函数');
                     log('error', 'window.createClient:', typeof window.createClient);
-                    log('error', 'global.createClient:', typeof global.createClient);
                     updateConnectionStatus('error', 'Supabase SDK 加载失败');
                     return;
                 }
