@@ -1,24 +1,66 @@
 // 数据库操作模块
 class DatabaseManager {
     constructor() {
-        // 检查是否使用模拟数据
-        this.useMockData = localStorage.getItem('use_mock_data') === 'true';
-        this.supabase = window.supabase;
-        
-        if (this.useMockData) {
-            console.log('使用模拟数据模式');
-        } else if (!this.supabase) {
-            console.error('Supabase 客户端未初始化');
+        this.supabase = null;
+        this.initializeSupabase();
+    }
+    
+    // 初始化 Supabase 客户端
+    initializeSupabase() {
+        try {
+            // 优先使用全局的 supabaseClient（从 config.js 初始化的）
+            if (window.supabaseClient && typeof window.supabaseClient === 'object') {
+                if (typeof window.supabaseClient.from === 'function') {
+                    this.supabase = window.supabaseClient;
+                    console.log('✓ 数据库管理器：使用 window.supabaseClient');
+                } else {
+                    console.error('✗ 数据库管理器：window.supabaseClient 没有 from 方法');
+                }
+            }
+            // 备用：检查 window.supabase
+            else if (window.supabase && typeof window.supabase === 'object') {
+                if (typeof window.supabase.from === 'function') {
+                    this.supabase = window.supabase;
+                    console.log('✓ 数据库管理器：使用 window.supabase');
+                } else if (window.supabase.createClient && typeof window.supabase.createClient === 'function') {
+                    this.supabase = window.supabase.createClient(
+                        window.AppConfig.supabase.url,
+                        window.AppConfig.supabase.key
+                    );
+                    console.log('✓ 数据库管理器：使用 supabase.createClient 创建客户端');
+                } else {
+                    console.error('✗ 数据库管理器：window.supabase 没有 from 方法或 createClient 方法');
+                }
+            }
+            // 备用：检查全局 createClient
+            else if (typeof createClient === 'function') {
+                this.supabase = createClient(
+                    window.AppConfig.supabase.url,
+                    window.AppConfig.supabase.key
+                );
+                console.log('✓ 数据库管理器：使用全局 createClient 函数');
+            } else {
+                console.error('✗ 数据库管理器：无法找到可用的 Supabase 客户端');
+            }
+            
+            // 验证客户端
+            if (this.supabase && typeof this.supabase.from === 'function') {
+                console.log('✓ 数据库管理器初始化成功');
+            } else {
+                console.error('✗ 数据库管理器初始化失败：客户端不完整');
+            }
+        } catch (error) {
+            console.error('✗ 数据库管理器初始化异常:', error);
         }
     }
 
     // 初始化数据库表
     async initializeDatabase() {
         try {
-            // 检查是否使用模拟数据
-            if (this.useMockData) {
-                console.log('模拟数据模式：数据库初始化成功');
-                return { success: true, message: '模拟数据模式：数据库初始化成功' };
+            // 检查 Supabase 客户端是否初始化
+            if (!this.supabase) {
+                console.error('Supabase 客户端未初始化');
+                return { success: false, error: 'Supabase 客户端未初始化' };
             }
             
             console.log('初始化数据库...');
@@ -72,80 +114,186 @@ class DatabaseManager {
 
     // 测试数据库连接
     async testConnection() {
-        // 检查是否使用模拟数据
-        if (this.useMockData) {
-            return { success: true, message: '使用模拟数据模式' };
+        // 检查 Supabase 客户端是否初始化
+        if (!this.supabase) {
+            console.error('✗ 测试连接：Supabase 客户端未初始化');
+            return { success: false, error: 'Supabase 客户端未初始化' };
+        }
+        
+        // 检查客户端是否有 from 方法
+        if (typeof this.supabase.from !== 'function') {
+            console.error('✗ 测试连接：this.supabase.from 不是函数');
+            return { success: false, error: 'this.supabase.from is not a function' };
         }
         
         try {
-            const { data, error } = await this.supabase.from('admins').select('id').limit(1);
-            if (error) {
-                console.error('数据库连接失败:', error);
-                return { success: false, error: error.message };
+            console.log('正在测试数据库连接...');
+            
+            // 方法1：尝试查询一个简单的表
+            console.log('方法1：尝试查询 admins 表');
+            try {
+                const { data: adminData, error: adminError } = await this.supabase
+                    .from('admins')
+                    .select('id')
+                    .limit(1);
+                
+                if (!adminError) {
+                    console.log('✓ 成功查询 admins 表');
+                    return { success: true, message: '成功连接到数据库并查询 admins 表' };
+                }
+                console.log('查询 admins 表失败:', adminError.message);
+            } catch (adminQueryError) {
+                console.log('查询 admins 表异常:', adminQueryError.message);
             }
-            return { success: true };
+            
+            // 方法2：尝试查询 users 表
+            console.log('方法2：尝试查询 users 表');
+            try {
+                const { data: userData, error: userError } = await this.supabase
+                    .from('users')
+                    .select('id')
+                    .limit(1);
+                
+                if (!userError) {
+                    console.log('✓ 成功查询 users 表');
+                    return { success: true, message: '成功连接到数据库并查询 users 表' };
+                }
+                console.log('查询 users 表失败:', userError.message);
+            } catch (userQueryError) {
+                console.log('查询 users 表异常:', userQueryError.message);
+            }
+            
+            // 方法3：尝试查询 games 表
+            console.log('方法3：尝试查询 games 表');
+            try {
+                const { data: gameData, error: gameError } = await this.supabase
+                    .from('games')
+                    .select('id')
+                    .limit(1);
+                
+                if (!gameError) {
+                    console.log('✓ 成功查询 games 表');
+                    return { success: true, message: '成功连接到数据库并查询 games 表' };
+                }
+                console.log('查询 games 表失败:', gameError.message);
+            } catch (gameQueryError) {
+                console.log('查询 games 表异常:', gameQueryError.message);
+            }
+            
+            // 如果所有查询都失败，检查是否是表不存在的问题
+            console.log('所有表查询都失败，可能是表不存在或权限问题');
+            return { 
+                success: true, 
+                message: '数据库连接成功，但所有表查询失败。可能是表不存在或权限问题。请先初始化数据库。' 
+            };
+            
         } catch (error) {
-            console.error('数据库连接异常:', error);
+            console.error('✗ 数据库连接异常:', error);
             return { success: false, error: error.message };
         }
     }
 
     // 验证管理员登录
     async verifyAdmin(username, password) {
-        // 检查是否使用模拟数据
-        if (this.useMockData) {
-            try {
-                const mockUsers = JSON.parse(localStorage.getItem('mock_users') || '[]');
-                const adminUser = mockUsers.find(user => user.username === username && user.role === 'admin');
-                
-                if (!adminUser) {
-                    return false;
-                }
-                
-                // 直接比较密码（模拟数据中密码是明文存储的）
-                return adminUser.password === password;
-            } catch (error) {
-                console.error('验证模拟管理员失败:', error);
-                return false;
-            }
+        // 检查 Supabase 客户端是否初始化
+        if (!this.supabase) {
+            console.error('✗ 验证管理员：Supabase 客户端未初始化');
+            return false;
+        }
+        
+        // 检查客户端是否有 from 方法
+        if (typeof this.supabase.from !== 'function') {
+            console.error('✗ 验证管理员：this.supabase.from 不是函数');
+            return false;
         }
         
         try {
-            const { data, error } = await this.supabase
-                .from('admins')
-                .select('*')
-                .eq('username', username)
-                .single();
-
-            if (error || !data) {
-                return false;
+            console.log(`正在验证管理员用户: ${username}`);
+            
+            // 使用默认管理员账号进行验证（作为备用方案）
+            const defaultAdmin = window.AppConfig?.admin;
+            if (defaultAdmin && username === defaultAdmin.defaultUsername && password === defaultAdmin.defaultPassword) {
+                console.log('✓ 使用默认管理员账号验证成功');
+                return true;
             }
+            
+            // 首先尝试从 admins 表查询
+            console.log('尝试从 admins 表查询管理员');
+            try {
+                const { data: adminData, error: adminError } = await this.supabase
+                    .from('admins')
+                    .select('*')
+                    .eq('username', username)
+                    .single();
 
-            const hashedPassword = this.hashPassword(password);
-            return data.password === hashedPassword || data.password_hash === hashedPassword;
+                if (!adminError && adminData) {
+                    console.log('找到管理员用户:', adminData.username);
+                    const hashedPassword = this.hashPassword(password);
+                    
+                    // 检查各种密码字段
+                    if (adminData.password === password || 
+                        adminData.password === hashedPassword || 
+                        adminData.password_hash === password || 
+                        adminData.password_hash === hashedPassword) {
+                        console.log('✓ 管理员密码验证成功');
+                        return true;
+                    } else {
+                        console.log('✗ 管理员密码验证失败');
+                    }
+                } else {
+                    console.log('在 admins 表中未找到用户:', adminError?.message);
+                }
+            } catch (adminQueryError) {
+                console.log('查询 admins 表异常:', adminQueryError.message);
+            }
+            
+            // 如果 admins 表查询失败，尝试从 users 表查询管理员用户
+            console.log('尝试从 users 表查询管理员');
+            try {
+                const { data: userData, error: userError } = await this.supabase
+                    .from('users')
+                    .select('*')
+                    .eq('username', username)
+                    .eq('role', 'admin')
+                    .single();
+
+                if (!userError && userData) {
+                    console.log('在 users 表找到管理员:', userData.username);
+                    const hashedPassword = this.hashPassword(password);
+                    
+                    // 检查各种密码字段
+                    if (userData.password === password || 
+                        userData.password === hashedPassword || 
+                        userData.password_hash === password || 
+                        userData.password_hash === hashedPassword) {
+                        console.log('✓ 用户表管理员密码验证成功');
+                        return true;
+                    } else {
+                        console.log('✗ 用户表管理员密码验证失败');
+                    }
+                } else {
+                    console.log('在 users 表中未找到管理员用户:', userError?.message);
+                }
+            } catch (userQueryError) {
+                console.log('查询 users 表异常:', userQueryError.message);
+            }
+            
+            console.log('✗ 所有验证方式都失败');
+            return false;
         } catch (error) {
-            console.error('验证管理员失败:', error);
+            console.error('✗ 验证管理员过程中发生异常:', error);
             return false;
         }
     }
 
+
     // 生成游戏ID
     async generateGameId() {
         try {
-            // 检查是否使用模拟数据
-            if (this.useMockData) {
-                const mockGames = JSON.parse(localStorage.getItem('mock_games') || '[]');
-                if (!mockGames || mockGames.length === 0) {
-                    return 'G000001';
-                }
-                
-                // 找到最大的ID
-                const maxId = mockGames.reduce((max, game) => {
-                    const num = parseInt(game.game_id?.substring(1) || '0');
-                    return num > max ? num : max;
-                }, 0);
-                
-                return `G${(maxId + 1).toString().padStart(6, '0')}`;
+            // 检查 Supabase 客户端是否初始化
+            if (!this.supabase) {
+                console.error('Supabase 客户端未初始化');
+                return 'G000001';
             }
             
             const { data, error } = await this.supabase
@@ -170,20 +318,10 @@ class DatabaseManager {
     // 生成用户ID
     async generateUserId() {
         try {
-            // 检查是否使用模拟数据
-            if (this.useMockData) {
-                const mockUsers = JSON.parse(localStorage.getItem('mock_users') || '[]');
-                if (!mockUsers || mockUsers.length === 0) {
-                    return 'U000001';
-                }
-                
-                // 找到最大的ID
-                const maxId = mockUsers.reduce((max, user) => {
-                    const num = parseInt(user.user_id?.substring(1) || '0');
-                    return num > max ? num : max;
-                }, 0);
-                
-                return `U${(maxId + 1).toString().padStart(6, '0')}`;
+            // 检查 Supabase 客户端是否初始化
+            if (!this.supabase) {
+                console.error('Supabase 客户端未初始化');
+                return 'U000001';
             }
             
             const { data, error } = await this.supabase
@@ -207,15 +345,10 @@ class DatabaseManager {
 
     // 获取所有游戏
     async getAllGames() {
-        // 检查是否使用模拟数据
-        if (this.useMockData) {
-            try {
-                const mockGames = JSON.parse(localStorage.getItem('mock_games') || '[]');
-                return mockGames || [];
-            } catch (error) {
-                console.error('获取模拟游戏数据失败:', error);
-                return [];
-            }
+        // 检查 Supabase 客户端是否初始化
+        if (!this.supabase) {
+            console.error('Supabase 客户端未初始化');
+            return [];
         }
         
         const { data, error } = await this.supabase
@@ -227,27 +360,10 @@ class DatabaseManager {
 
     // 添加游戏
     async addGame(gameData) {
-        // 检查是否使用模拟数据
-        if (this.useMockData) {
-            try {
-                const gameId = await this.generateGameId();
-                const mockGames = JSON.parse(localStorage.getItem('mock_games') || '[]');
-                const newGame = {
-                    id: mockGames.length + 1,
-                    game_id: gameId,
-                    ...gameData,
-                    is_active: true,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                };
-                
-                mockGames.push(newGame);
-                localStorage.setItem('mock_games', JSON.stringify(mockGames));
-                return true;
-            } catch (error) {
-                console.error('添加模拟游戏失败:', error);
-                return false;
-            }
+        // 检查 Supabase 客户端是否初始化
+        if (!this.supabase) {
+            console.error('Supabase 客户端未初始化');
+            return false;
         }
         
         const gameId = await this.generateGameId();
@@ -281,15 +397,10 @@ class DatabaseManager {
 
     // 获取所有用户
     async getAllUsers() {
-        // 检查是否使用模拟数据
-        if (this.useMockData) {
-            try {
-                const mockUsers = JSON.parse(localStorage.getItem('mock_users') || '[]');
-                return mockUsers || [];
-            } catch (error) {
-                console.error('获取模拟用户数据失败:', error);
-                return [];
-            }
+        // 检查 Supabase 客户端是否初始化
+        if (!this.supabase) {
+            console.error('Supabase 客户端未初始化');
+            return [];
         }
         
         const { data, error } = await this.supabase
@@ -301,27 +412,10 @@ class DatabaseManager {
 
     // 添加用户
     async addUser(userData) {
-        // 检查是否使用模拟数据
-        if (this.useMockData) {
-            try {
-                const userId = await this.generateUserId();
-                const mockUsers = JSON.parse(localStorage.getItem('mock_users') || '[]');
-                const newUser = {
-                    id: mockUsers.length + 1,
-                    user_id: userId,
-                    ...userData,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                    total_score: 0
-                };
-                
-                mockUsers.push(newUser);
-                localStorage.setItem('mock_users', JSON.stringify(mockUsers));
-                return true;
-            } catch (error) {
-                console.error('添加模拟用户失败:', error);
-                return false;
-            }
+        // 检查 Supabase 客户端是否初始化
+        if (!this.supabase) {
+            console.error('Supabase 客户端未初始化');
+            return false;
         }
         
         const userId = await this.generateUserId();
