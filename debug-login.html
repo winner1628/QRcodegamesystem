@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录调试工具 - QR码游戏系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4/dist/umd/supabase.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+            color: #333333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        .log-container {
+            background: #1e293b;
+            color: #f1f5f9;
+            border-radius: 8px;
+            padding: 16px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .log-entry {
+            margin-bottom: 4px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #334155;
+        }
+        .log-success { color: #10b981; }
+        .log-error { color: #ef4444; }
+        .log-info { color: #60a5fa; }
+        .log-warning { color: #f59e0b; }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #374151;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-success { background-color: #10b981; }
+        .status-error { background-color: #ef4444; }
+        .status-warning { background-color: #f59e0b; }
+        .status-info { background-color: #60a5fa; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">登录调试工具</h1>
+            <p class="text-gray-600">QR码游戏系统 - 数据库连接和登录验证诊断</p>
+        </div>
+
+        <!-- 连接状态 -->
+        <div class="card">
+            <h2 class="text-xl font-bold mb-4 flex items-center">
+                <i class="fa fa-database mr-2 text-blue-600"></i>
+                数据库连接状态
+            </h2>
+            <div class="flex items-center mb-4">
+                <span class="status-indicator" id="connectionStatus"></span>
+                <span id="connectionStatusText">正在检查连接...</span>
+            </div>
+            <button id="testConnectionBtn" class="btn btn-primary">
+                <i class="fa fa-refresh"></i>
+                测试数据库连接
+            </button>
+        </div>
+
+        <!-- 管理员登录测试 -->
+        <div class="card">
+            <h2 class="text-xl font-bold mb-4 flex items-center">
+                <i class="fa fa-user-circle mr-2 text-blue-600"></i>
+                管理员登录测试
+            </h2>
+            <form id="adminLoginForm" class="space-y-4">
+                <div class="form-group">
+                    <label class="form-label" for="adminUsername">用户名</label>
+                    <input type="text" id="adminUsername" class="form-input" value="admin" placeholder="请输入管理员用户名">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="adminPassword">密码</label>
+                    <input type="password" id="adminPassword" class="form-input" value="admin123" placeholder="请输入管理员密码">
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa fa-sign-in"></i>
+                    测试管理员登录
+                </button>
+            </form>
+        </div>
+
+        <!-- 用户登录测试 -->
+        <div class="card">
+            <h2 class="text-xl font-bold mb-4 flex items-center">
+                <i class="fa fa-user mr-2 text-blue-600"></i>
+                用户登录测试
+            </h2>
+            <form id="userLoginForm" class="space-y-4">
+                <div class="form-group">
+                    <label class="form-label" for="userId">用户ID</label>
+                    <input type="text" id="userId" class="form-input" value="U000001" placeholder="请输入用户ID">
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa fa-sign-in"></i>
+                    测试用户登录
+                </button>
+            </form>
+        </div>
+
+        <!-- 数据库查询测试 -->
+        <div class="card">
+            <h2 class="text-xl font-bold mb-4 flex items-center">
+                <i class="fa fa-search mr-2 text-blue-600"></i>
+                数据库查询测试
+            </h2>
+            <div class="space-y-4">
+                <button id="queryAdminsBtn" class="btn btn-secondary">
+                    <i class="fa fa-table"></i>
+                    查询管理员表
+                </button>
+                <button id="queryUsersBtn" class="btn btn-secondary">
+                    <i class="fa fa-table"></i>
+                    查询用户表
+                </button>
+                <button id="queryGamesBtn" class="btn btn-secondary">
+                    <i class="fa fa-table"></i>
+                    查询游戏表
+                </button>
+            </div>
+        </div>
+
+        <!-- 系统日志 -->
+        <div class="card">
+            <h2 class="text-xl font-bold mb-4 flex items-center">
+                <i class="fa fa-terminal mr-2 text-blue-600"></i>
+                系统日志
+            </h2>
+            <div class="log-container" id="logContainer">
+                <div class="log-entry log-info">系统初始化完成，开始调试...</div>
+            </div>
+        </div>
+
+        <!-- 返回首页 -->
+        <div class="text-center mt-8">
+            <a href="index.html" class="text-blue-600 hover:text-blue-800 font-medium">
+                <i class="fa fa-arrow-left mr-2"></i>返回首页
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let supabaseClient = null;
+        let databaseManager = null;
+        let authManager = null;
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', async () => {
+            log('info', '页面加载完成，开始初始化...');
+            
+            // 等待一段时间确保 Supabase SDK 加载完成
+            setTimeout(async () => {
+                await initializeDebugger();
+            }, 1000);
+        });
+
+        // 初始化调试器
+        async function initializeDebugger() {
+            try {
+                log('info', '开始初始化调试器...');
+                
+                // 检查 Supabase SDK
+                if (typeof createClient === 'undefined') {
+                    log('error', '未找到 Supabase createClient 函数');
+                    log('error', 'window.createClient:', typeof window.createClient);
+                    log('error', 'global.createClient:', typeof global.createClient);
+                    updateConnectionStatus('error', 'Supabase SDK 加载失败');
+                    return;
+                }
+                
+                log('success', '找到 Supabase createClient 函数');
+                
+                // 初始化配置
+                window.AppConfig = {
+                    supabase: {
+                        url: 'https://vphihqysgdhdnuszybib.supabase.co',
+                        key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwaGlocXlzZ2RoZG51c3p5YmlrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcyNzY3MzI4MiwiZXhwIjoyMDQzMjQ5MjgyfQ.H4YdUeGx3e8jKzZ4qQ4qQ4qQ4qQ4qQ4qQ4qQ4qQ4qQ4qQ4qQ'
+                    },
+                    REGEX: {
+                        USER_ID: /^U\d{6}$/,
+                        GAME_ID: /^G\d{6}$/
+                    }
+                };
+                
+                log('info', '初始化 AppConfig 完成');
+                log('info', '数据库 URL:', window.AppConfig.supabase.url);
+                log('info', '数据库 Key:', '***' + window.AppConfig.supabase.key.slice(-8));
+                
+                // 创建 Supabase 客户端
+                try {
+                    supabaseClient = createClient(
+                        window.AppConfig.supabase.url,
+                        window.AppConfig.supabase.key
+                    );
+                    
+                    log('success', 'Supabase 客户端创建成功');
+                    log('info', '客户端类型:', typeof supabaseClient);
+                    
+                    if (supabaseClient && typeof supabaseClient === 'object') {
+                        const clientKeys = Object.keys(supabaseClient);
+                        log('info', '客户端方法/属性数量:', clientKeys.length);
+                        log('info', '客户端方法/属性:', clientKeys.join(', '));
+                        
+                        if (typeof supabaseClient.from === 'function') {
+                            log('success', 'from 方法存在且类型正确');
+                            window.supabase = supabaseClient;
+                            updateConnectionStatus('success', 'Supabase 客户端初始化成功');
+                        } else {
+                            log('error', 'from 方法不存在或类型错误:', typeof supabaseClient.from);
+                            updateConnectionStatus('error', 'Supabase 客户端不完整');
+                        }
+                    } else {
+                        log('error', '创建的客户端不是有效对象');
+                        updateConnectionStatus('error', 'Supabase 客户端创建失败');
+                    }
+                } catch (createError) {
+                    log('error', '创建 Supabase 客户端时发生异常:', createError.message);
+                    log('error', '异常堆栈:', createError.stack);
+                    updateConnectionStatus('error', 'Supabase 客户端创建异常');
+                }
+                
+                // 初始化数据库管理器
+                if (window.supabase) {
+                    initializeDatabaseManager();
+                }
+                
+            } catch (error) {
+                log('error', '初始化调试器时发生异常:', error.message);
+                log('error', '异常堆栈:', error.stack);
+                updateConnectionStatus('error', '初始化失败');
+            }
+        }
+
+        // 初始化数据库管理器
+        function initializeDatabaseManager() {
+            try {
+                log('info', '开始初始化数据库管理器...');
+                
+                // 数据库管理器类
+                class DatabaseManager {
+                    constructor() {
+                        this.supabase = window.supabase;
+                        log('info', '数据库管理器使用 window.supabase');
+                    }
+                    
+                    // 测试连接
+                    async testConnection() {
+                        try {
+                            log('info', '开始测试数据库连接...');
+                            
+                            if (!this.supabase) {
+                                log('error', 'Supabase 客户端未初始化');
+                                return { success: false, error: 'Supabase 客户端未初始化' };
+                            }
+                            
+                            if (typeof this.supabase.from !== 'function') {
+                                log('error', 'this.supabase.from 不是函数:', typeof this.supabase.from);
+                                return { success: false, error: 'this.supabase.from is not a function' };
+                            }
+                            
+                            // 测试查询 admins 表
+                            try {
+                                log('info', '尝试查询 admins 表...');
+                                const { data, error } = await this.supabase
+                                    .from('admins')
+                                    .select('id, username')
+                                    .limit(1);
+                                
+                                if (!error && data) {
+                                    log('success', '成功查询 admins 表，找到', data.length, '条记录');
+                                    if (data.length > 0) {
+                                        log('info', '管理员数据:', JSON.stringify(data[0], null, 2));
+                                    }
+                                    return { success: true, message: '成功连接到数据库' };
+                                } else {
+                                    log('error', '查询 admins 表失败:', error?.message);
+                                    return { success: false, error: error?.message || '未知错误' };
+                                }
+                            } catch (queryError) {
+                                log('error', '查询 admins 表异常:', queryError.message);
+                                return { success: false, error: queryError.message };
+                            }
+                        } catch (error) {
+                            log('error', '测试连接时发生异常:', error.message);
+                            return { success: false, error: error.message };
+                        }
+                    }
+                    
+                    // 验证管理员
+                    async verifyAdmin(username, password) {
+                        try {
+                            log('info', `开始验证管理员用户: ${username}`);
+                            
+                            if (!this.supabase) {
+                                log('error', 'Supabase 客户端未初始化');
+                                return false;
+                            }
+                            
+                            if (typeof this.supabase.from !== 'function') {
+                                log('error', 'this.supabase.from 不是函数');
+                                return false;
+                            }
+                            
+                            // 查询 admins 表
+                            try {
+                                log('info', '查询 admins 表...');
+                                const { data, error } = await this.supabase
+                                    .from('admins')
+                                    .select('*')
+                                    .eq('username', username)
+                                    .single();
+                                
+                                if (!error && data) {
+                                    log('success', '找到管理员用户:', data.username);
+                                    log('info', '数据库中存储的密码:', data.password);
+                                    
+                                    const hashedPassword = btoa(password);
+                                    log('info', '输入密码的Base64编码:', hashedPassword);
+                                    
+                                    if (data.password === hashedPassword) {
+                                        log('success', '密码验证成功（Base64匹配）');
+                                        return true;
+                                    } else {
+                                        log('error', '密码验证失败：数据库密码 vs 输入密码编码');
+                                        return false;
+                                    }
+                                } else {
+                                    log('error', '在 admins 表中未找到用户:', error?.message);
+                                    return false;
+                                }
+                            } catch (queryError) {
+                                log('error', '查询 admins 表异常:', queryError.message);
+                                return false;
+                            }
+                        } catch (error) {
+                            log('error', '验证管理员时发生异常:', error.message);
+                            return false;
+                        }
+                    }
+                    
+                    // 验证用户
+                    async verifyUser(userId) {
+                        try {
+                            log('info', `开始验证用户: ${userId}`);
+                            
+                            if (!this.supabase) {
+                                log('error', 'Supabase 客户端未初始化');
+                                return null;
+                            }
+                            
+                            if (typeof this.supabase.from !== 'function') {
+                                log('error', 'this.supabase.from 不是函数');
+                                return null;
+                            }
+                            
+                            // 查询 users 表
+                            try {
+                                log('info', '查询 users 表...');
+                                const { data, error } = await this.supabase
+                                    .from('users')
+                                    .select('*')
+                                    .eq('id', userId)
+                                    .single();
+                                
+                                if (!error && data) {
+                                    log('success', '找到用户:', data.id, data.username);
+                                    log('info', '用户数据:', JSON.stringify(data, null, 2));
+                                    
+                                    if (!data.name) {
+                                        data.name = data.username || '用户';
+                                    }
+                                    
+                                    return data;
+                                } else {
+                                    log('error', '在 users 表中未找到用户:', error?.message);
+                                    
+                                    // 尝试列出所有用户
+                                    try {
+                                        log('info', '尝试列出所有用户...');
+                                        const { data: allUsers, error: listError } = await this.supabase
+                                            .from('users')
+                                            .select('*')
+                                            .limit(10);
+                                        
+                                        if (!listError && allUsers) {
+                                            log('info', '找到', allUsers.length, '个用户');
+                                            allUsers.forEach(user => {
+                                                log('info', '用户ID:', user.id, '用户名:', user.username);
+                                            });
+                                        } else {
+                                            log('error', '列出用户失败:', listError?.message);
+                                        }
+                                    } catch (listError) {
+                                        log('error', '列出用户异常:', listError.message);
+                                    }
+                                    
+                                    return null;
+                                }
+                            } catch (queryError) {
+                                log('error', '查询 users 表异常:', queryError.message);
+                                return null;
+                            }
+                        } catch (error) {
+                            log('error', '验证用户时发生异常:', error.message);
+                            return null;
+                        }
+                    }
+                    
+                    // 查询表数据
+                    async queryTable(tableName, limit = 10) {
+                        try {
+                            log('info', `开始查询 ${tableName} 表...`);
+                            
+                            if (!this.supabase) {
+                                log('error', 'Supabase 客户端未初始化');
+                                return null;
+                            }
+                            
+                            if (typeof this.supabase.from !== 'function') {
+                                log('error', 'this.supabase.from 不是函数');
+                                return null;
+                            }
+                            
+                            const { data, error } = await this.supabase
+                                .from(tableName)
+                                .select('*')
+                                .limit(limit);
+                            
+                            if (!error && data) {
+                                log('success', `成功查询 ${tableName} 表，找到 ${data.length} 条记录`);
+                                log('info', `${tableName} 表数据:`, JSON.stringify(data, null, 2));
+                                return data;
+                            } else {
+                                log('error', `查询 ${tableName} 表失败:`, error?.message);
+                                return null;
+                            }
+                        } catch (error) {
+                            log('error', `查询 ${tableName} 表时发生异常:`, error.message);
+                            return null;
+                        }
+                    }
+                }
+                
+                // 身份验证管理器类
+                class AuthManager {
+                    constructor(dbManager) {
+                        this.db = dbManager;
+                    }
+                    
+                    async adminLogin(username, password) {
+                        try {
+                            log('info', `执行管理员登录: ${username}`);
+                            
+                            if (!username || !password) {
+                                return { success: false, message: '请输入用户名和密码' };
+                            }
+                            
+                            const isValid = await this.db.verifyAdmin(username, password);
+                            
+                            if (isValid) {
+                                log('success', '管理员登录成功');
+                                return { success: true, message: '登录成功' };
+                            } else {
+                                log('error', '管理员登录失败：用户名或密码错误');
+                                return { success: false, message: '用户名或密码错误' };
+                            }
+                        } catch (error) {
+                            log('error', '管理员登录过程中发生异常:', error.message);
+                            return { success: false, message: '登录失败，请稍后重试' };
+                        }
+                    }
+                    
+                    async userLogin(userId) {
+                        try {
+                            log('info', `执行用户登录: ${userId}`);
+                            
+                            if (!userId) {
+                                return { success: false, message: '请输入用户ID' };
+                            }
+                            
+                            if (!window.AppConfig.REGEX.USER_ID.test(userId)) {
+                                return { success: false, message: '用户ID格式错误' };
+                            }
+                            
+                            const user = await this.db.verifyUser(userId);
+                            
+                            if (user) {
+                                log('success', '用户登录成功');
+                                return { success: true, message: '登录成功', user };
+                            } else {
+                                log('error', '用户登录失败：用户不存在');
+                                return { success: false, message: '用户不存在' };
+                            }
+                        } catch (error) {
+                            log('error', '用户登录过程中发生异常:', error.message);
+                            return { success: false, message: '登录失败，请稍后重试' };
+                        }
+                    }
+                }
+                
+                // 创建实例
+                databaseManager = new DatabaseManager();
+                authManager = new AuthManager(databaseManager);
+                
+                log('success', '数据库管理器和身份验证管理器初始化成功');
+                
+                // 绑定事件
+                bindEvents();
+                
+                // 自动测试连接
+                setTimeout(() => {
+                    testConnection();
+                }, 500);
+                
+            } catch (error) {
+                log('error', '初始化数据库管理器时发生异常:', error.message);
+                log('error', '异常堆栈:', error.stack);
+            }
+        }
+
+        // 绑定事件
+        function bindEvents() {
+            // 测试连接按钮
+            document.getElementById('testConnectionBtn').addEventListener('click', testConnection);
+            
+            // 管理员登录表单
+            document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await testAdminLogin();
+            });
+            
+            // 用户登录表单
+            document.getElementById('userLoginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await testUserLogin();
+            });
+            
+            // 查询按钮
+            document.getElementById('queryAdminsBtn').addEventListener('click', () => queryTable('admins'));
+            document.getElementById('queryUsersBtn').addEventListener('click', () => queryTable('users'));
+            document.getElementById('queryGamesBtn').addEventListener('click', () => queryTable('games'));
+        }
+
+        // 测试连接
+        async function testConnection() {
+            if (!databaseManager) {
+                log('error', '数据库管理器未初始化');
+                return;
+            }
+            
+            updateConnectionStatus('info', '正在测试连接...');
+            
+            try {
+                const result = await databaseManager.testConnection();
+                
+                if (result.success) {
+                    updateConnectionStatus('success', '数据库连接成功');
+                    log('success', '连接测试结果:', result.message);
+                } else {
+                    updateConnectionStatus('error', '数据库连接失败');
+                    log('error', '连接测试结果:', result.error);
+                }
+            } catch (error) {
+                updateConnectionStatus('error', '连接测试异常');
+                log('error', '连接测试异常:', error.message);
+            }
+        }
+
+        // 测试管理员登录
+        async function testAdminLogin() {
+            if (!authManager) {
+                log('error', '身份验证管理器未初始化');
+                return;
+            }
+            
+            const username = document.getElementById('adminUsername').value.trim();
+            const password = document.getElementById('adminPassword').value.trim();
+            
+            if (!username || !password) {
+                log('warning', '请输入用户名和密码');
+                return;
+            }
+            
+            try {
+                const result = await authManager.adminLogin(username, password);
+                
+                if (result.success) {
+                    log('success', '管理员登录测试结果:', result.message);
+                } else {
+                    log('error', '管理员登录测试结果:', result.message);
+                }
+            } catch (error) {
+                log('error', '管理员登录测试异常:', error.message);
+            }
+        }
+
+        // 测试用户登录
+        async function testUserLogin() {
+            if (!authManager) {
+                log('error', '身份验证管理器未初始化');
+                return;
+            }
+            
+            const userId = document.getElementById('userId').value.trim();
+            
+            if (!userId) {
+                log('warning', '请输入用户ID');
+                return;
+            }
+            
+            try {
+                const result = await authManager.userLogin(userId);
+                
+                if (result.success) {
+                    log('success', '用户登录测试结果:', result.message);
+                } else {
+                    log('error', '用户登录测试结果:', result.message);
+                }
+            } catch (error) {
+                log('error', '用户登录测试异常:', error.message);
+            }
+        }
+
+        // 查询表
+        async function queryTable(tableName) {
+            if (!databaseManager) {
+                log('error', '数据库管理器未初始化');
+                return;
+            }
+            
+            try {
+                const data = await databaseManager.queryTable(tableName);
+                
+                if (data) {
+                    log('success', `${tableName} 表查询成功，共 ${data.length} 条记录`);
+                } else {
+                    log('error', `${tableName} 表查询失败`);
+                }
+            } catch (error) {
+                log('error', `${tableName} 表查询异常:`, error.message);
+            }
+        }
+
+        // 更新连接状态
+        function updateConnectionStatus(status, message) {
+            const statusIndicator = document.getElementById('connectionStatus');
+            const statusText = document.getElementById('connectionStatusText');
+            
+            // 移除所有状态类
+            statusIndicator.classList.remove('status-success', 'status-error', 'status-warning', 'status-info');
+            
+            // 添加新状态类
+            statusIndicator.classList.add(`status-${status}`);
+            
+            // 更新文本
+            statusText.textContent = message;
+        }
+
+        // 记录日志
+        function log(type, ...messages) {
+            const logContainer = document.getElementById('logContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            
+            const messageText = messages.map(msg => 
+                typeof msg === 'object' ? JSON.stringify(msg) : String(msg)
+            ).join(' ');
+            
+            logEntry.innerHTML = `[${timestamp}] ${messageText}`;
+            
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            
+            // 限制日志条目数量
+            const logEntries = logContainer.querySelectorAll('.log-entry');
+            if (logEntries.length > 100) {
+                logEntries[0].remove();
+            }
+        }
+    </script>
+</body>
+</html>
