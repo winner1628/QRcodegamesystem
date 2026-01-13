@@ -39,12 +39,15 @@ window.AppConfig = {
 };
 
 // 初始化 Supabase 客户端
-if (!window.supabase && typeof createClient !== 'undefined') {
+if (typeof createClient !== 'undefined') {
     window.supabase = createClient(
         window.AppConfig.supabase.url,
         window.AppConfig.supabase.key
     );
-    console.log('Supabase 客户端初始化成功');
-} else if (!window.supabase) {
-    console.error('Supabase createClient 函数未找到');
+    console.log('✓ Supabase 客户端初始化成功');
+    console.log('✓ 数据库 URL:', window.AppConfig.supabase.url);
+    console.log('✓ 数据库 Key:', '***' + window.AppConfig.supabase.key.slice(-8));
+} else {
+    console.error('✗ Supabase createClient 函数未找到');
+    console.error('✗ 请检查 Supabase SDK 是否正确加载');
 }
