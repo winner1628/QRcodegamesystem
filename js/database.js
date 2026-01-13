@@ -1,8 +1,13 @@
 // 数据库操作模块
 class DatabaseManager {
     constructor() {
+        // 检查是否使用模拟数据
+        this.useMockData = localStorage.getItem('use_mock_data') === 'true';
         this.supabase = window.supabase;
-        if (!this.supabase) {
+        
+        if (this.useMockData) {
+            console.log('使用模拟数据模式');
+        } else if (!this.supabase) {
             console.error('Supabase 客户端未初始化');
         }
     }
@@ -10,6 +15,12 @@ class DatabaseManager {
     // 初始化数据库表
     async initializeDatabase() {
         try {
+            // 检查是否使用模拟数据
+            if (this.useMockData) {
+                console.log('模拟数据模式：数据库初始化成功');
+                return { success: true, message: '模拟数据模式：数据库初始化成功' };
+            }
+            
             console.log('初始化数据库...');
             
             // 检查并创建管理员表
@@ -61,6 +72,11 @@ class DatabaseManager {
 
     // 测试数据库连接
     async testConnection() {
+        // 检查是否使用模拟数据
+        if (this.useMockData) {
+            return { success: true, message: '使用模拟数据模式' };
+        }
+        
         try {
             const { data, error } = await this.supabase.from('admins').select('id').limit(1);
             if (error) {
@@ -76,6 +92,24 @@ class DatabaseManager {
 
     // 验证管理员登录
     async verifyAdmin(username, password) {
+        // 检查是否使用模拟数据
+        if (this.useMockData) {
+            try {
+                const mockUsers = JSON.parse(localStorage.getItem('mock_users') || '[]');
+                const adminUser = mockUsers.find(user => user.username === username && user.role === 'admin');
+                
+                if (!adminUser) {
+                    return false;
+                }
+                
+                // 直接比较密码（模拟数据中密码是明文存储的）
+                return adminUser.password === password;
+            } catch (error) {
+                console.error('验证模拟管理员失败:', error);
+                return false;
+            }
+        }
+        
         try {
             const { data, error } = await this.supabase
                 .from('admins')
@@ -98,6 +132,22 @@ class DatabaseManager {
     // 生成游戏ID
     async generateGameId() {
         try {
+            // 检查是否使用模拟数据
+            if (this.useMockData) {
+                const mockGames = JSON.parse(localStorage.getItem('mock_games') || '[]');
+                if (!mockGames || mockGames.length === 0) {
+                    return 'G000001';
+                }
+                
+                // 找到最大的ID
+                const maxId = mockGames.reduce((max, game) => {
+                    const num = parseInt(game.game_id?.substring(1) || '0');
+                    return num > max ? num : max;
+                }, 0);
+                
+                return `G${(maxId + 1).toString().padStart(6, '0')}`;
+            }
+            
             const { data, error } = await this.supabase
                 .from('games')
                 .select('id')
@@ -120,6 +170,22 @@ class DatabaseManager {
     // 生成用户ID
     async generateUserId() {
         try {
+            // 检查是否使用模拟数据
+            if (this.useMockData) {
+                const mockUsers = JSON.parse(localStorage.getItem('mock_users') || '[]');
+                if (!mockUsers || mockUsers.length === 0) {
+                    return 'U000001';
+                }
+                
+                // 找到最大的ID
+                const maxId = mockUsers.reduce((max, user) => {
+                    const num = parseInt(user.user_id?.substring(1) || '0');
+                    return num > max ? num : max;
+                }, 0);
+                
+                return `U${(maxId + 1).toString().padStart(6, '0')}`;
+            }
+            
             const { data, error } = await this.supabase
                 .from('users')
                 .select('id')
@@ -141,6 +207,17 @@ class DatabaseManager {
 
     // 获取所有游戏
     async getAllGames() {
+        // 检查是否使用模拟数据
+        if (this.useMockData) {
+            try {
+                const mockGames = JSON.parse(localStorage.getItem('mock_games') || '[]');
+                return mockGames || [];
+            } catch (error) {
+                console.error('获取模拟游戏数据失败:', error);
+                return [];
+            }
+        }
+        
         const { data, error } = await this.supabase
             .from('games')
             .select('*')
@@ -150,6 +227,29 @@ class DatabaseManager {
 
     // 添加游戏
     async addGame(gameData) {
+        // 检查是否使用模拟数据
+        if (this.useMockData) {
+            try {
+                const gameId = await this.generateGameId();
+                const mockGames = JSON.parse(localStorage.getItem('mock_games') || '[]');
+                const newGame = {
+                    id: mockGames.length + 1,
+                    game_id: gameId,
+                    ...gameData,
+                    is_active: true,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+                
+                mockGames.push(newGame);
+                localStorage.setItem('mock_games', JSON.stringify(mockGames));
+                return true;
+            } catch (error) {
+                console.error('添加模拟游戏失败:', error);
+                return false;
+            }
+        }
+        
         const gameId = await this.generateGameId();
         const { error } = await this.supabase
             .from('games')
@@ -181,6 +281,17 @@ class DatabaseManager {
 
     // 获取所有用户
     async getAllUsers() {
+        // 检查是否使用模拟数据
+        if (this.useMockData) {
+            try {
+                const mockUsers = JSON.parse(localStorage.getItem('mock_users') || '[]');
+                return mockUsers || [];
+            } catch (error) {
+                console.error('获取模拟用户数据失败:', error);
+                return [];
+            }
+        }
+        
         const { data, error } = await this.supabase
             .from('users')
             .select('*')
@@ -190,6 +301,29 @@ class DatabaseManager {
 
     // 添加用户
     async addUser(userData) {
+        // 检查是否使用模拟数据
+        if (this.useMockData) {
+            try {
+                const userId = await this.generateUserId();
+                const mockUsers = JSON.parse(localStorage.getItem('mock_users') || '[]');
+                const newUser = {
+                    id: mockUsers.length + 1,
+                    user_id: userId,
+                    ...userData,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                    total_score: 0
+                };
+                
+                mockUsers.push(newUser);
+                localStorage.setItem('mock_users', JSON.stringify(mockUsers));
+                return true;
+            } catch (error) {
+                console.error('添加模拟用户失败:', error);
+                return false;
+            }
+        }
+        
         const userId = await this.generateUserId();
         const { error } = await this.supabase
             .from('users')
