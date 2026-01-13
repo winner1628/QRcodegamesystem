@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase 测试页面</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4/dist/umd/supabase.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h1 class="text-2xl font-bold mb-4">Supabase 客户端测试</h1>
+            
+            <div class="mb-4">
+                <h2 class="text-lg font-semibold mb-2">加载状态</h2>
+                <div id="loadingStatus" class="p-3 bg-yellow-100 text-yellow-800 rounded">
+                    正在检查 Supabase 库加载状态...
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <h2 class="text-lg font-semibold mb-2">全局变量</h2>
+                <div id="globalVars" class="p-3 bg-gray-100 rounded font-mono text-sm max-h-40 overflow-y-auto">
+                    加载中...
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <h2 class="text-lg font-semibold mb-2">测试结果</h2>
+                <div id="testResult" class="p-3 bg-blue-100 text-blue-800 rounded">
+                    等待测试...
+                </div>
+            </div>
+            
+            <button id="testBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                测试 Supabase 连接
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('页面加载完成');
+            
+            // 检查 Supabase 库加载状态
+            checkSupabaseLoading();
+            
+            // 绑定测试按钮事件
+            document.getElementById('testBtn').addEventListener('click', testSupabaseConnection);
+        });
+        
+        // 检查 Supabase 库加载状态
+        function checkSupabaseLoading() {
+            const loadingStatus = document.getElementById('loadingStatus');
+            
+            // 检查全局变量
+            const globalVars = [];
+            for (let key in window) {
+                if (key.toLowerCase().includes('supabase') || key === 'createClient') {
+                    globalVars.push(`${key}: ${typeof window[key]}`);
+                }
+            }
+            
+            document.getElementById('globalVars').textContent = globalVars.join('\n');
+            
+            // 检查 createClient 函数
+            if (typeof createClient !== 'undefined') {
+                loadingStatus.className = 'p-3 bg-green-100 text-green-800 rounded';
+                loadingStatus.textContent = '✓ Supabase 库加载成功，createClient 函数可用';
+            } else {
+                loadingStatus.className = 'p-3 bg-red-100 text-red-800 rounded';
+                loadingStatus.textContent = '✗ Supabase 库加载失败，createClient 函数不可用';
+            }
+        }
+        
+        // 测试 Supabase 连接
+        async function testSupabaseConnection() {
+            const testResult = document.getElementById('testResult');
+            testResult.className = 'p-3 bg-yellow-100 text-yellow-800 rounded';
+            testResult.textContent = '正在测试 Supabase 连接...';
+            
+            try {
+                if (typeof createClient === 'undefined') {
+                    throw new Error('createClient 函数未找到');
+                }
+                
+                // 创建 Supabase 客户端
+                const supabaseUrl = 'https://vphihqysgdhdnuszybib.supabase.co';
+                const supabaseKey = 'sb_publishable_yQ8Br7S-Zk2YdmhtD2dAyg_8Gho4wDS';
+                
+                const supabase = createClient(supabaseUrl, supabaseKey);
+                
+                // 测试连接
+                const { data, error } = await supabase.rpc('pg_version');
+                
+                if (error) {
+                    throw error;
+                }
+                
+                testResult.className = 'p-3 bg-green-100 text-green-800 rounded';
+                testResult.textContent = `✓ Supabase 连接成功！PostgreSQL 版本: ${data}`;
+                
+            } catch (error) {
+                testResult.className = 'p-3 bg-red-100 text-red-800 rounded';
+                testResult.textContent = `✗ Supabase 连接失败: ${error.message}`;
+                console.error('Supabase 测试错误:', error);
+            }
+        }
+    </script>
+</body>
+</html>

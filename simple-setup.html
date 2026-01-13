@@ -7,6 +7,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4/dist/umd/supabase.min.js"></script>
+    <script>
+        // 确保 Supabase 库加载完成
+        window.Supabase = window.Supabase || {};
+    </script>
     <style>
         body {
             font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
@@ -192,13 +196,33 @@
             try {
                 addLog('正在初始化 Supabase 客戶端...', 'info');
                 
+                // 尝试不同的方式访问 createClient 函数
+                let createClientFn = null;
+                
+                // 方式1: 全局作用域
                 if (typeof createClient !== 'undefined') {
-                    supabaseClient = createClient(config.supabaseUrl, config.supabaseKey);
+                    createClientFn = createClient;
+                }
+                // 方式2: window 对象
+                else if (window.createClient) {
+                    createClientFn = window.createClient;
+                }
+                // 方式3: Supabase 对象
+                else if (window.Supabase && window.Supabase.createClient) {
+                    createClientFn = window.Supabase.createClient;
+                }
+                
+                if (createClientFn) {
+                    supabaseClient = createClientFn(config.supabaseUrl, config.supabaseKey);
                     addLog('Supabase 客戶端初始化成功', 'success');
                     updateConnectionStatus(true);
                 } else {
                     addLog('錯誤: createClient 函數未找到', 'error');
                     updateConnectionStatus(false, 'createClient 函數未找到');
+                    
+                    // 显示调试信息
+                    console.log('全局变量:', Object.keys(window).filter(k => k.includes('supabase')));
+                    console.log('createClient 类型:', typeof createClient);
                 }
             } catch (error) {
                 console.error('初始化 Supabase 失敗:', error);
