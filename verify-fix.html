@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>验证修复 - QR码游戏系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.5/dist/umd/supabase.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#64748b',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        error: '#ef4444',
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .glass-effect {
+                background: rgba(255, 255, 255, 0.9);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            .status-success {
+                @apply bg-green-50 border-green-200 text-green-800;
+            }
+            .status-warning {
+                @apply bg-yellow-50 border-yellow-200 text-yellow-800;
+            }
+            .status-error {
+                @apply bg-red-50 border-red-200 text-red-800;
+            }
+            .status-info {
+                @apply bg-blue-50 border-blue-200 text-blue-800;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- 标题 -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                <i class="fa fa-check-circle text-primary mr-2"></i>系统修复验证
+            </h1>
+            <p class="text-gray-600">验证 Supabase 连接和登录功能修复情况</p>
+        </div>
+
+        <!-- 主要内容 -->
+        <div class="max-w-4xl mx-auto">
+            <!-- 状态概览 -->
+            <div class="glass-effect rounded-xl p-6 shadow-lg mb-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">
+                    <i class="fa fa-tachometer mr-2"></i>系统状态概览
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div id="supabaseStatus" class="border rounded-lg p-4 status-info">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 rounded-full bg-blue-500 mr-3"></div>
+                            <span class="font-medium">Supabase 客户端</span>
+                        </div>
+                        <p class="text-sm mt-2" id="supabaseStatusText">正在初始化...</p>
+                    </div>
+                    <div id="databaseStatus" class="border rounded-lg p-4 status-info">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 rounded-full bg-blue-500 mr-3"></div>
+                            <span class="font-medium">数据库连接</span>
+                        </div>
+                        <p class="text-sm mt-2" id="databaseStatusText">未测试</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 详细诊断 -->
+            <div class="glass-effect rounded-xl p-6 shadow-lg mb-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">
+                    <i class="fa fa-stethoscope mr-2"></i>详细诊断
+                </h2>
+                
+                <!-- 诊断步骤 -->
+                <div class="space-y-4">
+                    <!-- 步骤1：Supabase 初始化 -->
+                    <div class="border rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center mr-3">1</div>
+                                <span class="font-medium">Supabase 客户端初始化</span>
+                            </div>
+                            <div id="step1Status" class="px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700">
+                                进行中
+                            </div>
+                        </div>
+                        <div class="mt-3 text-sm text-gray-600" id="step1Output">
+                            <div class="flex items-center">
+                                <i class="fa fa-spinner fa-spin mr-2"></i>
+                                <span>正在检查 Supabase 库加载情况...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤2：数据库连接测试 -->
+                    <div class="border rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center mr-3">2</div>
+                                <span class="font-medium">数据库连接测试</span>
+                            </div>
+                            <div id="step2Status" class="px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700">
+                                等待中
+                            </div>
+                        </div>
+                        <div class="mt-3 text-sm text-gray-600" id="step2Output">
+                            <span class="text-gray-400">等待 Supabase 初始化完成...</span>
+                        </div>
+                    </div>
+
+                    <!-- 步骤3：管理员登录测试 -->
+                    <div class="border rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center mr-3">3</div>
+                                <span class="font-medium">管理员登录测试</span>
+                            </div>
+                            <div id="step3Status" class="px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700">
+                                等待中
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <div class="flex space-x-2">
+                                <input type="text" id="testUsername" value="admin" 
+                                       class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                                <input type="password" id="testPassword" value="admin123" 
+                                       class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                                <button id="testLoginBtn" 
+                                        class="px-4 py-2 bg-primary text-white rounded-md text-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/50">
+                                    测试登录
+                                </button>
+                            </div>
+                            <div class="mt-3 text-sm text-gray-600" id="step3Output">
+                                <span class="text-gray-400">点击按钮测试管理员登录...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 操作建议 -->
+            <div class="glass-effect rounded-xl p-6 shadow-lg">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">
+                    <i class="fa fa-lightbulb-o mr-2 text-warning"></i>操作建议
+                </h2>
+                <div class="space-y-3 text-sm">
+                    <div id="recommendation1" class="p-3 rounded-lg status-info">
+                        <strong>1. 初始化数据库：</strong>
+                        <span>如果数据库连接成功但表不存在，请访问 <a href="setup-database.html" class="text-blue-600 hover:underline">数据库设置</a> 页面初始化数据库。</span>
+                    </div>
+                    <div id="recommendation2" class="p-3 rounded-lg status-info">
+                        <strong>2. 检查配置：</strong>
+                        <span>如果连接失败，请检查 Supabase URL 和 API Key 是否正确。</span>
+                    </div>
+                    <div id="recommendation3" class="p-3 rounded-lg status-info">
+                        <strong>3. 登录系统：</strong>
+                        <span>验证成功后，可以使用默认账号 <code>admin/admin123</code> 登录 <a href="admin.html" class="text-blue-600 hover:underline">管理员页面</a>。</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 脚本 -->
+    <script>
+        // 应用配置
+        window.AppConfig = {
+            supabase: {
+                url: 'https://vphihqysgdhdnuszybib.supabase.co',
+                key: 'sb_publishable_yQ8Br7S-Zk2YdmhtD2dAyg_8Gho4wDS'
+            },
+            admin: {
+                defaultUsername: 'admin',
+                defaultPassword: 'admin123'
+            }
+        };
+
+        // 全局变量
+        window.supabaseClient = null;
+
+        // DOM 元素
+        const elements = {
+            supabaseStatus: document.getElementById('supabaseStatus'),
+            supabaseStatusText: document.getElementById('supabaseStatusText'),
+            databaseStatus: document.getElementById('databaseStatus'),
+            databaseStatusText: document.getElementById('databaseStatusText'),
+            step1Status: document.getElementById('step1Status'),
+            step1Output: document.getElementById('step1Output'),
+            step2Status: document.getElementById('step2Status'),
+            step2Output: document.getElementById('step2Output'),
+            step3Status: document.getElementById('step3Status'),
+            step3Output: document.getElementById('step3Output'),
+            testLoginBtn: document.getElementById('testLoginBtn')
+        };
+
+        // 更新状态显示
+        function updateStatus(element, status, message) {
+            element.className = `border rounded-lg p-4 status-${status}`;
+            element.querySelector('.w-3.h-3').className = `w-3 h-3 rounded-full bg-${status}-500 mr-3`;
+            elements[element.id.replace('Status', 'StatusText')].textContent = message;
+        }
+
+        // 更新步骤状态
+        function updateStep(stepNumber, status, output) {
+            const statusElement = document.getElementById(`step${stepNumber}Status`);
+            const outputElement = document.getElementById(`step${stepNumber}Output`);
+            
+            // 更新状态标签
+            statusElement.className = `px-3 py-1 rounded-full text-xs font-medium bg-${status}-100 text-${status}-800`;
+            statusElement.textContent = {
+                'success': '成功',
+                'warning': '警告', 
+                'error': '失败',
+                'info': '进行中'
+            }[status] || '未知';
+            
+            // 更新输出内容
+            outputElement.innerHTML = output;
+        }
+
+        // 步骤1：初始化 Supabase
+        async function step1InitializeSupabase() {
+            try {
+                updateStep(1, 'info', '<div class="flex items-center"><i class="fa fa-spinner fa-spin mr-2"></i><span>正在初始化 Supabase 客户端...</span></div>');
+                
+                // 检查 Supabase 库
+                if (typeof supabase === 'undefined') {
+                    throw new Error('Supabase 库未加载');
+                }
+                
+                // 检查 createClient 函数
+                if (typeof supabase.createClient !== 'function') {
+                    throw new Error('createClient 函数不可用');
+                }
+                
+                // 初始化客户端
+                window.supabaseClient = supabase.createClient(
+                    window.AppConfig.supabase.url,
+                    window.AppConfig.supabase.key
+                );
+                
+                // 验证客户端
+                if (!window.supabaseClient || typeof window.supabaseClient.from !== 'function') {
+                    throw new Error('Supabase 客户端初始化失败：from 方法不可用');
+                }
+                
+                // 成功
+                updateStatus(elements.supabaseStatus, 'success', 'Supabase 客户端初始化成功');
+                updateStep(1, 'success', `
+                    <div class="space-y-2">
+                        <div><i class="fa fa-check-circle text-success mr-2"></i>Supabase 库加载成功</div>
+                        <div><i class="fa fa-check-circle text-success mr-2"></i>createClient 函数可用</div>
+                        <div><i class="fa fa-check-circle text-success mr-2"></i>客户端初始化成功</div>
+                        <div><i class="fa fa-check-circle text-success mr-2"></i>from 方法可用</div>
+                    </div>
+                `);
+                
+                // 继续下一步
+                setTimeout(() => step2TestDatabaseConnection(), 1000);
+                return true;
+                
+            } catch (error) {
+                updateStatus(elements.supabaseStatus, 'error', `初始化失败: ${error.message}`);
+                updateStep(1, 'error', `
+                    <div class="space-y-2">
+                        <div><i class="fa fa-times-circle text-error mr-2"></i>初始化失败: ${error.message}</div>
+                        <div class="text-xs text-gray-500 mt-2">请检查 Supabase 库是否正确加载，以及 URL 和 API Key 是否有效。</div>
+                    </div>
+                `);
+                return false;
+            }
+        }
+
+        // 步骤2：测试数据库连接
+        async function step2TestDatabaseConnection() {
+            if (!window.supabaseClient) {
+                updateStep(2, 'error', '<div><i class="fa fa-times-circle text-error mr-2"></i>跳过：Supabase 客户端未初始化</div>');
+                return;
+            }
+            
+            try {
+                updateStep(2, 'info', '<div class="flex items-center"><i class="fa fa-spinner fa-spin mr-2"></i><span>正在测试数据库连接...</span></div>');
+                
+                // 尝试查询
+                const tables = ['admins', 'users', 'games'];
+                let success = false;
+                let messages = [];
+                
+                for (const table of tables) {
+                    try {
+                        const { data, error } = await window.supabaseClient
+                            .from(table)
+                            .select('id')
+                            .limit(1);
+                        
+                        if (!error) {
+                            messages.push(`<div><i class="fa fa-check-circle text-success mr-2"></i>成功查询 ${table} 表</div>`);
+                            success = true;
+                            break;
+                        } else {
+                            messages.push(`<div><i class="fa fa-exclamation-circle text-warning mr-2"></i>${table} 表: ${error.message}</div>`);
+                        }
+                    } catch (queryError) {
+                        messages.push(`<div><i class="fa fa-exclamation-circle text-warning mr-2"></i>${table} 表查询异常: ${queryError.message}</div>`);
+                    }
+                }
+                
+                if (success) {
+                    updateStatus(elements.databaseStatus, 'success', '数据库连接成功');
+                    updateStep(2, 'success', `
+                        <div class="space-y-2">
+                            ${messages.join('')}
+                            <div class="text-xs text-success mt-2">数据库连接测试通过！</div>
+                        </div>
+                    `);
+                } else {
+                    updateStatus(elements.databaseStatus, 'warning', '连接成功但表可能不存在');
+                    updateStep(2, 'warning', `
+                        <div class="space-y-2">
+                            ${messages.join('')}
+                            <div class="text-xs text-warning mt-2">数据库连接成功，但所有表查询失败。这可能是因为表尚未创建，请先初始化数据库。</div>
+                        </div>
+                    `);
+                }
+                
+            } catch (error) {
+                updateStatus(elements.databaseStatus, 'error', `连接失败: ${error.message}`);
+                updateStep(2, 'error', `
+                    <div class="space-y-2">
+                        <div><i class="fa fa-times-circle text-error mr-2"></i>连接失败: ${error.message}</div>
+                        <div class="text-xs text-gray-500 mt-2">请检查网络连接和 Supabase 配置。</div>
+                    </div>
+                `);
+            }
+        }
+
+        // 测试管理员登录
+        async function testAdminLogin(username, password) {
+            if (!window.supabaseClient) {
+                updateStep(3, 'error', '<div><i class="fa fa-times-circle text-error mr-2"></i>跳过：Supabase 客户端未初始化</div>');
+                return;
+            }
+            
+            try {
+                elements.testLoginBtn.disabled = true;
+                elements.testLoginBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-1"></i>测试中...';
+                
+                updateStep(3, 'info', '<div class="flex items-center"><i class="fa fa-spinner fa-spin mr-2"></i><span>正在验证管理员账号...</span></div>');
+                
+                // 检查默认管理员账号
+                if (username === window.AppConfig.admin.defaultUsername && 
+                    password === window.AppConfig.admin.defaultPassword) {
+                    updateStep(3, 'success', `
+                        <div class="space-y-2">
+                            <div><i class="fa fa-check-circle text-success mr-2"></i>使用默认管理员账号验证成功</div>
+                            <div class="text-xs text-success mt-2">您可以使用此账号登录管理员页面。</div>
+                        </div>
+                    `);
+                    return;
+                }
+                
+                // 尝试从 admins 表查询
+                try {
+                    const { data: adminData, error: adminError } = await window.supabaseClient
+                        .from('admins')
+                        .select('*')
+                        .eq('username', username)
+                        .single();
+                    
+                    if (!adminError && adminData) {
+                        // 简单的密码验证
+                        if (adminData.password === password || adminData.password === btoa(password)) {
+                            updateStep(3, 'success', `
+                                <div class="space-y-2">
+                                    <div><i class="fa fa-check-circle text-success mr-2"></i>从 admins 表验证成功</div>
+                                    <div class="text-xs text-success mt-2">管理员登录测试通过！</div>
+                                </div>
+                            `);
+                            return;
+                        }
+                    }
+                } catch (adminError) {
+                    console.log('admins 表查询失败:', adminError);
+                }
+                
+                // 尝试从 users 表查询
+                try {
+                    const { data: userData, error: userError } = await window.supabaseClient
+                        .from('users')
+                        .select('*')
+                        .eq('username', username)
+                        .eq('role', 'admin')
+                        .single();
+                    
+                    if (!userError && userData) {
+                        if (userData.password === password || userData.password === btoa(password)) {
+                            updateStep(3, 'success', `
+                                <div class="space-y-2">
+                                    <div><i class="fa fa-check-circle text-success mr-2"></i>从 users 表验证成功</div>
+                                    <div class="text-xs text-success mt-2">管理员登录测试通过！</div>
+                                </div>
+                            `);
+                            return;
+                        }
+                    }
+                } catch (userError) {
+                    console.log('users 表查询失败:', userError);
+                }
+                
+                // 所有验证都失败
+                updateStep(3, 'error', `
+                    <div class="space-y-2">
+                        <div><i class="fa fa-times-circle text-error mr-2"></i>管理员登录验证失败</div>
+                        <div class="text-xs text-gray-500 mt-2">请检查用户名和密码是否正确，或者使用默认账号 admin/admin123。</div>
+                    </div>
+                `);
+                
+            } catch (error) {
+                updateStep(3, 'error', `
+                    <div class="space-y-2">
+                        <div><i class="fa fa-times-circle text-error mr-2"></i>验证过程发生错误: ${error.message}</div>
+                    </div>
+                `);
+            } finally {
+                elements.testLoginBtn.disabled = false;
+                elements.testLoginBtn.innerHTML = '测试登录';
+            }
+        }
+
+        // 事件监听
+        elements.testLoginBtn.addEventListener('click', () => {
+            const username = document.getElementById('testUsername').value;
+            const password = document.getElementById('testPassword').value;
+            testAdminLogin(username, password);
+        });
+
+        // 页面加载完成后开始测试
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('开始系统修复验证...');
+            step1InitializeSupabase();
+        });
+    </script>
+</body>
+</html>
