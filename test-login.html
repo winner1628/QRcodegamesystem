@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录功能测试 - QR码游戏系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4/dist/umd/supabase.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+            color: #333333;
+        }
+
+        .glass-card {
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #ffffff;
+            color: #333333;
+            transition: all 0.3s ease;
+        }
+
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-label {
+            color: #374151;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .test-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border-radius: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+
+        .test-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .test-title i {
+            margin-right: 0.5rem;
+            color: #3b82f6;
+        }
+
+        .log-output {
+            background: #1e293b;
+            color: #f1f5f9;
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.875rem;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 1rem;
+        }
+
+        .log-entry {
+            margin-bottom: 0.25rem;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 0.25rem;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-success {
+            color: #10b981;
+        }
+
+        .log-error {
+            color: #ef4444;
+        }
+
+        .log-info {
+            color: #60a5fa;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .status-success {
+            background-color: #10b981;
+        }
+
+        .status-error {
+            background-color: #ef4444;
+        }
+
+        .status-warning {
+            background-color: #f59e0b;
+        }
+
+        .status-info {
+            background-color: #60a5fa;
+        }
+
+        .quick-test-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quick-test-btn:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .quick-test-btn.danger {
+            background: #ef4444;
+        }
+
+        .quick-test-btn.danger:hover {
+            background: #dc2626;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4">
+    <div class="max-w-4xl mx-auto">
+        <!-- 页面标题 -->
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa fa-cogs text-white text-3xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800">登录功能测试</h1>
+            <p class="text-gray-600 mt-2">QR码游戏系统 - 登录功能诊断工具</p>
+        </div>
+
+        <!-- 快速测试按钮 -->
+        <div class="text-center mb-6 space-x-4">
+            <button id="testAllBtn" class="quick-test-btn">
+                <i class="fa fa-play-circle mr-2"></i>运行所有测试
+            </button>
+            <button id="clearLogsBtn" class="quick-test-btn danger">
+                <i class="fa fa-trash mr-2"></i>清除日志
+            </button>
+            <button id="checkConnectionBtn" class="quick-test-btn">
+                <i class="fa fa-database mr-2"></i>检查数据库连接
+            </button>
+        </div>
+
+        <!-- 数据库连接测试 -->
+        <div class="test-section">
+            <h2 class="test-title">
+                <i class="fa fa-database"></i>数据库连接测试
+            </h2>
+            <div class="space-y-4">
+                <div class="flex items-center">
+                    <span class="status-indicator status-info" id="dbStatus"></span>
+                    <span id="dbStatusText">正在检查数据库连接...</span>
+                </div>
+                <button id="testConnectionBtn" class="btn-primary">
+                    <i class="fa fa-refresh mr-2"></i>测试连接
+                </button>
+            </div>
+        </div>
+
+        <!-- 管理员登录测试 -->
+        <div class="test-section">
+            <h2 class="test-title">
+                <i class="fa fa-user-circle"></i>管理员登录测试
+            </h2>
+            <form id="adminLoginForm" class="space-y-4">
+                <div>
+                    <label for="adminUsername" class="form-label">用户名</label>
+                    <input type="text" id="adminUsername" name="adminUsername" class="form-input" 
+                           placeholder="请输入管理员用户名" value="admin">
+                </div>
+                <div>
+                    <label for="adminPassword" class="form-label">密码</label>
+                    <input type="password" id="adminPassword" name="adminPassword" class="form-input" 
+                           placeholder="请输入管理员密码" value="admin123">
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fa fa-sign-in mr-2"></i>测试管理员登录
+                </button>
+            </form>
+        </div>
+
+        <!-- 用户登录测试 -->
+        <div class="test-section">
+            <h2 class="test-title">
+                <i class="fa fa-user"></i>用户登录测试
+            </h2>
+            <form id="userLoginForm" class="space-y-4">
+                <div>
+                    <label for="userId" class="form-label">用户ID</label>
+                    <input type="text" id="userId" name="userId" class="form-input" 
+                           placeholder="请输入用户ID" value="U000001">
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fa fa-sign-in mr-2"></i>测试用户登录
+                </button>
+            </form>
+        </div>
+
+        <!-- 会话状态测试 -->
+        <div class="test-section">
+            <h2 class="test-title">
+                <i class="fa fa-check-circle"></i>会话状态测试
+            </h2>
+            <div class="space-y-4">
+                <div class="flex items-center">
+                    <span class="status-indicator" id="sessionStatus"></span>
+                    <span id="sessionStatusText">未登录</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button id="checkAdminSessionBtn" class="btn-secondary">
+                        <i class="fa fa-user-circle mr-2"></i>检查管理员会话
+                    </button>
+                    <button id="checkUserSessionBtn" class="btn-secondary">
+                        <i class="fa fa-user mr-2"></i>检查用户会话
+                    </button>
+                </div>
+                <button id="logoutBtn" class="btn-secondary w-full">
+                    <i class="fa fa-sign-out mr-2"></i>清除所有会话
+                </button>
+            </div>
+        </div>
+
+        <!-- 日志输出 -->
+        <div class="test-section">
+            <h2 class="test-title">
+                <i class="fa fa-terminal"></i>系统日志
+            </h2>
+            <div id="logOutput" class="log-output">
+                <div class="log-entry log-info">系统初始化完成，开始测试...</div>
+            </div>
+        </div>
+
+        <!-- 返回首页链接 -->
+        <div class="text-center mt-8 mb-4">
+            <a href="index.html" class="text-blue-600 hover:text-blue-800 font-medium">
+                <i class="fa fa-arrow-left mr-2"></i>返回首页
+            </a>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/database.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // 全局变量
+        let authManager = new AuthManager();
+        let dbManager = new DatabaseManager();
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('登录功能测试页面加载完成');
+            
+            // 绑定事件
+            bindEvents();
+            
+            // 检查数据库连接
+            setTimeout(() => {
+                checkDatabaseConnection();
+            }, 500);
+            
+            // 检查会话状态
+            checkSessionStatus();
+        });
+
+        // 绑定事件
+        function bindEvents() {
+            // 数据库连接测试
+            document.getElementById('testConnectionBtn').addEventListener('click', checkDatabaseConnection);
+            document.getElementById('checkConnectionBtn').addEventListener('click', checkDatabaseConnection);
+
+            // 管理员登录测试
+            document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await testAdminLogin();
+            });
+
+            // 用户登录测试
+            document.getElementById('userLoginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await testUserLogin();
+            });
+
+            // 会话状态测试
+            document.getElementById('checkAdminSessionBtn').addEventListener('click', checkAdminSession);
+            document.getElementById('checkUserSessionBtn').addEventListener('click', checkUserSession);
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+
+            // 快速测试按钮
+            document.getElementById('testAllBtn').addEventListener('click', runAllTests);
+            document.getElementById('clearLogsBtn').addEventListener('click', clearLogs);
+        }
+
+        // 检查数据库连接
+        async function checkDatabaseConnection() {
+            try {
+                log('info', '正在检查数据库连接...');
+                
+                // 更新状态指示器
+                updateDbStatus('info', '正在连接数据库...');
+
+                const result = await dbManager.testConnection();
+                
+                if (result.success) {
+                    log('success', `数据库连接成功: ${result.message}`);
+                    updateDbStatus('success', '数据库连接正常');
+                } else {
+                    log('error', `数据库连接失败: ${result.error}`);
+                    updateDbStatus('error', `连接失败: ${result.error}`);
+                }
+            } catch (error) {
+                log('error', `数据库连接测试异常: ${error.message}`);
+                updateDbStatus('error', '连接异常');
+            }
+        }
+
+        // 更新数据库状态
+        function updateDbStatus(status, message) {
+            const statusIndicator = document.getElementById('dbStatus');
+            const statusText = document.getElementById('dbStatusText');
+            
+            // 移除所有状态类
+            statusIndicator.classList.remove('status-success', 'status-error', 'status-warning', 'status-info');
+            
+            // 添加新状态类
+            statusIndicator.classList.add(`status-${status}`);
+            
+            // 更新文本
+            statusText.textContent = message;
+        }
+
+        // 测试管理员登录
+        async function testAdminLogin() {
+            try {
+                const username = document.getElementById('adminUsername').value.trim();
+                const password = document.getElementById('adminPassword').value.trim();
+                
+                if (!username || !password) {
+                    log('error', '请输入用户名和密码');
+                    return;
+                }
+                
+                log('info', `开始测试管理员登录: ${username}`);
+                
+                const result = await authManager.adminLogin(username, password);
+                
+                if (result.success) {
+                    log('success', `管理员登录成功: ${result.message}`);
+                    checkSessionStatus();
+                } else {
+                    log('error', `管理员登录失败: ${result.message}`);
+                }
+            } catch (error) {
+                log('error', `管理员登录测试异常: ${error.message}`);
+            }
+        }
+
+        // 测试用户登录
+        async function testUserLogin() {
+            try {
+                const userId = document.getElementById('userId').value.trim();
+                
+                if (!userId) {
+                    log('error', '请输入用户ID');
+                    return;
+                }
+                
+                log('info', `开始测试用户登录: ${userId}`);
+                
+                const result = await authManager.userLogin(userId);
+                
+                if (result.success) {
+                    log('success', `用户登录成功: ${result.message}`);
+                    checkSessionStatus();
+                } else {
+                    log('error', `用户登录失败: ${result.message}`);
+                }
+            } catch (error) {
+                log('error', `用户登录测试异常: ${error.message}`);
+            }
+        }
+
+        // 检查会话状态
+        function checkSessionStatus() {
+            const sessionStatus = document.getElementById('sessionStatus');
+            const sessionStatusText = document.getElementById('sessionStatusText');
+            
+            // 移除所有状态类
+            sessionStatus.classList.remove('status-success', 'status-error', 'status-warning', 'status-info');
+            
+            if (authManager.isAdminLoggedIn()) {
+                sessionStatus.classList.add('status-success');
+                sessionStatusText.textContent = `管理员已登录: ${sessionStorage.getItem('username')}`;
+            } else if (authManager.isUserLoggedIn()) {
+                sessionStatus.classList.add('status-success');
+                sessionStatusText.textContent = `用户已登录: ${sessionStorage.getItem('user_id')}`;
+            } else {
+                sessionStatus.classList.add('status-error');
+                sessionStatusText.textContent = '未登录';
+            }
+        }
+
+        // 检查管理员会话
+        function checkAdminSession() {
+            if (authManager.isAdminLoggedIn()) {
+                log('success', `管理员会话有效: ${sessionStorage.getItem('username')}`);
+            } else {
+                log('warning', '管理员会话无效或未登录');
+            }
+            checkSessionStatus();
+        }
+
+        // 检查用户会话
+        function checkUserSession() {
+            if (authManager.isUserLoggedIn()) {
+                log('success', `用户会话有效: ${sessionStorage.getItem('user_id')}`);
+            } else {
+                log('warning', '用户会话无效或未登录');
+            }
+            checkSessionStatus();
+        }
+
+        // 登出
+        function logout() {
+            authManager.logout();
+            log('info', '已清除所有会话');
+            checkSessionStatus();
+        }
+
+        // 运行所有测试
+        async function runAllTests() {
+            log('info', '开始运行所有测试...');
+            
+            // 检查数据库连接
+            await checkDatabaseConnection();
+            
+            // 等待1秒
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // 测试管理员登录
+            await testAdminLogin();
+            
+            // 等待1秒
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // 清除会话
+            logout();
+            
+            // 等待1秒
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // 测试用户登录
+            await testUserLogin();
+            
+            log('info', '所有测试运行完成');
+        }
+
+        // 清除日志
+        function clearLogs() {
+            const logOutput = document.getElementById('logOutput');
+            logOutput.innerHTML = '<div class="log-entry log-info">日志已清除</div>';
+        }
+
+        // 记录日志
+        function log(type, message) {
+            const logOutput = document.getElementById('logOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            
+            logOutput.appendChild(logEntry);
+            logOutput.scrollTop = logOutput.scrollHeight;
+            
+            // 限制日志条目数量
+            const logEntries = logOutput.querySelectorAll('.log-entry');
+            if (logEntries.length > 50) {
+                logEntries[0].remove();
+            }
+        }
+    </script>
+</body>
+</html>
