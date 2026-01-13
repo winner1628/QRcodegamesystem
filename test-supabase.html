@@ -59,20 +59,55 @@
             const globalVars = [];
             for (let key in window) {
                 if (key.toLowerCase().includes('supabase') || key === 'createClient') {
-                    globalVars.push(`${key}: ${typeof window[key]}`);
+                    const value = window[key];
+                    const type = typeof value;
+                    let details = type;
+                    
+                    // 如果是对象，显示其属性
+                    if (type === 'object' && value !== null) {
+                        const props = Object.keys(value).slice(0, 10).join(', ');
+                        details = `${type} {${props}${Object.keys(value).length > 10 ? '...' : ''}}`;
+                    }
+                    
+                    globalVars.push(`${key}: ${details}`);
                 }
             }
             
             document.getElementById('globalVars').textContent = globalVars.join('\n');
             
-            // 检查 createClient 函数
+            // 检查各种可能的 createClient 位置
+            let createClientFound = false;
+            let createClientFn = null;
+            
+            // 方式1: 全局作用域
             if (typeof createClient !== 'undefined') {
+                createClientFn = createClient;
+                createClientFound = true;
+            }
+            // 方式2: window.supabase 对象
+            else if (window.supabase && typeof window.supabase === 'object') {
+                // 检查 supabase 对象的结构
+                globalVars.push('\n=== window.supabase 结构 ===');
+                for (let key in window.supabase) {
+                    globalVars.push(`  ${key}: ${typeof window.supabase[key]}`);
+                }
+                
+                // 尝试从 supabase 对象中获取 createClient
+                if (window.supabase.createClient) {
+                    createClientFn = window.supabase.createClient;
+                    createClientFound = true;
+                }
+            }
+            
+            if (createClientFound) {
                 loadingStatus.className = 'p-3 bg-green-100 text-green-800 rounded';
                 loadingStatus.textContent = '✓ Supabase 库加载成功，createClient 函数可用';
             } else {
                 loadingStatus.className = 'p-3 bg-red-100 text-red-800 rounded';
                 loadingStatus.textContent = '✗ Supabase 库加载失败，createClient 函数不可用';
             }
+            
+            document.getElementById('globalVars').textContent = globalVars.join('\n');
         }
         
         // 测试 Supabase 连接
