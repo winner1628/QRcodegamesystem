@@ -21,31 +21,95 @@ class SupabaseConnectionFixer {
         try {
             console.log('=== 开始初始化 Supabase 客户端 ===');
             
-            // 如果已经初始化并且使用备用客户端，直接返回成功
-            if (this.isInitialized && this.useBackupClient) {
-                console.log('已使用备用客户端，直接返回成功');
+            // 如果已经初始化，直接返回当前状态
+            if (this.isInitialized) {
+                console.log('客户端已初始化，当前模式:', this.useBackupClient ? '备用模式' : '正常模式');
                 return { 
                     success: true, 
-                    method: 'simple.http.client',
-                    warning: '使用备用 HTTP 客户端，系统正常运行'
+                    method: this.useBackupClient ? 'simple.http.client' : 'existing.client',
+                    warning: this.useBackupClient ? '使用备用 HTTP 客户端' : undefined
                 };
             }
             
             // 清理之前的错误状态
             this.cleanupPreviousState();
             
-            // 方法0: 直接使用备用客户端（快速启动）
-            console.log('方法0: 直接创建备用 HTTP 客户端以确保系统可用性');
+            // 方法1: 检查是否已经有有效的客户端实例
+            if (window.supabaseClient && typeof window.supabaseClient.from === 'function') {
+                console.log('方法1: 发现已存在的有效客户端实例');
+                this.client = window.supabaseClient;
+                if (await this.validateClient(this.client)) {
+                    console.log('使用已存在的客户端实例成功');
+                    this.isInitialized = true;
+                    this.useBackupClient = false;
+                    return { success: true, method: 'existing.client' };
+                }
+            }
+            
+            // 方法2: 直接使用全局 supabase 对象的 createClient
+            if (window.supabase && typeof window.supabase.createClient === 'function') {
+                console.log('方法2: 使用 window.supabase.createClient');
+                this.client = window.supabase.createClient(this.config.url, this.config.key);
+                if (await this.validateClient(this.client)) {
+                    this.setGlobalClient(this.client);
+                    this.isInitialized = true;
+                    this.useBackupClient = false;
+                    return { success: true, method: 'window.supabase.createClient' };
+                }
+            }
+            
+            // 方法3: 检查 window.supabase 是否本身就是客户端实例
+            if (window.supabase && typeof window.supabase.from === 'function') {
+                console.log('方法3: window.supabase 本身就是客户端实例');
+                this.client = window.supabase;
+                if (await this.validateClient(this.client)) {
+                    this.setGlobalClient(this.client);
+                    this.isInitialized = true;
+                    this.useBackupClient = false;
+                    return { success: true, method: 'window.supabase.instance' };
+                }
+            }
+            
+            // 方法4: 使用全局 createClient 函数
+            if (typeof createClient === 'function') {
+                console.log('方法4: 使用全局 createClient 函数');
+                this.client = createClient(this.config.url, this.config.key);
+                if (await this.validateClient(this.client)) {
+                    this.setGlobalClient(this.client);
+                    this.isInitialized = true;
+                    this.useBackupClient = false;
+                    return { success: true, method: 'global.createClient' };
+                }
+            }
+            
+            // 方法5: 动态创建客户端（备用方法）
+            console.log('方法5: 尝试直接创建 SupabaseClient 实例');
+            try {
+                if (window.supabase && window.supabase.SupabaseClient) {
+                    this.client = new window.supabase.SupabaseClient(this.config.url, this.config.key);
+                    if (await this.validateClient(this.client)) {
+                        this.setGlobalClient(this.client);
+                        this.isInitialized = true;
+                        this.useBackupClient = false;
+                        return { success: true, method: 'SupabaseClient.constructor' };
+                    }
+                }
+            } catch (constructorError) {
+                console.log('构造函数方法失败:', constructorError.message);
+            }
+            
+            console.warn('所有真实连接方法都失败，尝试使用备用 HTTP 客户端');
+            
+            // 创建一个简单的 HTTP 客户端作为备用
             this.client = this.createSimpleHttpClient();
             this.useBackupClient = true;
             this.isInitialized = true;
-            
-            console.log('备用客户端已就绪，系统可以正常运行');
+            console.log('已创建备用 HTTP 客户端');
             
             return { 
                 success: true, 
-                method: 'immediate.backup.client',
-                warning: '使用备用连接模式，系统功能正常'
+                method: 'simple.http.client',
+                warning: '无法连接到真实数据库，已启用备用模式'
             };
             
         } catch (error) {
@@ -61,7 +125,7 @@ class SupabaseConnectionFixer {
             return { 
                 success: true, 
                 method: 'emergency.backup.client',
-                warning: '发生异常，已启用应急备用模式'
+                warning: '初始化过程发生异常，已启用备用模式'
             };
         }
     }
