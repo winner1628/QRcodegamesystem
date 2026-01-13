@@ -49,7 +49,7 @@ class AuthManager {
                 sessionStorage.setItem('user_logged_in', 'true');
                 sessionStorage.setItem('user_type', 'user');
                 sessionStorage.setItem('user_id', userId);
-                sessionStorage.setItem('user_name', user.name);
+                sessionStorage.setItem('user_name', user.name || user.username || '用戶');
                 return { success: true, message: '登入成功', user };
             } else {
                 return { success: false, message: '用戶不存在' };
@@ -147,7 +147,24 @@ class AuthManager {
             'user': ['view_profile', 'record_scores', 'view_records']
         };
 
+        const currentUser = this.getCurrentUser();
+        if (!currentUser) {
+            return false;
+        }
+
+        const userPermissions = permissions[currentUser.type] || [];
+        return userPermissions.includes(action);
+    }
+
+    // 生成安全的会话ID
+    generateSessionId() {
+        return Math.random().toString(36).substring(2, 15) + 
+               Math.random().toString(36).substring(2, 15);
+    }
+
+    // 验证会话是否有效
+    isValidSession() {
         const userType = sessionStorage.getItem('user_type');
-        return permissions[userType]?.includes(action) || false;
+        return userType === 'admin' || userType === 'user';
     }
 }

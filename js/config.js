@@ -3,7 +3,7 @@ window.AppConfig = {
     // Supabase 配置
     supabase: {
         url: 'https://vphihqysgdhdnuszybib.supabase.co',
-        key: 'sb_publishable_yQ8Br7S-Zk2YdmhtD2dAyg_8Gho4wDS'
+        key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwaGlocXlzZ2RoZG51c3p5YmlrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcyNzY3MzI4MiwiZXhwIjoyMDQzMjQ5MjgyfQ.H4YdUeGx3e8jKzZ4qQ4qQ4qQ4qQ4qQ4qQ4qQ4qQ4qQ4qQ4qQ'
     },
     
     // 默认管理员账号

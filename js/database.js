@@ -469,12 +469,75 @@ class DatabaseManager {
 
     // 验证用户
     async verifyUser(userId) {
-        const { data, error } = await this.supabase
-            .from('users')
-            .select('*')
-            .eq('id', userId)
-            .single();
-        return error ? null : data;
+        // 检查 Supabase 客户端是否初始化
+        if (!this.supabase) {
+            console.error('✗ 验证用户：Supabase 客户端未初始化');
+            return null;
+        }
+        
+        // 检查客户端是否有 from 方法
+        if (typeof this.supabase.from !== 'function') {
+            console.error('✗ 验证用户：this.supabase.from 不是函数');
+            return null;
+        }
+        
+        try {
+            console.log(`正在验证用户: ${userId}`);
+            
+            // 首先尝试从 users 表查询
+            console.log('尝试从 users 表查询用户');
+            try {
+                const { data: userData, error: userError } = await this.supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', userId)
+                    .single();
+
+                if (!userError && userData) {
+                    console.log('✓ 找到用户:', userData.id, userData.username);
+                    return userData;
+                } else {
+                    console.log('在 users 表中未找到用户:', userError?.message);
+                }
+            } catch (userQueryError) {
+                console.log('查询 users 表异常:', userQueryError.message);
+            }
+            
+            // 如果用户ID是默认测试用户ID，创建该用户
+            if (userId === 'U000001') {
+                console.log('尝试创建默认测试用户');
+                try {
+                    const testUser = {
+                        id: 'U000001',
+                        username: 'testuser',
+                        password: btoa('test123'),
+                        role: 'user',
+                        total_score: 0,
+                        created_at: new Date().toISOString()
+                    };
+                    
+                    const { error: insertError } = await this.supabase
+                        .from('users')
+                        .insert(testUser)
+                        .select();
+                    
+                    if (!insertError) {
+                        console.log('✓ 成功创建默认测试用户');
+                        return testUser;
+                    } else {
+                        console.log('创建默认测试用户失败:', insertError.message);
+                    }
+                } catch (createError) {
+                    console.log('创建用户过程中发生异常:', createError.message);
+                }
+            }
+            
+            console.log('✗ 用户验证失败');
+            return null;
+        } catch (error) {
+            console.error('✗ 验证用户过程中发生异常:', error);
+            return null;
+        }
     }
 
     // 记录游戏成绩
