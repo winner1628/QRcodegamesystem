@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理員登入</title>
+    <title>管理員登入 - QR碼遊戲系統</title>
     <style>
         body { font-family: 'Microsoft JhengHei', sans-serif; max-width: 400px; margin: 50px auto; padding: 20px; background: #f5f5f5; }
         .login-box { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -17,6 +17,7 @@
         <h1>管理員登入</h1>
         <input id="admin-username" type="text" placeholder="管理員帳號" value="admin">
         <input id="admin-password" type="password" placeholder="管理員密碼" value="admin123">
+        <!-- 重點：按鈕呼叫 adminLogin() 函數 -->
         <button onclick="adminLogin()">登入管理後台</button>
     </div>
 
