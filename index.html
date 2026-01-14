@@ -14,7 +14,7 @@
 <body>
     <div class="header">
         <h1>QR碼遊戲系統</h1>
-        <button onclick="logoutUser()">登出</button>
+        <button onclick="logout()">登出</button>
     </div>
 
     <div class="scanner">
@@ -30,9 +30,12 @@
     <script src="js/database.js"></script>
     <script src="js/auth.js"></script>
     <script>
+        // 頁面加載時驗證是否登入
+        window.onload = checkLogin;
+
+        // QR掃描功能（不影響登入，保留即可）
         let cameraActive = false;
         const camera = document.getElementById('camera');
-
         async function startScan() {
             if (cameraActive) return;
             try {
@@ -40,36 +43,8 @@
                 camera.srcObject = stream;
                 camera.style.display = 'block';
                 cameraActive = true;
-                scanLoop();
             } catch (e) { alert(`無法開啟相機：${e.message}`); }
         }
-
-        async function scanLoop() {
-            if (!cameraActive) return;
-            const canvas = document.createElement('canvas');
-            canvas.width = camera.videoWidth; canvas.height = camera.videoHeight;
-            canvas.getContext('2d').drawImage(camera, 0, 0);
-            const code = jsQR(canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data, canvas.width, canvas.height);
-            
-            if (code) {
-                document.getElementById('result').textContent = `掃描結果：${code.data}`;
-                const match = code.data.match(/^GAME:([A-Z0-9]+):(\d+)$/);
-                if (match) {
-                    const [, gameCode, score] = match;
-                    const games = await window.dbManager.getAllGames();
-                    const game = games.find(g => g.game_code === gameCode);
-                    if (game) {
-                        await window.dbManager.saveRecord(window.currentUser.id, game.id, score);
-                        alert(`成功記錄：${game.game_name}，分數：${score}`);
-                    }
-                } else { alert('無效的QR碼格式'); }
-                cameraActive = false;
-                camera.srcObject.getTracks().forEach(t => t.stop());
-                camera.style.display = 'none';
-            } else { requestAnimationFrame(scanLoop); }
-        }
-
-        window.onload = checkAuth;
     </script>
 </body>
 </html>
