@@ -1,39 +1,33 @@
-// 資料庫管理類
 class DatabaseManager {
     constructor() {
         this.client = null;
         this.initialized = false;
     }
 
-    // 初始化資料庫連接
     async init() {
         try {
-            // 檢查Supabase SDK是否加載
             if (typeof supabase === 'undefined') {
-                throw new Error("Supabase SDK加載失敗，請檢查網路或CDN鏈接");
+                throw new Error("Supabase SDK加載失敗，請檢查網路");
             }
-
-            // 檢查配置是否填寫
             if (!window.QRGameConfig) {
-                throw new Error("找不到配置文件，請檢查js/config.js是否存在");
+                throw new Error("找不到config.js配置文件");
             }
             if (!window.QRGameConfig.supabaseUrl || window.QRGameConfig.supabaseUrl.includes("你的項目ID")) {
-                throw new Error("請在js/config.js中填寫正確的Supabase URL");
+                throw new Error("請填寫正確的Supabase URL");
             }
             if (!window.QRGameConfig.supabaseKey || window.QRGameConfig.supabaseKey.includes("你的anon公鑰")) {
-                throw new Error("請在js/config.js中填寫正確的Supabase Key");
+                throw new Error("請填寫正確的Supabase Key");
             }
 
-            // 建立客戶端
             this.client = supabase.createClient(
                 window.QRGameConfig.supabaseUrl,
                 window.QRGameConfig.supabaseKey
             );
 
-            // 測試連接（查詢users表）
+            // 測試連接
             const { error } = await this.client.from('users').select('*').limit(1);
             if (error) {
-                throw new Error(`資料庫連接失敗：${error.message}\n請檢查：1.URL/Key是否正確 2.是否執行SQL建立users表 3.Supabase是否開啟網路存取`);
+                throw new Error(`資料庫連接失敗：${error.message}\n請檢查：1.URL/Key 2.是否建立users表 3.Supabase網路權限`);
             }
 
             this.initialized = true;
@@ -42,11 +36,68 @@ class DatabaseManager {
 
         } catch (err) {
             alert(`❌ 資料庫初始化失敗：${err.message}`);
-            console.error("資料庫錯誤：", err);
+            console.error(err);
             return false;
         }
     }
+
+    // 管理員後台專用：獲取所有用戶
+    async getAllUsers() {
+        if (!this.initialized) await this.init();
+        const { data, error } = await this.client.from('users').select('*').order('created_at', { ascending: false });
+        if (error) {
+            alert(`❌ 加載用戶數據失敗：${error.message}`);
+            return [];
+        }
+        return data || [];
+    }
+
+    // 管理員後台專用：獲取所有遊戲
+    async getAllGames() {
+        if (!this.initialized) await this.init();
+        const { data, error } = await this.client.from('games').select('*');
+        if (error) {
+            alert(`❌ 加載遊戲數據失敗：${error.message}`);
+            return [];
+        }
+        return data || [];
+    }
+
+    // 管理員後台專用：獲取所有遊戲紀錄（聯表查詢）
+    async getAllGameRecords() {
+        if (!this.initialized) await this.init();
+        const { data, error } = await this.client
+            .from('game_records')
+            .select(`
+                *,
+                users(username),
+                games(game_name, game_code)
+            `)
+            .order('scanned_at', { ascending: false });
+        
+        if (error) {
+            alert(`❌ 加載遊戲紀錄失敗：${error.message}`);
+            return [];
+        }
+        return data || [];
+    }
+
+    // 管理員後台專用：新增遊戲
+    async addGame(gameCode, gameName, maxScore = 1000) {
+        if (!this.initialized) await this.init();
+        const { error } = await this.client
+            .from('games')
+            .insert([{ game_code: gameCode, game_name: gameName, max_score: maxScore }]);
+        
+        if (error) {
+            alert(`❌ 新增遊戲失敗：${error.message}`);
+            return false;
+        }
+        alert("✅ 遊戲新增成功！");
+        return true;
+    }
 }
 
-// 建立全域的資料庫實例（確保其他JS能訪問）
 window.dbManager = new DatabaseManager();
+// 頁面加載時預初始化資料庫
+window.dbManager.init().catch(err => console.error(err));
