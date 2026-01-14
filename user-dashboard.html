@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用戶仪表盘 - QR碼遊戲系統</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- ZXing QR码扫描库 -->
+    <script src="https://unpkg.com/@zxing/library@0.19.6/umd/index.min.js"></script>
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#000000',
+                        secondary: '#666666',
+                        background: '#ffffff',
+                        success: '#22c55e',
+                        error: '#ef4444',
+                        warning: '#f59e0b'
+                    },
+                    fontFamily: {
+                        sans: ['Microsoft JhengHei', 'PingFang TC', 'sans-serif']
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.5s ease-in-out',
+                        'pulse-fast': 'pulse 1s infinite',
+                        'bounce-success': 'bounceSuccess 0.6s ease-out'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        bounceSuccess: {
+                            '0%': { transform: 'scale(1)' },
+                            '50%': { transform: 'scale(1.1)' },
+                            '100%': { transform: 'scale(1)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow {
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            .input-focus {
+                @apply focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none;
+            }
+            .btn-hover {
+                @apply transition-all duration-300 hover:bg-gray-800 hover:text-white hover:shadow-lg transform hover:-translate-y-1;
+            }
+            .scanner-active {
+                @apply ring-4 ring-success ring-opacity-50;
+            }
+            .scanner-pulse {
+                @apply animate-pulse-fast;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 顶部导航 -->
+    <nav class="bg-white shadow-md border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fa fa-qrcode text-2xl mr-3 text-primary"></i>
+                        <span class="text-xl font-bold">QR碼遊戲系統</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- 用户信息 -->
+                    <div class="relative">
+                        <button id="userMenuBtn" class="flex items-center space-x-2">
+                            <div class="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center">
+                                <i class="fa fa-user"></i>
+                            </div>
+                            <span id="currentUsername" class="hidden md:block">用戶</span>
+                            <i class="fa fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="userMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden z-50">
+                            <a href="#profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fa fa-user-circle mr-2"></i> 個人資料
+                            </a>
+                            <a href="#settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fa fa-cog mr-2"></i> 設置
+                            </a>
+                            <hr class="my-1">
+                            <a href="#" id="logoutBtn" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                <i class="fa fa-sign-out mr-2"></i> 登出
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容 -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- 用户信息卡片 -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8 animate-fade-in">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div class="flex items-center mb-4 md:mb-0">
+                    <div class="w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center text-2xl">
+                        <i class="fa fa-user"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h2 id="userFullName" class="text-2xl font-bold">歡迎，用戶</h2>
+                        <p id="userInfo" class="text-gray-600">ID: U000001 | 總分: 0</p>
+                    </div>
+                </div>
+                <div class="flex space-x-4">
+                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                        <p class="text-sm text-gray-600">今日分數</p>
+                        <p id="todayScore" class="text-2xl font-bold text-primary">0</p>
+                    </div>
+                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                        <p class="text-sm text-gray-600">今日遊戲</p>
+                        <p id="todayGames" class="text-2xl font-bold text-primary">0</p>
+                    </div>
+                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                        <p class="text-sm text-gray-600">排名</p>
+                        <p id="userRank" class="text-2xl font-bold text-primary">--</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 扫描区域 -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <!-- QR码扫描 -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="p-6 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold flex items-center">
+                            <i class="fa fa-qrcode mr-2 text-primary"></i>
+                            QR碼掃描
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <!-- 扫描区域 -->
+                        <div class="relative mb-6">
+                            <div id="scanArea" class="aspect-video bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                                <!-- 视频元素 -->
+                                <video id="scanVideo" class="w-full h-full object-cover hidden"></video>
+                                
+                                <!-- 画布元素 -->
+                                <canvas id="scanCanvas" class="w-full h-full absolute top-0 left-0"></canvas>
+                                
+                                <!-- 初始状态 -->
+                                <div id="scanInitial" class="text-center">
+                                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <i class="fa fa-camera text-3xl text-primary"></i>
+                                    </div>
+                                    <p class="text-gray-600 mb-4">點擊下方按鈕開始掃描</p>
+                                    <p class="text-sm text-gray-500">請確保已授予相機權限</p>
+                                </div>
+                                
+                                <!-- 扫描线动画 -->
+                                <div id="scanLine" class="absolute left-0 right-0 h-1 bg-success transform -translate-y-full opacity-0"></div>
+                            </div>
+                            
+                            <!-- 扫描框 -->
+                            <div id="scanFrame" class="absolute inset-0 border-4 border-transparent pointer-events-none hidden">
+                                <div class="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-success"></div>
+                                <div class="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-success"></div>
+                                <div class="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-success"></div>
+                                <div class="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-success"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- 控制按钮 -->
+                        <div class="flex space-x-4 justify-center">
+                            <button id="startScanBtn" class="btn-hover bg-success text-white px-6 py-3 rounded-lg font-medium flex items-center">
+                                <i class="fa fa-play mr-2"></i>
+                                開始掃描
+                            </button>
+                            <button id="stopScanBtn" class="btn-hover bg-error text-white px-6 py-3 rounded-lg font-medium flex items-center hidden">
+                                <i class="fa fa-stop mr-2"></i>
+                                停止掃描
+                            </button>
+                            <button id="toggleCameraBtn" class="btn-hover bg-primary text-white px-6 py-3 rounded-lg font-medium flex items-center hidden">
+                                <i class="fa fa-refresh mr-2"></i>
+                                切換相機
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 手动输入 -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow-md">
+                    <div class="p-6 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold flex items-center">
+                            <i class="fa fa-keyboard-o mr-2 text-primary"></i>
+                            手動輸入
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <form id="manualEntryForm">
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    遊戲ID
+                                </label>
+                                <input type="text" id="manualGameId" required
+                                    class="input-focus w-full px-4 py-2 border border-gray-300 rounded-lg text-sm"
+                                    placeholder="例如: G000001">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    分數
+                                </label>
+                                <input type="number" id="manualScore" required min="0" max="100"
+                                    class="input-focus w-full px-4 py-2 border border-gray-300 rounded-lg text-sm"
+                                    placeholder="請輸入分數">
+                            </div>
+                            <button type="submit" id="submitManualBtn"
+                                class="btn-hover w-full bg-primary text-white px-6 py-3 rounded-lg font-medium">
+                                <i class="fa fa-check mr-2"></i>
+                                提交分數
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 最近游戏记录 -->
+        <div class="bg-white rounded-lg shadow-md mb-8">
+            <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold flex items-center">
+                    <i class="fa fa-history mr-2 text-primary"></i>
+                    最近遊戲記錄
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">時間</th>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">遊戲名稱</th>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">分數</th>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">記錄者</th>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">狀態</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gameRecordsTable" class="bg-white divide-y divide-gray-200">
+                            <!-- 游戏记录将通过JavaScript动态填充 -->
+                            <tr>
+                                <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                                    暫無遊戲記錄
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 排行榜 -->
+        <div class="bg-white rounded-lg shadow-md">
+            <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold flex items-center">
+                    <i class="fa fa-trophy mr-2 text-primary"></i>
+                    排行榜
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- 总分排行 -->
+                    <div>
+                        <h4 class="text-md font-semibold mb-4 flex items-center">
+                            <i class="fa fa-star text-yellow-500 mr-2"></i>
+                            總分排行
+                        </h4>
+                        <div id="totalScoreRanking" class="space-y-3">
+                            <!-- 排行榜数据将通过JavaScript动态填充 -->
+                        </div>
+                    </div>
+                    
+                    <!-- 今日排行 -->
+                    <div>
+                        <h4 class="text-md font-semibold mb-4 flex items-center">
+                            <i class="fa fa-calendar text-blue-500 mr-2"></i>
+                            今日排行
+                        </h4>
+                        <div id="todayRanking" class="space-y-3">
+                            <!-- 排行榜数据将通过JavaScript动态填充 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 扫描成功提示 -->
+    <div id="scanSuccessModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 text-center animate-bounce-success">
+            <div class="w-20 h-20 bg-success/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa fa-check text-4xl text-success"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">掃描成功！</h3>
+            <p id="scanSuccessGame" class="text-gray-600 mb-2">遊戲: 測試遊戲</p>
+            <p id="scanSuccessScore" class="text-2xl font-bold text-primary mb-4">分數: 100</p>
+            <p id="scanSuccessTotal" class="text-sm text-gray-500 mb-6">總分: 500</p>
+            <button id="closeSuccessModal" class="btn-hover bg-primary text-white px-6 py-3 rounded-lg font-medium">
+                確定
+            </button>
+        </div>
+    </div>
+
+    <!-- 提示框 -->
+    <div id="toast" class="fixed top-4 right-4 transform translate-x-full transition-transform duration-300 z-50">
+        <div class="bg-white shadow-lg rounded-lg p-4 border border-gray-200 max-w-sm">
+            <div class="flex items-center">
+                <div id="toastIcon" class="w-6 h-6 rounded-full flex items-center justify-center mr-3">
+                    <i id="toastIconInner"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 id="toastTitle" class="font-semibold text-sm"></h4>
+                    <p id="toastMessage" class="text-xs text-secondary"></p>
+                </div>
+                <button id="toastClose" class="text-gray-400 hover:text-gray-600">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2.43.4/dist/umd/supabase.min.js"></script>
+    
+    <!-- 配置文件 -->
+    <script src="js/config.js"></script>
+    
+    <!-- 数据库模块 -->
+    <script src="js/database.js"></script>
+    
+    <!-- 身份验证模块 -->
+    <script src="js/auth.js"></script>
+    
+    <!-- 用户功能模块 -->
+    <script src="js/user.js"></script>
+
+    <script>
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('用戶仪表盘加載完成');
+            
+            // 检查登录状态
+            if (!window.authManager || !window.authManager.isUser()) {
+                showToast('error', '錯誤', '請先登入用戶帳號');
+                setTimeout(() => {
+                    window.location.href = 'user-login.html';
+                }, 1500);
+                return;
+            }
+            
+            // 初始化页面
+            await initializeDashboard();
+            
+            // 绑定事件
+            bindEvents();
+            
+            // 初始化扫描器事件监听
+            initializeScannerEvents();
+        });
+
+        // 初始化仪表盘
+        async function initializeDashboard() {
+            try {
+                // 加载用户信息
+                await loadUserInfo();
+                
+                // 加载游戏记录
+                await loadGameRecords();
+                
+                // 加载排行榜
+                await loadRanking();
+                
+                // 初始化扫描器
+                await initializeScanner();
+                
+            } catch (error) {
+                console.error('初始化仪表盘失败:', error);
+                showToast('error', '錯誤', '初始化數據失敗');
+            }
+        }
+
+        // 加载用户信息
+        async function loadUserInfo() {
+            try {
+                const currentUser = window.authManager.getCurrentUser();
+                if (!currentUser) {
+                    throw new Error('未找到當前用戶信息');
+                }
+                
+                // 获取用户详细信息
+                const user = await window.dbManager.getUserById(currentUser.id);
+                if (!user) {
+                    throw new Error('用戶不存在');
+                }
+                
+                // 更新界面显示
+                document.getElementById('currentUsername').textContent = user.username;
+                document.getElementById('userFullName').textContent = `歡迎，${user.username}`;
+                document.getElementById('userInfo').textContent = `ID: ${user.id} | 總分: ${user.total_score || 0}`;
+                
+                // 更新今日数据（模拟数据）
+                document.getElementById('todayScore').textContent = '0';
+                document.getElementById('todayGames').textContent = '0';
+                document.getElementById('userRank').textContent = '1';
+                
+            } catch (error) {
+                console.error('加载用户信息失败:', error);
+                showToast('error', '錯誤', '加載用戶信息失敗');
+            }
+        }
+
+        // 加载游戏记录
+        async function loadGameRecords() {
+            try {
+                const currentUser = window.authManager.getCurrentUser();
+                const records = await window.dbManager.getUserGameRecords(currentUser.id, 10);
+                
+                const tableBody = document.getElementById('gameRecordsTable');
+                tableBody.innerHTML = '';
+                
+                if (records.length === 0) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                            暫無遊戲記錄
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                    return;
+                }
+                
+                records.forEach(record => {
+                    const row = document.createElement('tr');
+                    const gameName = record.games ? record.games.name : '未知遊戲';
+                    const time = new Date(record.created_at).toLocaleString('zh-TW');
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${time}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="font-medium text-gray-900">${gameName}</div>
+                            <div class="text-sm text-gray-500">${record.game_id}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                ${record.score}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${record.recorded_by}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                已確認
+                            </span>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                
+            } catch (error) {
+                console.error('加载游戏记录失败:', error);
+            }
+        }
+
+        // 加载排行榜
+        async function loadRanking() {
+            try {
+                const users = await window.dbManager.getUsers('', 10);
+                
+                // 总分排行
+                const totalScoreRanking = document.getElementById('totalScoreRanking');
+                totalScoreRanking.innerHTML = '';
+                
+                users.slice(0, 5).forEach((user, index) => {
+                    const rankItem = document.createElement('div');
+                    rankItem.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
+                    
+                    const medalColors = ['bg-yellow-500', 'bg-gray-300', 'bg-yellow-700'];
+                    const medalColor = index < 3 ? medalColors[index] : 'bg-gray-500';
+                    
+                    rankItem.innerHTML = `
+                        <div class="flex items-center">
+                            <div class="w-6 h-6 ${medalColor} text-white rounded-full flex items-center justify-center text-xs font-bold mr-3">
+                                ${index + 1}
+                            </div>
+                            <div>
+                                <div class="font-medium">${user.username}</div>
+                                <div class="text-xs text-gray-500">${user.id}</div>
+                            </div>
+                        </div>
+                        <div class="font-bold">${user.total_score || 0}</div>
+                    `;
+                    totalScoreRanking.appendChild(rankItem);
+                });
+                
+                // 今日排行（使用相同数据作为示例）
+                const todayRanking = document.getElementById('todayRanking');
+                todayRanking.innerHTML = '';
+                
+                users.slice(0, 5).forEach((user, index) => {
+                    const rankItem = document.createElement('div');
+                    rankItem.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
+                    
+                    const medalColor = index < 3 ? medalColors[index] : 'bg-gray-500';
+                    
+                    rankItem.innerHTML = `
+                        <div class="flex items-center">
+                            <div class="w-6 h-6 ${medalColor} text-white rounded-full flex items-center justify-center text-xs font-bold mr-3">
+                                ${index + 1}
+                            </div>
+                            <div>
+                                <div class="font-medium">${user.username}</div>
+                                <div class="text-xs text-gray-500">${user.id}</div>
+                            </div>
+                        </div>
+                        <div class="font-bold">${Math.floor(Math.random() * 100)}</div>
+                    `;
+                    todayRanking.appendChild(rankItem);
+                });
+                
+            } catch (error) {
+                console.error('加载排行榜失败:', error);
+            }
+        }
+
+        // 初始化扫描器
+        async function initializeScanner() {
+            try {
+                const video = document.getElementById('scanVideo');
+                const canvas = document.getElementById('scanCanvas');
+                
+                // 设置画布尺寸
+                canvas.width = video.clientWidth || 640;
+                canvas.height = video.clientHeight || 480;
+                
+                // 初始化扫描器
+                await window.userManager.initializeScanner(video, canvas);
+                
+                console.log('✓ 扫描器初始化成功');
+                
+            } catch (error) {
+                console.error('初始化扫描器失败:', error);
+                showToast('warning', '提示', '初始化相機失敗，請檢查相機權限');
+            }
+        }
+
+        // 初始化扫描器事件监听
+        function initializeScannerEvents() {
+            // 扫描成功事件
+            window.userManager.on('scanSuccess', function(data) {
+                handleScanSuccess(data);
+            });
+            
+            // 扫描错误事件
+            window.userManager.on('scanError', function(data) {
+                handleScanError(data);
+            });
+        }
+
+        // 处理扫描成功
+        function handleScanSuccess(data) {
+            try {
+                console.log('掃描成功:', data);
+                
+                // 更新界面显示
+                document.getElementById('scanSuccessGame').textContent = `遊戲: ${data.game.name}`;
+                document.getElementById('scanSuccessScore').textContent = `分數: ${data.score}`;
+                document.getElementById('scanSuccessTotal').textContent = `總分: ${data.totalScore}`;
+                
+                // 显示成功模态框
+                document.getElementById('scanSuccessModal').classList.remove('hidden');
+                
+                // 重新加载用户信息和游戏记录
+                setTimeout(async () => {
+                    await loadUserInfo();
+                    await loadGameRecords();
+                    await loadRanking();
+                }, 1000);
+                
+            } catch (error) {
+                console.error('处理扫描成功事件失败:', error);
+            }
+        }
+
+        // 处理扫描错误
+        function handleScanError(data) {
+            console.log('掃描錯誤:', data);
+            showToast('error', '錯誤', data.message || '掃描失敗');
+        }
+
+        // 绑定事件
+        function bindEvents() {
+            // 用户菜单按钮
+            document.getElementById('userMenuBtn').addEventListener('click', function() {
+                document.getElementById('userMenu').classList.toggle('hidden');
+            });
+            
+            // 登出按钮
+            document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                handleLogout();
+            });
+            
+            // 开始扫描按钮
+            document.getElementById('startScanBtn').addEventListener('click', async function() {
+                await handleStartScan();
+            });
+            
+            // 停止扫描按钮
+            document.getElementById('stopScanBtn').addEventListener('click', function() {
+                handleStopScan();
+            });
+            
+            // 切换相机按钮
+            document.getElementById('toggleCameraBtn').addEventListener('click', function() {
+                handleToggleCamera();
+            });
+            
+            // 手动输入表单提交
+            document.getElementById('manualEntryForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await handleManualEntry();
+            });
+            
+            // 关闭成功模态框
+            document.getElementById('closeSuccessModal').addEventListener('click', function() {
+                document.getElementById('scanSuccessModal').classList.add('hidden');
+            });
+            
+            // 关闭提示框
+            document.getElementById('toastClose').addEventListener('click', function() {
+                hideToast();
+            });
+            
+            // 点击页面其他地方关闭下拉菜单
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('#userMenuBtn') && !e.target.closest('#userMenu')) {
+                    document.getElementById('userMenu').classList.add('hidden');
+                }
+            });
+            
+            // 窗口大小改变时重新设置画布尺寸
+            window.addEventListener('resize', function() {
+                const video = document.getElementById('scanVideo');
+                const canvas = document.getElementById('scanCanvas');
+                canvas.width = video.clientWidth || 640;
+                canvas.height = video.clientHeight || 480;
+            });
+        }
+
+        // 处理开始扫描
+        async function handleStartScan() {
+            try {
+                const result = await window.userManager.startScan();
+                
+                if (result.success) {
+                    // 更新界面状态
+                    document.getElementById('startScanBtn').classList.add('hidden');
+                    document.getElementById('stopScanBtn').classList.remove('hidden');
+                    document.getElementById('toggleCameraBtn').classList.remove('hidden');
+                    document.getElementById('scanVideo').classList.remove('hidden');
+                    document.getElementById('scanInitial').classList.add('hidden');
+                    document.getElementById('scanArea').classList.add('scanner-active');
+                    document.getElementById('scanFrame').classList.remove('hidden');
+                    
+                    // 开始扫描线动画
+                    startScanLineAnimation();
+                    
+                    showToast('success', '成功', '掃描器已啟動');
+                } else {
+                    showToast('error', '錯誤', result.message);
+                }
+                
+            } catch (error) {
+                console.error('启动扫描器失败:', error);
+                showToast('error', '錯誤', '啟動相機失敗，請檢查相機權限');
+            }
+        }
+
+        // 处理停止扫描
+        function handleStopScan() {
+            try {
+                window.userManager.stopScan();
+                
+                // 更新界面状态
+                document.getElementById('startScanBtn').classList.remove('hidden');
+                document.getElementById('stopScanBtn').classList.add('hidden');
+                document.getElementById('toggleCameraBtn').classList.add('hidden');
+                document.getElementById('scanVideo').classList.add('hidden');
+                document.getElementById('scanInitial').classList.remove('hidden');
+                document.getElementById('scanArea').classList.remove('scanner-active');
+                document.getElementById('scanFrame').classList.add('hidden');
+                
+                // 停止扫描线动画
+                stopScanLineAnimation();
+                
+                showToast('info', '提示', '掃描器已停止');
+                
+            } catch (error) {
+                console.error('停止扫描器失败:', error);
+            }
+        }
+
+        // 处理切换相机
+        function handleToggleCamera() {
+            // 停止当前扫描
+            handleStopScan();
+            
+            // 延迟重新启动扫描（会自动请求新的相机权限）
+            setTimeout(() => {
+                handleStartScan();
+            }, 500);
+        }
+
+        // 处理手动输入
+        async function handleManualEntry() {
+            try {
+                const gameId = document.getElementById('manualGameId').value.trim();
+                const score = document.getElementById('manualScore').value.trim();
+                
+                // 验证输入
+                if (!gameId || !score) {
+                    showToast('warning', '提示', '請填寫完整的遊戲信息');
+                    return;
+                }
+                
+                // 执行手动输入
+                const result = await window.userManager.manualScoreEntry(gameId, score);
+                
+                if (result.success) {
+                    showToast('success', '成功', '分數提交成功');
+                    
+                    // 重置表单
+                    document.getElementById('manualEntryForm').reset();
+                    
+                    // 重新加载数据
+                    await loadUserInfo();
+                    await loadGameRecords();
+                    await loadRanking();
+                } else {
+                    showToast('error', '錯誤', result.message);
+                }
+                
+            } catch (error) {
+                console.error('手动输入失败:', error);
+                showToast('error', '錯誤', '提交分數失敗，請重試');
+            }
+        }
+
+        // 处理登出
+        function handleLogout() {
+            if (window.userManager) {
+                window.userManager.stopScan();
+            }
+            if (window.authManager) {
+                window.authManager.logout();
+            }
+            window.location.href = 'user-login.html';
+        }
+
+        // 开始扫描线动画
+        function startScanLineAnimation() {
+            const scanLine = document.getElementById('scanLine');
+            scanLine.style.opacity = '1';
+            
+            let position = -100;
+            const interval = setInterval(() => {
+                position += 2;
+                scanLine.style.transform = `translateY(${position}%)`;
+                
+                if (position > 100) {
+                    position = -100;
+                }
+            }, 50);
+            
+            // 保存动画间隔ID
+            window.scanLineInterval = interval;
+        }
+
+        // 停止扫描线动画
+        function stopScanLineAnimation() {
+            if (window.scanLineInterval) {
+                clearInterval(window.scanLineInterval);
+                window.scanLineInterval = null;
+            }
+            
+            const scanLine = document.getElementById('scanLine');
+            scanLine.style.opacity = '0';
+            scanLine.style.transform = 'translateY(-100%)';
+        }
+
+        // 显示提示框
+        function showToast(type, title, message) {
+            const toast = document.getElementById('toast');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastIconInner = document.getElementById('toastIconInner');
+            const toastTitle = document.getElementById('toastTitle');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            // 设置图标和颜色
+            switch (type) {
+                case 'success':
+                    toastIcon.className = 'w-6 h-6 rounded-full bg-success flex items-center justify-center mr-3';
+                    toastIconInner.className = 'fa fa-check text-white';
+                    break;
+                case 'error':
+                    toastIcon.className = 'w-6 h-6 rounded-full bg-error flex items-center justify-center mr-3';
+                    toastIconInner.className = 'fa fa-times text-white';
+                    break;
+                case 'warning':
+                    toastIcon.className = 'w-6 h-6 rounded-full bg-warning flex items-center justify-center mr-3';
+                    toastIconInner.className = 'fa fa-exclamation text-white';
+                    break;
+                case 'info':
+                    toastIcon.className = 'w-6 h-6 rounded-full bg-primary flex items-center justify-center mr-3';
+                    toastIconInner.className = 'fa fa-info text-white';
+                    break;
+            }
+            
+            // 设置标题和消息
+            toastTitle.textContent = title;
+            toastMessage.textContent = message;
+            
+            // 显示提示框
+            toast.classList.remove('translate-x-full');
+            
+            // 3秒后自动隐藏
+            setTimeout(hideToast, 3000);
+        }
+
+        // 隐藏提示框
+        function hideToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('translate-x-full');
+        }
+    </script>
+</body>
+</html>

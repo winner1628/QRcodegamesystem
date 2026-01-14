@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR碼遊戲系統 - 首頁</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#000000',
+                        secondary: '#666666',
+                        background: '#ffffff',
+                        success: '#22c55e',
+                        error: '#ef4444',
+                        warning: '#f59e0b'
+                    },
+                    fontFamily: {
+                        sans: ['Microsoft JhengHei', 'PingFang TC', 'sans-serif']
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.5s ease-in-out',
+                        'bounce-slow': 'bounce 2s infinite'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow {
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            .btn-hover {
+                @apply transition-all duration-300 hover:bg-gray-800 hover:text-white hover:shadow-lg transform hover:-translate-y-1;
+            }
+            .card-hover {
+                @apply transition-all duration-300 hover:shadow-xl transform hover:-translate-y-2;
+            }
+        }
+    </style>
+</head>
+<body class="bg-background text-primary min-h-screen">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-md border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fa fa-qrcode text-3xl mr-3"></i>
+                        <span class="text-2xl font-bold">QR碼遊戲系統</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="adminLoginBtn" class="btn-hover bg-primary text-white px-6 py-2 rounded-lg font-medium">
+                        <i class="fa fa-user-circle mr-2"></i>管理員登入
+                    </button>
+                    <button id="userLoginBtn" class="btn-hover bg-white text-primary border border-primary px-6 py-2 rounded-lg font-medium">
+                        <i class="fa fa-users mr-2"></i>用戶登入
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容 -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <!-- 欢迎区域 -->
+        <div class="text-center mb-16 animate-fade-in">
+            <h1 class="text-5xl font-bold mb-6 text-shadow">歡迎使用 QR碼遊戲系統</h1>
+            <p class="text-xl text-secondary max-w-3xl mx-auto">
+                基於QR碼的攤位遊戲記分系統，讓遊戲管理更簡單、更高效
+            </p>
+        </div>
+
+        <!-- 功能特点 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            <!-- 特点1 -->
+            <div class="bg-white p-8 rounded-xl shadow-lg card-hover animate-slide-up" style="animation-delay: 0.1s;">
+                <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 mx-auto">
+                    <i class="fa fa-qrcode text-3xl text-primary"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-4 text-center">QR碼快速掃描</h3>
+                <p class="text-secondary text-center">
+                    使用手機或電腦攝像頭快速掃描QR碼，即時記錄遊戲分數，無需手動輸入
+                </p>
+            </div>
+
+            <!-- 特点2 -->
+            <div class="bg-white p-8 rounded-xl shadow-lg card-hover animate-slide-up" style="animation-delay: 0.2s;">
+                <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 mx-auto">
+                    <i class="fa fa-database text-3xl text-primary"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-4 text-center">實時數據管理</h3>
+                <p class="text-secondary text-center">
+                    所有數據即時同步到雲端數據庫，隨時查看最新的遊戲記錄和排行榜
+                </p>
+            </div>
+
+            <!-- 特点3 -->
+            <div class="bg-white p-8 rounded-xl shadow-lg card-hover animate-slide-up" style="animation-delay: 0.3s;">
+                <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 mx-auto">
+                    <i class="fa fa-line-chart text-3xl text-primary"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-4 text-center">智能統計分析</h3>
+                <p class="text-secondary text-center">
+                    自動生成詳細的統計報表，幫助您更好地了解遊戲運行情況和參與者表現
+                </p>
+            </div>
+        </div>
+
+        <!-- 系统状态 -->
+        <div class="bg-white p-8 rounded-xl shadow-lg mb-16">
+            <h2 class="text-2xl font-bold mb-6 text-center">系統狀態</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- 数据库连接状态 -->
+                <div class="p-6 border border-gray-200 rounded-lg">
+                    <div class="flex items-center mb-4">
+                        <div id="dbStatusIcon" class="w-4 h-4 rounded-full bg-gray-300 mr-3"></div>
+                        <h3 class="text-lg font-semibold">數據庫連接</h3>
+                    </div>
+                    <p id="dbStatusText" class="text-secondary">正在檢查連接...</p>
+                </div>
+
+                <!-- 系统版本 -->
+                <div class="p-6 border border-gray-200 rounded-lg">
+                    <div class="flex items-center mb-4">
+                        <i class="fa fa-info-circle text-primary mr-3"></i>
+                        <h3 class="text-lg font-semibold">系統版本</h3>
+                    </div>
+                    <p id="systemVersion" class="text-secondary">v2.0.0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 默认账号信息 -->
+        <div class="bg-gray-50 p-8 rounded-xl border border-gray-200">
+            <h2 class="text-2xl font-bold mb-6 text-center">測試帳號</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- 管理员账号 -->
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold mb-4 text-center">管理員帳號</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-secondary">用戶名:</span>
+                            <span class="font-mono bg-gray-100 px-2 py-1 rounded">admin</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-secondary">密碼:</span>
+                            <span class="font-mono bg-gray-100 px-2 py-1 rounded">admin123</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 用户账号 -->
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold mb-4 text-center">用戶帳號</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-secondary">用戶名:</span>
+                            <span class="font-mono bg-gray-100 px-2 py-1 rounded">U000001</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-secondary">密碼:</span>
+                            <span class="font-mono bg-gray-100 px-2 py-1 rounded">testuser</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-gray-200 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-secondary">
+                © 2024 QR碼遊戲系統 - 版本 2.0.0
+            </p>
+        </div>
+    </footer>
+
+    <!-- 提示框 -->
+    <div id="toast" class="fixed top-4 right-4 transform translate-x-full transition-transform duration-300 z-50">
+        <div class="bg-white shadow-lg rounded-lg p-4 border border-gray-200 max-w-sm">
+            <div class="flex items-center">
+                <div id="toastIcon" class="w-6 h-6 rounded-full flex items-center justify-center mr-3">
+                    <i id="toastIconInner"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 id="toastTitle" class="font-semibold text-sm"></h4>
+                    <p id="toastMessage" class="text-xs text-secondary"></p>
+                </div>
+                <button id="toastClose" class="text-gray-400 hover:text-gray-600">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4/dist/umd/supabase.min.js"></script>
+    
+    <!-- 配置文件 -->
+    <script src="js/config.js"></script>
+    
+    <!-- 数据库模块 -->
+    <script src="js/database.js"></script>
+    
+    <!-- 身份验证模块 -->
+    <script src="js/auth.js"></script>
+    
+    <!-- 用户功能模块 -->
+    <script src="js/user.js"></script>
+
+    <script>
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('QR碼遊戲系統首頁加載完成');
+            
+            // 等待Supabase初始化完成
+            if (window.initializeSupabase) {
+                const initialized = await window.initializeSupabase();
+                if (initialized) {
+                    // 验证数据库连接
+                    if (window.verifyDatabaseConnection) {
+                        await window.verifyDatabaseConnection();
+                    }
+                }
+            }
+            
+            // 检查数据库连接状态
+            await checkDatabaseStatus();
+            
+            // 绑定按钮事件
+            bindEvents();
+        });
+
+        // 检查数据库连接状态
+        async function checkDatabaseStatus() {
+            try {
+                const dbStatusIcon = document.getElementById('dbStatusIcon');
+                const dbStatusText = document.getElementById('dbStatusText');
+                
+                // 等待Supabase初始化
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                if (window.supabaseClient) {
+                    try {
+                        // 测试数据库连接
+                        const { data, error } = await window.supabaseClient
+                            .from('admins')
+                            .select('*')
+                            .limit(1);
+                        
+                        if (error) {
+                            throw error;
+                        }
+                        
+                        // 连接成功
+                        dbStatusIcon.className = 'w-4 h-4 rounded-full bg-success mr-3';
+                        dbStatusText.textContent = '數據庫連接正常';
+                        dbStatusText.className = 'text-success';
+                        
+                        showToast('success', '成功', '數據庫連接正常');
+                        
+                    } catch (error) {
+                        // 连接失败
+                        dbStatusIcon.className = 'w-4 h-4 rounded-full bg-error mr-3';
+                        dbStatusText.textContent = '數據庫連接失敗';
+                        dbStatusText.className = 'text-error';
+                        
+                        showToast('error', '錯誤', '數據庫連接失敗，請檢查網絡或配置');
+                        console.error('數據庫連接測試失敗:', error);
+                    }
+                } else {
+                    dbStatusIcon.className = 'w-4 h-4 rounded-full bg-warning mr-3';
+                    dbStatusText.textContent = 'Supabase未初始化';
+                    dbStatusText.className = 'text-warning';
+                }
+                
+            } catch (error) {
+                console.error('檢查數據庫狀態時發生錯誤:', error);
+            }
+        }
+
+        // 绑定事件
+        function bindEvents() {
+            // 管理员登录按钮
+            document.getElementById('adminLoginBtn').addEventListener('click', function() {
+                window.location.href = 'admin-login.html';
+            });
+            
+            // 用户登录按钮
+            document.getElementById('userLoginBtn').addEventListener('click', function() {
+                window.location.href = 'user-login.html';
+            });
+            
+            // 关闭提示框
+            document.getElementById('toastClose').addEventListener('click', function() {
+                hideToast();
+            });
+        }
+
+        // 显示提示框
+        function showToast(type, title, message) {
+            const toast = document.getElementById('toast');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastIconInner = document.getElementById('toastIconInner');
+            const toastTitle = document.getElementById('toastTitle');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            // 设置图标和颜色
+            switch (type) {
+                case 'success':
+                    toastIcon.className = 'w-6 h-6 rounded-full bg-success flex items-center justify-center mr-3';
+                    toastIconInner.className = 'fa fa-check text-white';
+                    break;
+                case 'error':
+                    toastIcon.className = 'w-6 h-6 rounded-full bg-error flex items-center justify-center mr-3';
+                    toastIconInner.className = 'fa fa-times text-white';
+                    break;
+                case 'warning':
+                    toastIcon.className = 'w-6 h-6 rounded-full bg-warning flex items-center justify-center mr-3';
+                    toastIconInner.className = 'fa fa-exclamation text-white';
+                    break;
+                case 'info':
+                    toastIcon.className = 'w-6 h-6 rounded-full bg-primary flex items-center justify-center mr-3';
+                    toastIconInner.className = 'fa fa-info text-white';
+                    break;
+            }
+            
+            // 设置标题和消息
+            toastTitle.textContent = title;
+            toastMessage.textContent = message;
+            
+            // 显示提示框
+            toast.classList.remove('translate-x-full');
+            
+            // 3秒后自动隐藏
+            setTimeout(hideToast, 3000);
+        }
+
+        // 隐藏提示框
+        function hideToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('translate-x-full');
+        }
+    </script>
+</body>
+</html>

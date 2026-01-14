@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理員控制台 - QR碼遊戲系統</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#000000',
+                        secondary: '#666666',
+                        background: '#ffffff',
+                        success: '#22c55e',
+                        error: '#ef4444',
+                        warning: '#f59e0b'
+                    },
+                    fontFamily: {
+                        sans: ['Microsoft JhengHei', 'PingFang TC', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow {
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            .input-focus {
+                @apply focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none;
+            }
+            .btn-hover {
+                @apply transition-all duration-300 hover:bg-gray-800 hover:text-white hover:shadow-lg transform hover:-translate-y-1;
+            }
+            .nav-link {
+                @apply flex items-center px-4 py-3 text-gray-600 hover:bg-primary hover:text-white rounded-lg transition-all duration-300;
+            }
+            .nav-link.active {
+                @apply bg-primary text-white;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="flex h-screen overflow-hidden">
+        <!-- 侧边栏 -->
+        <aside class="w-64 bg-white shadow-lg hidden md:block">
+            <div class="p-6">
+                <div class="flex items-center space-x-3">
+                    <i class="fa fa-qrcode text-2xl text-primary"></i>
+                    <h1 class="text-xl font-bold">管理控制台</h1>
+                </div>
+            </div>
+            <nav class="mt-6 px-4 space-y-2">
+                <a href="#dashboard" class="nav-link active" data-section="dashboard">
+                    <i class="fa fa-dashboard w-5 h-5 mr-3"></i>
+                    <span>數據總覽</span>
+                </a>
+                <a href="#users" class="nav-link" data-section="users">
+                    <i class="fa fa-users w-5 h-5 mr-3"></i>
+                    <span>用戶管理</span>
+                </a>
+                <a href="#games" class="nav-link" data-section="games">
+                    <i class="fa fa-gamepad w-5 h-5 mr-3"></i>
+                    <span>遊戲管理</span>
+                </a>
+                <a href="#records" class="nav-link" data-section="records">
+                    <i class="fa fa-history w-5 h-5 mr-3"></i>
+                    <span>遊戲記錄</span>
+                </a>
+                <a href="#statistics" class="nav-link" data-section="statistics">
+                    <i class="fa fa-bar-chart w-5 h-5 mr-3"></i>
+                    <span>統計分析</span>
+                </a>
+                <a href="#settings" class="nav-link" data-section="settings">
+                    <i class="fa fa-cog w-5 h-5 mr-3"></i>
+                    <span>系統設置</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- 主内容 -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- 顶部导航 -->
+            <header class="bg-white shadow-sm z-10">
+                <div class="flex items-center justify-between h-16 px-6">
+                    <!-- 移动端菜单按钮 -->
+                    <button id="mobileMenuBtn" class="md:hidden text-gray-600">
+                        <i class="fa fa-bars text-xl"></i>
+                    </button>
+                    
+                    <!-- 标题 -->
+                    <h2 id="pageTitle" class="text-lg font-semibold">數據總覽</h2>
+                    
+                    <!-- 用户信息 -->
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <button id="userMenuBtn" class="flex items-center space-x-2">
+                                <div class="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center">
+                                    <i class="fa fa-user"></i>
+                                </div>
+                                <span class="hidden md:block">管理員</span>
+                                <i class="fa fa-chevron-down text-xs"></i>
+                            </button>
+                            <div id="userMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden">
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fa fa-user-circle mr-2"></i> 個人資料
+                                </a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fa fa-cog mr-2"></i> 設置
+                                </a>
+                                <hr class="my-1">
+                                <a href="#" id="logoutBtn" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                    <i class="fa fa-sign-out mr-2"></i> 登出
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 内容区域 -->
+            <main class="flex-1 overflow-y-auto p-6">
+                <!-- 仪表盘部分 -->
+                <section id="dashboard" class="section active">
+                    <!-- 统计卡片 -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                                    <i class="fa fa-users text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm text-gray-500">總用戶數</p>
+                                    <p id="totalUsers" class="text-2xl font-bold">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-green-100 text-green-600">
+                                    <i class="fa fa-gamepad text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm text-gray-500">活躍遊戲</p>
+                                    <p id="activeGames" class="text-2xl font-bold">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                                    <i class="fa fa-trophy text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm text-gray-500">今日記錄</p>
+                                    <p id="todayRecords" class="text-2xl font-bold">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                                    <i class="fa fa-line-chart text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm text-gray-500">平均分數</p>
+                                    <p id="avgScore" class="text-2xl font-bold">0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 图表 -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <h3 class="text-lg font-semibold mb-4">用戶活躍趨勢</h3>
+                            <canvas id="userActivityChart" height="250"></canvas>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <h3 class="text-lg font-semibold mb-4">遊戲參與度</h3>
+                            <canvas id="gameParticipationChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 用户管理部分 -->
+                <section id="users" class="section hidden">
+                    <div class="bg-white rounded-lg shadow mb-6">
+                        <div class="p-6 border-b">
+                            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                                <h3 class="text-lg font-semibold">用戶管理</h3>
+                                <div class="mt-4 md:mt-0 flex space-x-3">
+                                    <button id="addUserBtn" class="btn-hover bg-primary text-white px-4 py-2 rounded-lg text-sm">
+                                        <i class="fa fa-plus mr-2"></i> 添加用戶
+                                    </button>
+                                    <button id="batchImportBtn" class="btn-hover bg-green-600 text-white px-4 py-2 rounded-lg text-sm">
+                                        <i class="fa fa-upload mr-2"></i> 批量導入
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                                <div class="flex items-center space-x-2 mb-4 md:mb-0">
+                                    <input type="text" id="userSearch" placeholder="搜索用戶..." 
+                                        class="input-focus px-4 py-2 border border-gray-300 rounded-lg text-sm w-full md:w-64">
+                                    <button id="searchUserBtn" class="bg-primary text-white px-4 py-2 rounded-lg text-sm">
+                                        <i class="fa fa-search"></i>
+                                    </button>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <select id="userFilter" class="input-focus px-4 py-2 border border-gray-300 rounded-lg text-sm">
+                                        <option value="">全部用戶</option>
+                                        <option value="active">活躍用戶</option>
+                                        <option value="inactive">非活躍用戶</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead>
+                                        <tr>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">用戶ID</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">用戶名</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">角色</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">總分數</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">創建時間</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="usersTableBody" class="bg-white divide-y divide-gray-200">
+                                        <!-- 用户数据将通过JavaScript动态填充 -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="userPagination" class="mt-6 flex justify-center">
+                                <!-- 分页控件 -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 游戏管理部分 -->
+                <section id="games" class="section hidden">
+                    <div class="bg-white rounded-lg shadow mb-6">
+                        <div class="p-6 border-b">
+                            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                                <h3 class="text-lg font-semibold">遊戲管理</h3>
+                                <div class="mt-4 md:mt-0">
+                                    <button id="addGameBtn" class="btn-hover bg-primary text-white px-4 py-2 rounded-lg text-sm">
+                                        <i class="fa fa-plus mr-2"></i> 添加遊戲
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="gamesGrid">
+                                <!-- 游戏卡片将通过JavaScript动态填充 -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 其他部分... -->
+                <section id="records" class="section hidden">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b">
+                            <h3 class="text-lg font-semibold">遊戲記錄</h3>
+                        </div>
+                        <div class="p-6">
+                            <p class="text-gray-600">遊戲記錄功能正在開發中...</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="statistics" class="section hidden">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b">
+                            <h3 class="text-lg font-semibold">統計分析</h3>
+                        </div>
+                        <div class="p-6">
+                            <p class="text-gray-600">統計分析功能正在開發中...</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="settings" class="section hidden">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b">
+                            <h3 class="text-lg font-semibold">系統設置</h3>
+                        </div>
+                        <div class="p-6">
+                            <p class="text-gray-600">系統設置功能正在開發中...</p>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- 添加用户模态框 -->
+    <div id="addUserModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">添加用戶</h3>
+                <button id="closeAddUserModal" class="text-gray-400 hover:text-gray-600">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <form id="addUserForm">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">用戶ID</label>
+                    <input type="text" id="newUserId" required pattern="^U\d{6}$" 
+                        class="input-focus w-full px-4 py-2 border border-gray-300 rounded-lg text-sm"
+                        placeholder="格式: U000001">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">用戶名</label>
+                    <input type="text" id="newUserName" required
+                        class="input-focus w-full px-4 py-2 border border-gray-300 rounded-lg text-sm"
+                        placeholder="請輸入用戶名">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">密碼</label>
+                    <input type="password" id="newUserPassword" required
+                        class="input-focus w-full px-4 py-2 border border-gray-300 rounded-lg text-sm"
+                        placeholder="請輸入密碼">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">角色</label>
+                    <select id="newUserRole" class="input-focus w-full px-4 py-2 border border-gray-300 rounded-lg text-sm">
+                        <option value="user">普通用戶</option>
+                        <option value="manager">管理員</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="cancelAddUser" class="px-4 py-2 border border-gray-300 rounded-lg text-sm">
+                        取消
+                    </button>
+                    <button type="submit" class="btn-hover bg-primary text-white px-4 py-2 rounded-lg text-sm">
+                        添加
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 提示框 -->
+    <div id="toast" class="fixed top-4 right-4 transform translate-x-full transition-transform duration-300 z-50">
+        <div class="bg-white shadow-lg rounded-lg p-4 border border-gray-200 max-w-sm">
+            <div class="flex items-center">
+                <div id="toastIcon" class="w-6 h-6 rounded-full flex items-center justify-center mr-3">
+                    <i id="toastIconInner"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 id="toastTitle" class="font-semibold text-sm"></h4>
+                    <p id="toastMessage" class="text-xs text-secondary"></p>
+                </div>
+                <button id="toastClose" class="text-gray-400 hover:text-gray-600">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2.43.4/dist/umd/supabase.min.js"></script>
+    
+    <!-- 配置文件 -->
+    <script src="js/config.js"></script>
+    
+    <!-- 数据库模块 -->
+    <script src="js/database.js"></script>
+    
+    <!-- 身份验证模块 -->
+    <script src="js/auth.js"></script>
+
+    <script>
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('管理員控制台加載完成');
+            
+            // 检查登录状态
+            if (!window.authManager || !window.authManager.isAdmin()) {
+                showToast('error', '錯誤', '請先登入管理員帳號');
+                setTimeout(() => {
+                    window.location.href = 'admin-login.html';
+                }, 1500);
+                return;
+            }
+            
+            // 初始化页面
+            await initializeDashboard();
+            
+            // 绑定事件
+            bindEvents();
+        });
+
+        // 初始化仪表盘
+        async function initializeDashboard() {
+            try {
+                // 加载统计数据
+                await loadStatistics();
+                
+                // 加载用户列表
+                await loadUsers();
+                
+                // 加载游戏列表
+                await loadGames();
+                
+                // 初始化图表
+                initializeCharts();
+                
+            } catch (error) {
+                console.error('初始化仪表盘失败:', error);
+                showToast('error', '錯誤', '初始化數據失敗');
+            }
+        }
+
+        // 加载统计数据
+        async function loadStatistics() {
+            try {
+                // 获取用户总数
+                const users = await window.dbManager.getUsers();
+                document.getElementById('totalUsers').textContent = users.length;
+                
+                // 获取活跃游戏数
+                const games = await window.dbManager.getGames(true);
+                document.getElementById('activeGames').textContent = games.length;
+                
+                // TODO: 获取今日记录数和平均分數
+                document.getElementById('todayRecords').textContent = '0';
+                document.getElementById('avgScore').textContent = '0';
+                
+            } catch (error) {
+                console.error('加载统计数据失败:', error);
+            }
+        }
+
+        // 加载用户列表
+        async function loadUsers(searchTerm = '') {
+            try {
+                const users = await window.dbManager.getUsers(searchTerm);
+                const tableBody = document.getElementById('usersTableBody');
+                tableBody.innerHTML = '';
+                
+                users.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">${user.id}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${user.username}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-${user.role === 'admin' ? 'blue' : 'green'}-100 text-${user.role === 'admin' ? 'blue' : 'green'}-800">
+                                ${user.role === 'admin' ? '管理員' : '普通用戶'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">${user.total_score || 0}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${new Date(user.created_at).toLocaleDateString('zh-TW')}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button class="text-blue-600 hover:text-blue-900 mr-3 edit-user" data-id="${user.id}">
+                                <i class="fa fa-edit"></i> 編輯
+                            </button>
+                            <button class="text-red-600 hover:text-red-900 delete-user" data-id="${user.id}">
+                                <i class="fa fa-trash"></i> 刪除
+                            </button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                
+                // 绑定用户操作按钮事件
+                bindUserActionEvents();
+                
+            } catch (error) {
+                console.error('加载用户列表失败:', error);
+                showToast('error', '錯誤', '加載用戶列表失敗');
+            }
+        }
+
+        // 加载游戏列表
+        async function loadGames() {
+            try {
+                const games = await window.dbManager.getGames();
+                const gamesGrid = document.getElementById('gamesGrid');
+                gamesGrid.innerHTML = '';
+                
+                games.forEach(game => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow';
+                    card.innerHTML = `
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h4 class="text-lg font-semibold">${game.name}</h4>
+                                    <p class="text-sm text-gray-500">${game.id}</p>
+                                </div>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full ${game.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                    ${game.is_active ? '活躍' : '停用'}
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-4">${game.description || '無描述'}</p>
+                            <div class="flex justify-between items-center text-sm text-gray-500 mb-4">
+                                <span>最高分: ${game.max_score}</span>
+                                <span>創建時間: ${new Date(game.created_at).toLocaleDateString('zh-TW')}</span>
+                            </div>
+                            <div class="flex justify-between space-x-2">
+                                <button class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 edit-game" data-id="${game.id}">
+                                    <i class="fa fa-edit mr-1"></i> 編輯
+                                </button>
+                                <button class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 toggle-game" data-id="${game.id}" data-active="${game.is_active}">
+                                    <i class="fa fa-${game.is_active ? 'pause' : 'play'} mr-1"></i> ${game.is_active ? '停用' : '啟用'}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    gamesGrid.appendChild(card);
+                });
+                
+                // 绑定游戏操作按钮事件
+                bindGameActionEvents();
+                
+            } catch (error) {
+                console.error('加载游戏列表失败:', error);
+                showToast('error', '錯誤', '加載遊戲列表失敗');
+            }
+        }
+
+        // 初始化图表
+        function initializeCharts() {
+            // 用户活跃度图表
+            const userActivityCtx = document.getElementById('userActivityChart').getContext('2d');
+            new Chart(userActivityCtx, {
+                type: 'line',
+                data: {
+                    labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                    datasets: [{
+                        label: '活躍用戶數',
+                        data: [12, 19, 3, 5, 2, 3],
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // 游戏参与度图表
+            const gameParticipationCtx = document.getElementById('gameParticipationChart').getContext('2d');
+            new Chart(gameParticipationCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['遊戲A', '遊戲B', '遊戲C', '遊戲D', '遊戲E'],
+                    datasets: [{
+                        label: '參與人數',
+                        data: [3, 5, 2, 8, 4],
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgb(75, 192, 192)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // 绑定事件
+        function bindEvents() {
+            // 导航链接点击事件
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const section = this.dataset.section;
+                    switchSection(section);
+                });
+            });
+            
+            // 用户菜单按钮
+            document.getElementById('userMenuBtn').addEventListener('click', function() {
+                document.getElementById('userMenu').classList.toggle('hidden');
+            });
+            
+            // 登出按钮
+            document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                handleLogout();
+            });
+            
+            // 移动端菜单按钮
+            document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+                document.querySelector('aside').classList.toggle('hidden');
+            });
+            
+            // 搜索用户按钮
+            document.getElementById('searchUserBtn').addEventListener('click', function() {
+                const searchTerm = document.getElementById('userSearch').value.trim();
+                loadUsers(searchTerm);
+            });
+            
+            // 添加用户按钮
+            document.getElementById('addUserBtn').addEventListener('click', function() {
+                document.getElementById('addUserModal').classList.remove('hidden');
+            });
+            
+            // 关闭添加用户模态框
+            document.getElementById('closeAddUserModal').addEventListener('click', function() {
+                document.getElementById('addUserModal').classList.add('hidden');
+            });
+            
+            // 取消添加用户
+            document.getElementById('cancelAddUser').addEventListener('click', function() {
+                document.getElementById('addUserModal').classList.add('hidden');
+            });
+            
+            // 添加用户表单提交
+            document.getElementById('addUserForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await handleAddUser();
+            });
+            
+            // 关闭提示框
+            document.getElementById('toastClose').addEventListener('click', function() {
+                hideToast();
+            });
+            
+            // 点击页面其他地方关闭下拉菜单
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('#userMenuBtn') && !e.target.closest('#userMenu')) {
+                    document.getElementById('userMenu').classList.add('hidden');
+                }
+            });
+        }
+
+        // 绑定用户操作按钮事件
+        function bindUserActionEvents() {
+            // 编辑用户按钮
+            document.querySelectorAll('.edit-user').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const userId = this.dataset.id;
+                    showToast('info', '提示', `編輯用戶: ${userId}`);
+                });
+            });
+            
+            // 删除用户按钮
+            document.querySelectorAll('.delete-user').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const userId = this.dataset.id;
+                    if (confirm(`確定要刪除用戶 ${userId} 嗎？`)) {
+                        handleDeleteUser(userId);
+                    }
+                });
+            });
+        }
+
+        // 绑定游戏操作按钮事件
+        function bindGameActionEvents() {
+            // 编辑游戏按钮
+            document.querySelectorAll('.edit-game').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const gameId = this.dataset.id;
+                    showToast('info', '提示', `編輯遊戲: ${gameId}`);
+                });
+            });
+            
+            // 切换游戏状态按钮
+            document.querySelectorAll('.toggle-game').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const gameId = this.dataset.id;
+                    const isActive = this.dataset.active === 'true';
+                    await handleToggleGame(gameId, !isActive);
+                });
+            });
+        }
+
+        // 切换页面部分
+        function switchSection(section) {
+            // 更新导航链接状态
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.dataset.section === section) {
+                    link.classList.add('active');
+                }
+            });
+            
+            // 更新页面标题
+            const titles = {
+                'dashboard': '數據總覽',
+                'users': '用戶管理',
+                'games': '遊戲管理',
+                'records': '遊戲記錄',
+                'statistics': '統計分析',
+                'settings': '系統設置'
+            };
+            document.getElementById('pageTitle').textContent = titles[section] || '管理控制台';
+            
+            // 显示对应部分
+            document.querySelectorAll('.section').forEach(s => {
+                s.classList.add('hidden');
+            });
+            document.getElementById(section).classList.remove('hidden');
+            
+            // 在移动端关闭侧边栏
+            if (window.innerWidth < 768) {
+                document.querySelector('aside').classList.add('hidden');
+            }
+        }
+
+        // 处理登出
+        function handleLogout() {
+            if (window.authManager) {
+                window.authManager.logout();
+            }
+            window.location.href = 'admin-login.html';
+        }
+
+        // 处理添加用户
+        async function handleAddUser() {
+            try {
+                const userId = document.getElementById('newUserId').value.trim();
+                const username = document.getElementById('newUserName').value.trim();
+                const password = document.getElementById('newUserPassword').value.trim();
+                const role = document.getElementById('newUserRole').value;
+                
+                // 验证输入
+                if (!userId || !username || !password) {
+                    showToast('warning', '提示', '請填寫完整的用戶信息');
+                    return;
+                }
+                
+                // 验证用户ID格式
+                if (!window.QRGameConfig.regex.userId.test(userId)) {
+                    showToast('error', '錯誤', '用戶ID格式錯誤，正確格式: U000001');
+                    return;
+                }
+                
+                // 检查用户是否已存在
+                const existingUser = await window.dbManager.getUserById(userId);
+                if (existingUser) {
+                    showToast('error', '錯誤', '用戶ID已存在');
+                    return;
+                }
+                
+                // 编码密码
+                const encodedPassword = window.dbManager.encodeBase64(password);
+                
+                // 添加用户
+                await window.dbManager.addUser({
+                    id: userId,
+                    username: username,
+                    password: encodedPassword,
+                    role: role,
+                    total_score: 0
+                });
+                
+                showToast('success', '成功', '用戶添加成功');
+                
+                // 关闭模态框
+                document.getElementById('addUserModal').classList.add('hidden');
+                
+                // 重置表单
+                document.getElementById('addUserForm').reset();
+                
+                // 重新加载用户列表
+                await loadUsers();
+                
+            } catch (error) {
+                console.error('添加用户失败:', error);
+                showToast('error', '錯誤', '添加用戶失敗，請重試');
+            }
+        }
+
+        // 处理删除用户
+        async function handleDeleteUser(userId) {
+            try {
+                await window.dbManager.batchDeleteUsers([userId]);
+                showToast('success', '成功', '用戶刪除成功');
+                await loadUsers();
+            } catch (error) {
+                console.error('删除用户失败:', error);
+                showToast('error', '錯誤', '刪除用戶失敗，請重試');
+            }
+        }
+
+        // 处理切换游戏状态
+        async function handleToggleGame(gameId, isActive) {
+            try {
+                await window.dbManager.updateGameStatus(gameId, isActive);
+                showToast('success', '成功', `遊戲已${isActive ? '啟用' : '停用'}`);
+                await loadGames();
+            } catch (error) {
+                console.error('切换游戏状态失败:', error);
+                showToast('error', '錯誤', '操作失敗，請重試');
+            }
+        }
+
+        // 显示提示框
+        function showToast(type, title, message) {
+            const toast = document.getElementById('toast');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastIconInner = document.getElementById('toastIconInner');
+            const toastTitle = document.getElementById('toastTitle');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            // 设置图标和颜色
+            switch (type) {
+                case 'success':
+                    toastIcon.className = 'w-6 h-6 rounded-full bg-success flex items-center justify-center mr-3';
+                    toastIconInner.className = 'fa fa-check text-white';
+                    break;
+                case 'error':
+                    toastIcon.className = 'w-6 h-6 rounded-full bg-error flex items-center justify-center mr-3';
+                    toastIconInner.className = 'fa fa-times text-white';
+                    break;
+                case 'warning':
+                    toastIcon.className = 'w-6 h-6 rounded-full bg-warning flex items-center justify-center mr-3';
+                    toastIconInner.className = 'fa fa-exclamation text-white';
+                    break;
+                case 'info':
+                    toastIcon.className = 'w-6 h-6 rounded-full bg-primary flex items-center justify-center mr-3';
+                    toastIconInner.className = 'fa fa-info text-white';
+                    break;
+            }
+            
+            // 设置标题和消息
+            toastTitle.textContent = title;
+            toastMessage.textContent = message;
+            
+            // 显示提示框
+            toast.classList.remove('translate-x-full');
+            
+            // 3秒后自动隐藏
+            setTimeout(hideToast, 3000);
+        }
+
+        // 隐藏提示框
+        function hideToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('translate-x-full');
+        }
+    </script>
+</body>
+</html>
