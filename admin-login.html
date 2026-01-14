@@ -17,10 +17,11 @@
         <h1>管理員登入</h1>
         <input id="admin-username" type="text" placeholder="管理員帳號" value="admin">
         <input id="admin-password" type="password" placeholder="管理員密碼" value="admin123">
-        <!-- 重點：按鈕呼叫 adminLogin() 函數 -->
+        <!-- 綁定正確的管理員登入函數 -->
         <button onclick="adminLogin()">登入管理後台</button>
     </div>
 
+    <!-- 嚴格按順序加載JS，確保函數能被找到 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/database.js"></script>
