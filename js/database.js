@@ -10,45 +10,32 @@ class DatabaseManager {
         try {
             console.log('=== 开始初始化数据库管理器 ===');
             
-            // 直接使用全局 createClient 函数创建新的客户端
-            if (typeof createClient === 'function') {
-                console.log('✓ 找到全局 createClient 函数');
-                console.log('✓ 正在创建新的 Supabase 客户端...');
-                console.log('✓ 数据库 URL:', window.AppConfig.supabase.url);
-                console.log('✓ 数据库 Key:', '***' + window.AppConfig.supabase.key.slice(-8));
+            // 直接使用全局 supabase 实例
+            if (typeof window.supabase !== 'undefined' && window.supabase) {
+                console.log('✓ 找到全局 supabase 实例');
+                console.log('✓ 全局 supabase 类型:', typeof window.supabase);
                 
-                try {
-                    this.supabase = createClient(
-                        window.AppConfig.supabase.url,
-                        window.AppConfig.supabase.key
-                    );
+                this.supabase = window.supabase;
+                
+                if (this.supabase && typeof this.supabase === 'object') {
+                    const clientKeys = Object.keys(this.supabase);
+                    console.log('✓ 客户端方法/属性数量:', clientKeys.length);
+                    console.log('✓ 客户端方法/属性:', clientKeys.join(', '));
                     
-                    console.log('✓ Supabase 客户端创建成功');
-                    console.log('✓ 客户端类型:', typeof this.supabase);
-                    
-                    if (this.supabase && typeof this.supabase === 'object') {
-                        const clientKeys = Object.keys(this.supabase);
-                        console.log('✓ 客户端方法/属性数量:', clientKeys.length);
-                        console.log('✓ 客户端方法/属性:', clientKeys.join(', '));
-                        
-                        if (typeof this.supabase.from === 'function') {
-                            console.log('✓ from 方法存在且类型正确:', typeof this.supabase.from);
-                            console.log('✓ 数据库管理器初始化成功');
-                        } else {
-                            console.error('✗ from 方法不存在或类型错误:', typeof this.supabase.from);
-                            console.error('✗ 数据库管理器初始化失败：客户端不完整');
-                        }
+                    if (typeof this.supabase.from === 'function') {
+                        console.log('✓ from 方法存在且类型正确:', typeof this.supabase.from);
+                        console.log('✓ 数据库管理器初始化成功');
                     } else {
-                        console.error('✗ 创建的客户端不是有效对象');
+                        console.error('✗ from 方法不存在或类型错误:', typeof this.supabase.from);
+                        console.error('✗ 数据库管理器初始化失败：客户端不完整');
                     }
-                } catch (createError) {
-                    console.error('✗ 创建 Supabase 客户端时发生异常:', createError);
-                    console.error('✗ 异常详情:', createError.message);
+                } else {
+                    console.error('✗ 全局 supabase 不是有效对象');
                 }
             } else {
-                console.error('✗ 未找到 createClient 函数');
-                console.error('✗ window.createClient 存在:', typeof window.createClient !== 'undefined');
-                console.error('✗ global.createClient 存在:', typeof global.createClient !== 'undefined');
+                console.error('✗ 未找到全局 supabase 实例');
+                console.error('✗ window.supabase 存在:', typeof window.supabase !== 'undefined');
+                console.error('✗ window.supabase 值:', window.supabase);
             }
             
             console.log('=== 数据库管理器初始化完成 ===');
@@ -564,6 +551,213 @@ class DatabaseManager {
         } catch (error) {
             console.error('导出数据失败:', error);
             return null;
+        }
+    }
+    
+    // 初始化数据库
+    async initializeDatabase() {
+        try {
+            console.log('=== 开始初始化数据库 ===');
+            
+            if (!this.supabase) {
+                console.error('✗ 数据库客户端未初始化');
+                throw new Error('数据库客户端未初始化');
+            }
+            
+            // 检查数据库连接状态
+            if (typeof this.supabase.from === 'function') {
+                console.log('✓ 数据库连接正常');
+                console.log('✓ 数据库初始化成功');
+                return true;
+            } else {
+                console.error('✗ 数据库连接异常：from 方法不可用');
+                throw new Error('数据库连接异常');
+            }
+        } catch (error) {
+            console.error('✗ 数据库初始化失败:', error);
+            throw error;
+        }
+    }
+
+    // 批量导入用户
+    async batchImportUsers(usersData) {
+        try {
+            console.log(`=== 开始批量导入用户，共 ${usersData.length} 条记录 ===`);
+            
+            if (!this.supabase) {
+                throw new Error('数据库客户端未初始化');
+            }
+
+            const { data, error } = await this.supabase
+                .from('users')
+                .insert(usersData);
+
+            if (error) {
+                console.error('✗ 批量导入用户失败:', error);
+                throw error;
+            }
+
+            console.log(`✓ 批量导入用户成功，导入 ${data.length} 条记录`);
+            return data;
+        } catch (error) {
+            console.error('✗ 批量导入用户时发生异常:', error);
+            throw error;
+        }
+    }
+
+    // 批量导入游戏
+    async batchImportGames(gamesData) {
+        try {
+            console.log(`=== 开始批量导入游戏，共 ${gamesData.length} 条记录 ===`);
+            
+            if (!this.supabase) {
+                throw new Error('数据库客户端未初始化');
+            }
+
+            const { data, error } = await this.supabase
+                .from('games')
+                .insert(gamesData);
+
+            if (error) {
+                console.error('✗ 批量导入游戏失败:', error);
+                throw error;
+            }
+
+            console.log(`✓ 批量导入游戏成功，导入 ${data.length} 条记录`);
+            return data;
+        } catch (error) {
+            console.error('✗ 批量导入游戏时发生异常:', error);
+            throw error;
+        }
+    }
+
+    // 修改用户
+    async updateUser(userId, updateData) {
+        try {
+            console.log(`=== 开始修改用户: ${userId} ===`);
+            
+            if (!this.supabase) {
+                throw new Error('数据库客户端未初始化');
+            }
+
+            const { data, error } = await this.supabase
+                .from('users')
+                .update(updateData)
+                .eq('id', userId)
+                .single();
+
+            if (error) {
+                console.error('✗ 修改用户失败:', error);
+                throw error;
+            }
+
+            console.log(`✓ 修改用户成功: ${userId}`);
+            return data;
+        } catch (error) {
+            console.error('✗ 修改用户时发生异常:', error);
+            throw error;
+        }
+    }
+
+    // 删除用户
+    async deleteUser(userId) {
+        try {
+            console.log(`=== 开始删除用户: ${userId} ===`);
+            
+            if (!this.supabase) {
+                throw new Error('数据库客户端未初始化');
+            }
+
+            // 先删除相关的游戏记录
+            await this.supabase
+                .from('game_records')
+                .delete()
+                .eq('user_id', userId);
+
+            const { data, error } = await this.supabase
+                .from('users')
+                .delete()
+                .eq('id', userId)
+                .single();
+
+            if (error) {
+                console.error('✗ 删除用户失败:', error);
+                throw error;
+            }
+
+            console.log(`✓ 删除用户成功: ${userId}`);
+            return data;
+        } catch (error) {
+            console.error('✗ 删除用户时发生异常:', error);
+            throw error;
+        }
+    }
+
+    // 修改游戏
+    async updateGame(gameId, updateData) {
+        try {
+            console.log(`=== 开始修改游戏: ${gameId} ===`);
+            
+            if (!this.supabase) {
+                throw new Error('数据库客户端未初始化');
+            }
+
+            const { data, error } = await this.supabase
+                .from('games')
+                .update(updateData)
+                .eq('id', gameId)
+                .single();
+
+            if (error) {
+                console.error('✗ 修改游戏失败:', error);
+                throw error;
+            }
+
+            console.log(`✓ 修改游戏成功: ${gameId}`);
+            return data;
+        } catch (error) {
+            console.error('✗ 修改游戏时发生异常:', error);
+            throw error;
+        }
+    }
+
+    // 删除游戏
+    async deleteGame(gameId) {
+        try {
+            console.log(`=== 开始删除游戏: ${gameId} ===`);
+            
+            if (!this.supabase) {
+                throw new Error('数据库客户端未初始化');
+            }
+
+            // 先删除相关的游戏记录
+            await this.supabase
+                .from('game_records')
+                .delete()
+                .eq('game_id', gameId);
+
+            // 删除游戏统计
+            await this.supabase
+                .from('game_statistics')
+                .delete()
+                .eq('game_id', gameId);
+
+            const { data, error } = await this.supabase
+                .from('games')
+                .delete()
+                .eq('id', gameId)
+                .single();
+
+            if (error) {
+                console.error('✗ 删除游戏失败:', error);
+                throw error;
+            }
+
+            console.log(`✓ 删除游戏成功: ${gameId}`);
+            return data;
+        } catch (error) {
+            console.error('✗ 删除游戏时发生异常:', error);
+            throw error;
         }
     }
 }
