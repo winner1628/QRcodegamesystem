@@ -6,22 +6,28 @@
     <title>QR碼遊戲系統 - 主頁</title>
     <style>
         body { font-family: 'Microsoft JhengHei', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .scanner { border: 2px dashed #ccc; padding: 20px; text-align: center; margin: 20px 0; }
-        #camera { width: 100%; max-height: 400px; display: none; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .scanner { border: 2px dashed #ccc; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px; }
+        #camera { width: 100%; max-height: 400px; display: none; border-radius: 4px; margin: 10px 0; }
+        #result { margin-top: 15px; font-size: 16px; color: #2563eb; }
+        .btn-scan { background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+        .btn-logout { background: #dc2626; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>QR碼遊戲系統</h1>
-        <button onclick="logout()">登出</button>
+        <div>
+            <span id="user-name">歡迎，${window.currentUser?.username || '用戶'}</span>
+            <button class="btn-logout" onclick="logout()">登出</button>
+        </div>
     </div>
 
     <div class="scanner">
         <h2>掃描遊戲QR碼</h2>
-        <button onclick="startScan()">開啟掃描器</button>
+        <button class="btn-scan" onclick="startScan()">開啟掃描器</button>
         <video id="camera" autoplay playsinline></video>
-        <div id="result" style="margin-top: 20px;"></div>
+        <div id="result"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -30,20 +36,94 @@
     <script src="js/database.js"></script>
     <script src="js/auth.js"></script>
     <script>
-        // 頁面加載時驗證是否登入
-        window.onload = checkLogin;
+        // 頁面加載時驗證登入狀態（兼容localStorage）
+        window.onload = function() {
+            if (!checkLogin()) return;
+            // 顯示當前登入用戶名
+            document.getElementById('user-name').textContent = `歡迎，${window.currentUser.username}`;
+        };
 
-        // QR掃描功能（不影響登入，保留即可）
+        // QR碼掃描功能
         let cameraActive = false;
         const camera = document.getElementById('camera');
+        const resultDiv = document.getElementById('result');
+
         async function startScan() {
-            if (cameraActive) return;
+            if (cameraActive) {
+                stopScan();
+                return;
+            }
+
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                // 請求相機權限
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "environment" } // 優先後置鏡頭
+                });
                 camera.srcObject = stream;
                 camera.style.display = 'block';
                 cameraActive = true;
-            } catch (e) { alert(`無法開啟相機：${e.message}`); }
+                resultDiv.textContent = "正在掃描QR碼...";
+                // 開始掃描迴圈
+                scanLoop();
+            } catch (e) {
+                alert(`無法開啟相機：${e.message}\n請確保網頁使用HTTPS，且已授予相機權限`);
+                resultDiv.textContent = "相機開啟失敗";
+            }
+        }
+
+        function stopScan() {
+            if (!cameraActive) return;
+            // 停止相機流
+            camera.srcObject.getTracks().forEach(track => track.stop());
+            camera.style.display = 'none';
+            cameraActive = false;
+            resultDiv.textContent = "掃描器已關閉";
+        }
+
+        async function scanLoop() {
+            if (!cameraActive) return;
+
+            // 建立畫布捕捉畫面
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = camera.videoWidth;
+            canvas.height = camera.videoHeight;
+            ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
+            
+            // 解析QR碼
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, canvas.width, canvas.height);
+
+            if (code) {
+                resultDiv.textContent = `掃描結果：${code.data}`;
+                // 解析QR碼格式（GAME:代碼:分數）
+                const match = code.data.match(/^GAME:([A-Z0-9]+):(\d+)$/);
+                if (match) {
+                    const [, gameCode, score] = match;
+                    // 查詢對應遊戲
+                    const games = await window.dbManager.getAllGames();
+                    const game = games.find(g => g.game_code === gameCode);
+                    if (game) {
+                        // 保存遊戲紀錄
+                        await window.dbManager.client
+                            .from('game_records')
+                            .insert([{
+                                user_id: window.currentUser.id,
+                                game_id: game.id,
+                                score: parseInt(score)
+                            }]);
+                        alert(`✅ 掃描成功！\n遊戲：${game.game_name}\n分數：${score}`);
+                    } else {
+                        alert("❌ 掃描的遊戲不存在！");
+                    }
+                } else {
+                    alert("❌ 無效的QR碼格式！請掃描 GAME:代碼:分數 格式的QR碼");
+                }
+                stopScan(); // 掃描成功後停止
+            } else {
+                // 繼續掃描
+                requestAnimationFrame(scanLoop);
+            }
         }
     </script>
 </body>
