@@ -26,11 +26,11 @@
             <label>密碼</label>
             <input id="password" type="password" placeholder="請輸入密碼" value="testpass123">
         </div>
-        <!-- 重點：按鈕呼叫 userLogin() 函數 -->
+        <!-- 按鈕只負責觸發登入，不提前驗證 -->
         <button onclick="userLogin()">登入</button>
     </div>
 
-    <!-- 加載順序不可改變 -->
+    <!-- 嚴格按順序加載JS，先載SDK → 配置 → 資料庫 → 登入邏輯 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/database.js"></script>
