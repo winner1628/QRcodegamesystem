@@ -59,7 +59,7 @@ async function userLoginByUsername() {
         saveUserToStorage(data);
         
         alert(`✅ 登入成功！歡迎你，${data.username}！`);
-        window.location.href = "index.html";
+        window.location.href = "scan.html";
 
     } catch (err) {
         alert(`❌ 登入異常：${err.message}`);
