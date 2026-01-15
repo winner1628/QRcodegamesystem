@@ -7,15 +7,15 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Microsoft JhengHei', sans-serif; background: #f8fafc; color: #334155; }
-        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 2px solid #e2e8f0; margin-bottom: 30px; }
         .logo { font-size: 24px; font-weight: bold; color: #dc2626; }
         .btn-logout { padding: 8px 16px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; }
         .btn-logout:hover { background: #b91c1c; }
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab-btn { padding: 10px 20px; background: #e2e8f0; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
         .tab-btn.active { background: #dc2626; color: white; }
-        .tab-content { display: none; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .tab-content { display: none; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .tab-content.active { display: block; }
         .add-form { display: grid; gap: 15px; max-width: 500px; margin-bottom: 30px; }
         .form-group { display: flex; flex-direction: column; gap: 5px; }
@@ -26,27 +26,59 @@
         .data-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
         .data-table th { background: #f1f5f9; font-weight: 600; }
+        .data-table tr:hover { background: #f8fafc; }
         .msg-box { padding: 10px; border-radius: 4px; margin-bottom: 20px; display: none; }
         .success-msg { background: #f0fdf4; color: #16a34a; }
         .error-msg { background: #fef2f2; color: #dc2626; }
         .loading { text-align: center; padding: 20px; color: #64748b; }
+        .stats-card { background: #f1f5f9; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 20px; flex-wrap: wrap; }
+        .stat-item { flex: 1; min-width: 200px; background: white; padding: 15px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .stat-item h3 { font-size: 16px; color: #64748b; margin-bottom: 10px; }
+        .stat-item .value { font-size: 24px; font-weight: bold; color: #dc2626; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <div class="logo">管理員後台</div>
-            <button class="btn-logout" onclick="logout()">登出</button>
+            <button class="btn-logout" onclick="adminLogout()">登出</button>
         </div>
 
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('games')">遊戲管理</button>
+            <button class="tab-btn active" onclick="switchTab('user-scores')">用戶最高分統計</button>
+            <button class="tab-btn" onclick="switchTab('games')">遊戲管理</button>
             <button class="tab-btn" onclick="switchTab('users')">用戶管理</button>
             <button class="tab-btn" onclick="switchTab('records')">遊戲紀錄</button>
         </div>
 
+        <!-- 用戶最高分統計標籤 (新增) -->
+        <div id="user-scores" class="tab-content active">
+            <h2>用戶最高分統計</h2>
+            <div class="stats-card">
+                <div class="stat-item">
+                    <h3>總註冊用戶數</h3>
+                    <div id="total-users" class="value">0</div>
+                </div>
+                <div class="stat-item">
+                    <h3>總遊戲數</h3>
+                    <div id="total-games" class="value">0</div>
+                </div>
+                <div class="stat-item">
+                    <h3>總遊戲紀錄數</h3>
+                    <div id="total-records" class="value">0</div>
+                </div>
+                <div class="stat-item">
+                    <h3>全站最高分</h3>
+                    <div id="highest-score" class="value">0</div>
+                </div>
+            </div>
+
+            <div id="score-msg" class="msg-box"></div>
+            <div id="user-scores-list" class="loading">加載用戶最高分數據中...</div>
+        </div>
+
         <!-- 遊戲管理標籤 -->
-        <div id="games" class="tab-content active">
+        <div id="games" class="tab-content">
             <h2>新增遊戲</h2>
             <div class="add-form">
                 <div class="form-group">
@@ -98,9 +130,18 @@
             // 手動初始化資料庫 (只在控制台輸出，不彈窗)
             await window.dbManager.init();
             
-            // 加載初始數據
-            loadGamesList();
+            // 加載初始數據 (優先加載用戶最高分)
+            loadDashboardStats();
+            loadUserScoresList();
         };
+
+        // 管理員專用登出函數 (返回管理員登入頁)
+        function adminLogout() {
+            localStorage.removeItem('qrGameUser');
+            window.currentUser = null;
+            alert("✅ 管理員已成功登出！");
+            window.location.href = "admin-login.html"; // 改為返回管理員登入頁
+        }
 
         // 切換標籤
         function switchTab(tabId) {
@@ -113,11 +154,17 @@
             document.getElementById(tabId).classList.add('active');
             
             // 加載對應數據
+            if (tabId === 'games' && document.getElementById('games-list').classList.contains('loading')) {
+                loadGamesList();
+            }
             if (tabId === 'users' && document.getElementById('users-list').classList.contains('loading')) {
                 loadUsersList();
             }
             if (tabId === 'records' && document.getElementById('records-list').classList.contains('loading')) {
                 loadRecordsList();
+            }
+            if (tabId === 'user-scores' && document.getElementById('user-scores-list').classList.contains('loading')) {
+                loadUserScoresList();
             }
         }
 
@@ -132,6 +179,135 @@
             setTimeout(() => {
                 msgBox.style.display = 'none';
             }, 3000);
+        }
+
+        // 加載儀表板統計數據 (新增)
+        async function loadDashboardStats() {
+            try {
+                const initOk = await window.dbManager.init();
+                if (!initOk) {
+                    showMessage('score-msg', '❌ 無法加載統計數據：資料庫連接失敗', false);
+                    return;
+                }
+
+                // 1. 獲取總用戶數
+                const { data: usersData, error: usersError } = await window.dbManager.client
+                    .from('users')
+                    .select('count', { count: 'exact', head: true });
+                
+                if (!usersError) {
+                    document.getElementById('total-users').textContent = usersData || 0;
+                }
+
+                // 2. 獲取總遊戲數
+                const { data: gamesData, error: gamesError } = await window.dbManager.client
+                    .from('games')
+                    .select('count', { count: 'exact', head: true });
+                
+                if (!gamesError) {
+                    document.getElementById('total-games').textContent = gamesData || 0;
+                }
+
+                // 3. 獲取總紀錄數
+                const { data: recordsData, error: recordsError } = await window.dbManager.client
+                    .from('game_records')
+                    .select('count', { count: 'exact', head: true });
+                
+                if (!recordsError) {
+                    document.getElementById('total-records').textContent = recordsData || 0;
+                }
+
+                // 4. 獲取全站最高分
+                const { data: highestData, error: highestError } = await window.dbManager.client
+                    .from('game_records')
+                    .select('score', { order: { score: 'desc' }, limit: 1, head: true });
+                
+                if (!highestError && highestData) {
+                    document.getElementById('highest-score').textContent = highestData.score || 0;
+                }
+
+            } catch (err) {
+                console.error("Load Dashboard Stats Error:", err);
+            }
+        }
+
+        // 加載用戶最高分列表 (新增核心功能)
+        async function loadUserScoresList() {
+            const scoresList = document.getElementById('user-scores-list');
+            
+            try {
+                const initOk = await window.dbManager.init();
+                if (!initOk) {
+                    scoresList.innerHTML = '<div class="error-msg" style="display:block">❌ 無法加載數據：資料庫連接失敗</div>';
+                    return;
+                }
+
+                // 查詢每個用戶的最高分（按用戶分組，取最高分）
+                const { data, error } = await window.dbManager.client
+                    .from('game_records')
+                    .select(`
+                        max(score) as highest_score,
+                        users!inner(id, username),
+                        games!inner(game_name, game_code)
+                    `)
+                    .order('highest_score', { ascending: false });
+
+                if (error) throw new Error(error.message);
+
+                if (data.length === 0) {
+                    scoresList.innerHTML = '<div class="loading">暫無用戶分數數據</div>';
+                    return;
+                }
+
+                // 去重處理 (每個用戶只顯示一條最高分記錄)
+                const userScoresMap = new Map();
+                data.forEach(item => {
+                    const userId = item.users.id;
+                    if (!userScoresMap.has(userId) || item.highest_score > userScoresMap.get(userId).highest_score) {
+                        userScoresMap.set(userId, item);
+                    }
+                });
+
+                const uniqueUserScores = Array.from(userScoresMap.values());
+
+                // 生成表格
+                let tableHTML = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>用戶名</th>
+                                <th>最高分數</th>
+                                <th>獲取最高分遊戲</th>
+                                <th>遊戲代碼</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                uniqueUserScores.forEach((item, index) => {
+                    tableHTML += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${item.users.username}</td>
+                            <td>${item.highest_score}</td>
+                            <td>${item.games.game_name}</td>
+                            <td>${item.games.game_code}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHTML += `
+                        </tbody>
+                    </table>
+                `;
+
+                scoresList.innerHTML = tableHTML;
+
+            } catch (err) {
+                scoresList.innerHTML = `<div class="error-msg" style="display:block">❌ 加載失敗：${err.message}</div>`;
+                console.error("Load User Scores Error:", err);
+            }
         }
 
         // 新增遊戲
@@ -181,6 +357,8 @@
                 
                 // 重新加載列表
                 loadGamesList();
+                // 更新儀表板統計
+                loadDashboardStats();
 
             } catch (err) {
                 showMessage('game-msg', `❌ 新增失敗：${err.message}`, false);
