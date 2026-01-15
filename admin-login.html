@@ -1,76 +1,176 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理員登入 - QR碼遊戲系統</title>
-    <style>
-        body { font-family: 'Microsoft JhengHei', sans-serif; max-width: 400px; margin: 50px auto; padding: 20px; background: #f5f5f5; }
-        .login-box { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #333; margin-bottom: 25px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; color: #555; }
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
-        button { width: 100%; padding: 12px; background: #dc2626; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
-        button:hover { background: #b91c1c; }
-        .error-msg { color: #dc2626; text-align: center; margin-top: 10px; padding: 8px; border-radius: 4px; background: #fef2f2; display: none; }
-    </style>
-</head>
-<body>
-    <div class="login-box">
-        <h1>管理員後台登入</h1>
-        
-        <div class="form-group">
-            <label>管理員帳號</label>
-            <input id="admin-username" type="text" placeholder="請輸入管理員帳號" value="">
-        </div>
-        
-        <div class="form-group">
-            <label>管理員密碼</label>
-            <input id="admin-password" type="password" placeholder="請輸入管理員密碼">
-        </div>
-        
-        <button onclick="adminLogin()">登入後台</button>
-        <div id="error-msg" class="error-msg"></div>
-    </div>
+// --------------------------
+// Core: User State Management
+// --------------------------
+function saveUserToStorage(user) {
+    user.table = user.table || (user.username === "admin" ? "admins" : "users");
+    localStorage.setItem('qrGameUser', JSON.stringify(user));
+}
 
-    <!-- JS加載：只在點擊登入後才初始化 -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/config.js"></script>
-    <script src="js/auth.js"></script>
-    <script>
-        // 管理員登入函數（手動觸發初始化）
-        async function adminLogin() {
-            const username = document.getElementById('admin-username').value.trim();
-            const password = document.getElementById('admin-password').value.trim();
-            const errorMsg = document.getElementById('error-msg');
-            
-            // 清空錯誤提示
-            errorMsg.style.display = 'none';
-            
-            // 表單驗證
-            if (!username || !password) {
-                errorMsg.textContent = "❌ 請輸入完整的帳號和密碼！";
-                errorMsg.style.display = 'block';
-                return;
-            }
-            
-            // 手動初始化資料庫（失敗才提示）
-            const initOk = await window.dbManager.init();
-            if (!initOk) {
-                errorMsg.textContent = "❌ 資料庫連接失敗，請檢查配置！";
-                errorMsg.style.display = 'block';
-                return;
-            }
-            
-            // 調用auth.js中的adminLogin函數
-            try {
-                await window.adminLogin(); // 調用全域函數
-            } catch (err) {
-                errorMsg.textContent = `❌ 登入失敗：${err.message}`;
-                errorMsg.style.display = 'block';
-            }
+function getUserFromStorage() {
+    const userStr = localStorage.getItem('qrGameUser');
+    return userStr ? JSON.parse(userStr) : null;
+}
+
+window.currentUser = getUserFromStorage();
+
+// --------------------------
+// 1. User Login (Username Only)
+// --------------------------
+async function userLoginByUsername() {
+    const username = document.getElementById('username').value.trim();
+
+    if (!username) {
+        alert("❌ 請輸入用戶名！");
+        return;
+    }
+
+    // Initialize database
+    const initOk = await window.dbManager.init();
+    if (!initOk) {
+        alert("❌ 無法連接資料庫，請稍後再試！");
+        return;
+    }
+
+    try {
+        const { data, error } = await window.dbManager.client
+            .from('users')
+            .select('*')
+            .eq('username', username)
+            .single();
+
+        if (error) {
+            let errorMsg = `❌ 登入失敗：${error.message}`;
+            if (error.code === 'PGRST116') errorMsg += "\n提示：該用戶名不存在！測試用戶名：testuser1";
+            alert(errorMsg);
+            return;
         }
-    </script>
-</body>
-</html>
+        
+        if (!data) {
+            alert("❌ 查無此用戶！測試用戶名：testuser1");
+            return;
+        }
+
+        saveUserToStorage(data);
+        window.currentUser = data;
+        
+        alert(`✅ 登入成功！歡迎你，${data.username}！`);
+        window.location.href = "scan.html";
+
+    } catch (err) {
+        alert(`❌ 登入異常：${err.message}`);
+        console.error("User Login Error：", err);
+    }
+}
+
+// --------------------------
+// 2. Admin Login (Dedicated Function with Parameters)
+// --------------------------
+window.adminLoginProcess = async function(username, password) {
+    try {
+        // Direct database query (no DOM dependency)
+        const { data, error } = await window.dbManager.client
+            .from('admins')
+            .select('*')
+            .eq('username', username)
+            .eq('password', password)
+            .single();
+
+        // Handle database errors
+        if (error) {
+            if (error.code === 'PGRST116') {
+                throw new Error("帳號或密碼錯誤！測試帳號：admin / 密碼：admin123");
+            }
+            throw new Error(`資料庫錯誤：${error.message}`);
+        }
+        
+        // Validate admin user
+        if (!data) {
+            throw new Error("查無此管理員帳號！");
+        }
+        
+        if (data.username !== "admin") {
+            throw new Error("非管理員帳號，無法登入後台！");
+        }
+
+        // Save user to local storage
+        saveUserToStorage(data);
+        window.currentUser = data;
+        
+        return true; // Return success
+
+    } catch (err) {
+        console.error("Admin Login Process Error：", err);
+        throw err; // Re-throw error to handler
+    }
+};
+
+// --------------------------
+// 3. Logout Function
+// --------------------------
+function logout() {
+    localStorage.removeItem('qrGameUser');
+    window.currentUser = null;
+    alert("✅ 已成功登出！");
+    window.location.href = "user-login.html";
+}
+
+// --------------------------
+// 4. Login Validation
+// --------------------------
+function checkLogin() {
+    window.currentUser = getUserFromStorage();
+    
+    if (!window.currentUser) {
+        setTimeout(() => {
+            window.location.href = "user-login.html";
+        }, 300);
+        return false;
+    }
+    return true;
+}
+
+// --------------------------
+// 5. Admin Permission Validation
+// --------------------------
+function checkAdmin() {
+    if (!checkLogin()) return false;
+    
+    if (window.currentUser.table !== "admins") {
+        alert("❌ 僅管理員可存取此頁面！");
+        window.location.href = "index.html";
+        return false;
+    }
+    return true;
+}
+
+// --------------------------
+// 6. Get User Game Records
+// --------------------------
+async function getUserGameRecords() {
+    try {
+        const initOk = await window.dbManager.init();
+        if (!initOk) return [];
+
+        const { data, error } = await window.dbManager.client
+            .from('game_records')
+            .select(`
+                *,
+                games(game_name, game_code)
+            `)
+            .eq('user_id', window.currentUser.id)
+            .order('scanned_at', { ascending: false });
+
+        if (error) throw new Error(error.message);
+        return data || [];
+    } catch (err) {
+        console.error("Get User Records Error:", err);
+        return [];
+    }
+}
+
+// --------------------------
+// 7. Calculate Total Score
+// --------------------------
+function calculateTotalScore(records) {
+    return records.reduce((total, record) => total + record.score, 0);
+}
