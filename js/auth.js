@@ -24,7 +24,7 @@ async function userLoginByUsername() {
         return;
     }
 
-    // 手動初始化資料庫
+    // Initialize database
     const initOk = await window.dbManager.init();
     if (!initOk) {
         alert("❌ 無法連接資料庫，請稍後再試！");
@@ -63,17 +63,11 @@ async function userLoginByUsername() {
 }
 
 // --------------------------
-// 2. Admin Login (全域函數)
+// 2. Admin Login (Dedicated Function with Parameters)
 // --------------------------
-window.adminLogin = async function() {
-    const username = document.getElementById('admin-username').value.trim();
-    const password = document.getElementById('admin-password').value.trim();
-
-    if (!username || !password) {
-        throw new Error("請輸入完整的管理員帳號和密碼！");
-    }
-
+window.adminLoginProcess = async function(username, password) {
     try {
+        // Direct database query (no DOM dependency)
         const { data, error } = await window.dbManager.client
             .from('admins')
             .select('*')
@@ -81,25 +75,32 @@ window.adminLogin = async function() {
             .eq('password', password)
             .single();
 
+        // Handle database errors
         if (error) {
-            let errorMsg = error.message;
-            if (error.code === 'PGRST116') errorMsg = "帳號或密碼錯誤！測試帳號：admin / 密碼：admin123";
-            throw new Error(errorMsg);
+            if (error.code === 'PGRST116') {
+                throw new Error("帳號或密碼錯誤！測試帳號：admin / 密碼：admin123");
+            }
+            throw new Error(`資料庫錯誤：${error.message}`);
         }
         
-        if (!data || data.username !== "admin") {
+        // Validate admin user
+        if (!data) {
+            throw new Error("查無此管理員帳號！");
+        }
+        
+        if (data.username !== "admin") {
             throw new Error("非管理員帳號，無法登入後台！");
         }
 
+        // Save user to local storage
         saveUserToStorage(data);
         window.currentUser = data;
         
-        alert("✅ 管理員登入成功！");
-        window.location.href = "admin-management.html";
+        return true; // Return success
 
     } catch (err) {
-        console.error("Admin Login Error：", err);
-        throw err; // 拋出錯誤給調用方處理
+        console.error("Admin Login Process Error：", err);
+        throw err; // Re-throw error to handler
     }
 };
 
@@ -114,7 +115,7 @@ function logout() {
 }
 
 // --------------------------
-// 4. Login Validation (僅檢查狀態，不彈窗)
+// 4. Login Validation
 // --------------------------
 function checkLogin() {
     window.currentUser = getUserFromStorage();
