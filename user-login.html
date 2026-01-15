@@ -11,29 +11,93 @@
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; color: #555; }
         input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
-        button { width: 100%; padding: 12px; background: #2563eb; color: #fff; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+        button { width: 100%; padding: 12px; background: #2563eb; color: #fff; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; margin-bottom: 10px; }
         button:hover { background: #1d4ed8; }
+        .btn-scan { background: #16a34a; }
+        #camera { width: 100%; max-height: 300px; display: none; margin: 10px 0; }
+        .divider { text-align: center; margin: 15px 0; color: #999; }
     </style>
 </head>
 <body>
     <div class="login-box">
         <h1>QR碼遊戲系統 - 用戶登入</h1>
+        
+        <!-- 手動輸入用戶名 -->
         <div class="form-group">
             <label>用戶名</label>
             <input id="username" type="text" placeholder="請輸入用戶名" value="testuser1">
         </div>
-        <div class="form-group">
-            <label>密碼</label>
-            <input id="password" type="password" placeholder="請輸入密碼" value="testpass123">
-        </div>
-        <!-- 按鈕只負責觸發登入，不提前驗證 -->
-        <button onclick="userLogin()">登入</button>
+        <button onclick="userLoginByUsername()">手動登入</button>
+        
+        <div class="divider">—— 或掃QR碼登入 ——</div>
+        
+        <!-- QR掃描登入 -->
+        <button class="btn-scan" onclick="toggleScanner()">開啟QR掃描器</button>
+        <video id="camera" autoplay playsinline></video>
+        <div id="scan-result" style="text-align:center; margin-top:10px; color:#2563eb;"></div>
     </div>
 
-    <!-- 嚴格按順序加載JS，先載SDK → 配置 → 資料庫 → 登入邏輯 -->
+    <!-- 加載JS（順序不可改） -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script src="js/config.js"></script>
     <script src="js/database.js"></script>
     <script src="js/auth.js"></script>
+    <script>
+        let scannerActive = false;
+        const camera = document.getElementById('camera');
+        const scanResult = document.getElementById('scan-result');
+
+        // 切換QR掃描器
+        async function toggleScanner() {
+            if (scannerActive) {
+                // 關閉掃描器
+                camera.srcObject.getTracks().forEach(track => track.stop());
+                camera.style.display = 'none';
+                scannerActive = false;
+                scanResult.textContent = '';
+                return;
+            }
+
+            // 開啟掃描器
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "environment" }
+                });
+                camera.srcObject = stream;
+                camera.style.display = 'block';
+                scannerActive = true;
+                scanResult.textContent = '正在掃描QR碼...';
+                scanLoop();
+            } catch (e) {
+                alert(`無法開啟相機：${e.message}`);
+                scanResult.textContent = '相機開啟失敗';
+            }
+        }
+
+        // QR掃描迴圈（解析用戶名）
+        async function scanLoop() {
+            if (!scannerActive) return;
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = camera.videoWidth;
+            canvas.height = camera.videoHeight;
+            ctx.drawImage(camera, 0, 0);
+
+            const code = jsQR(ctx.getImageData(0,0,canvas.width,canvas.height).data, canvas.width, canvas.height);
+            if (code) {
+                const username = code.data.trim();
+                scanResult.textContent = `掃描到用戶名：${username}`;
+                // 自動填入用戶名並登入
+                document.getElementById('username').value = username;
+                userLoginByUsername();
+                // 關閉掃描器
+                toggleScanner();
+            } else {
+                requestAnimationFrame(scanLoop);
+            }
+        }
+    </script>
 </body>
 </html>
