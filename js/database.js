@@ -24,10 +24,13 @@ class DatabaseManager {
                 window.QRGameConfig.supabaseKey
             );
 
-            // 測試連接
-            const { error } = await this.client.from('users').select('*').limit(1);
-            if (error) {
-                throw new Error(`資料庫連接失敗：${error.message}\n請檢查：1.URL/Key 2.是否建立users表 3.Supabase網路權限`);
+            // 測試連接（同時檢查users和admins表）
+            const [userTest, adminTest] = await Promise.all([
+                this.client.from('users').select('*').limit(1),
+                this.client.from('admins').select('*').limit(1)
+            ]);
+            if (userTest.error || adminTest.error) {
+                throw new Error(`資料庫連接失敗：${userTest.error?.message || adminTest.error?.message}\n請檢查：1.URL/Key 2.是否建立users/admins表 3.Supabase網路權限`);
             }
 
             this.initialized = true;
@@ -41,12 +44,23 @@ class DatabaseManager {
         }
     }
 
-    // 管理員後台專用：獲取所有用戶
+    // 管理員後台專用：獲取所有普通用戶
     async getAllUsers() {
         if (!this.initialized) await this.init();
         const { data, error } = await this.client.from('users').select('*').order('created_at', { ascending: false });
         if (error) {
             alert(`❌ 加載用戶數據失敗：${error.message}`);
+            return [];
+        }
+        return data || [];
+    }
+
+    // 管理員後台專用：獲取所有管理員
+    async getAllAdmins() {
+        if (!this.initialized) await this.init();
+        const { data, error } = await this.client.from('admins').select('username, created_at').order('created_at', { ascending: false });
+        if (error) {
+            alert(`❌ 加載管理員數據失敗：${error.message}`);
             return [];
         }
         return data || [];
