@@ -43,7 +43,7 @@
     <div class="login-box">
         <h1>QR碼遊戲系統 - 用戶登入</h1>
         
-        <!-- Manual Login (No Default Username) -->
+        <!-- Manual Login -->
         <div class="form-group">
             <label>用戶名</label>
             <input id="username" type="text" placeholder="請輸入用戶名" value="">
@@ -58,11 +58,10 @@
         <div id="scan-result" class="info">請點擊按鈕開啟掃描器</div>
     </div>
 
-    <!-- Load JS in CORRECT ORDER (config.js FIRST) -->
+    <!-- JS加載順序：Supabase → config → 其他 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-    <script src="js/config.js"></script> <!-- Critical: Load config first -->
-    <script src="js/database.js"></script>
+    <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
     <script>
         let scannerActive = false;
@@ -70,27 +69,24 @@
         const camera = document.getElementById('camera');
         const scanResult = document.getElementById('scan-result');
 
+        // 更新掃描狀態
         function updateScanStatus(text, type = "info") {
             scanResult.textContent = text;
             scanResult.className = type;
         }
 
+        // 切換掃描器
         async function toggleScanner() {
-            // Pre-check database initialization
-            if (!window.dbManager) {
-                updateScanStatus("❌ 找不到資料庫配置！請檢查config.js", "error");
-                return;
-            }
-
-            const initOk = await window.dbManager.init();
-            if (!initOk) {
-                updateScanStatus("❌ 資料庫初始化失敗！請檢查Supabase配置", "error");
-                return;
-            }
-
             if (scannerActive) {
                 stopScanner();
                 updateScanStatus("掃描器已關閉", "info");
+                return;
+            }
+
+            // 初始化資料庫
+            const initOk = await window.dbManager.init();
+            if (!initOk) {
+                updateScanStatus("❌ 資料庫連接失敗，無法使用QR登入", "error");
                 return;
             }
 
@@ -112,32 +108,28 @@
 
             } catch (e) {
                 let errorMsg = "無法開啟相機：";
-                if (e.name === "NotAllowedError") {
-                    errorMsg += "請授予相機使用權限";
-                } else if (e.name === "NotFoundError") {
-                    errorMsg += "未檢測到相機設備";
-                } else if (e.message.includes("HTTPS")) {
-                    errorMsg += "請使用HTTPS協議打開頁面";
-                } else {
-                    errorMsg += e.message;
-                }
+                if (e.name === "NotAllowedError") errorMsg += "請授予相機使用權限";
+                else if (e.name === "NotFoundError") errorMsg += "未檢測到相機設備";
+                else if (e.message.includes("HTTPS")) errorMsg += "請使用HTTPS協議打開頁面";
+                else errorMsg += e.message;
+                
                 updateScanStatus(errorMsg, "error");
                 console.error("相機錯誤：", e);
             }
         }
 
+        // 停止掃描器
         function stopScanner() {
             scannerActive = false;
             if (camera.srcObject) {
                 camera.srcObject.getTracks().forEach(track => track.stop());
             }
             camera.style.display = 'none';
-            if (scanInterval) {
-                clearInterval(scanInterval);
-                scanInterval = null;
-            }
+            clearInterval(scanInterval);
+            scanInterval = null;
         }
 
+        // 掃描QR碼
         async function scanQRCode() {
             if (!scannerActive) return;
 
@@ -167,27 +159,20 @@
                     } else {
                         updateScanStatus(`QR碼內容無效：${qrContent}，請掃描僅包含用戶名的QR碼`, "error");
                     }
-                } else {
-                    if (scanResult.textContent.includes("相機已開啟")) {
-                        updateScanStatus("相機已開啟，請將QR碼對準鏡頭", "info");
-                    }
                 }
-
             } catch (err) {
                 updateScanStatus(`掃描出錯：${err.message}`, "error");
                 console.error("QR解析錯誤：", err);
             }
         }
 
-        // Check config on page load
+        // 頁面加載完成後初始化
         window.addEventListener('load', async () => {
-            if (!window.dbManager) {
-                alert("❌ 關鍵錯誤：找不到config.js文件！\n請確認js/config.js已創建且路徑正確");
-            } else {
-                await window.dbManager.init(); // Pre-initialize database
-            }
+            // 預先初始化資料庫（只在後台列印，不彈窗）
+            await window.dbManager.init();
         });
 
+        // 頁面關閉時停止掃描器
         window.addEventListener('beforeunload', stopScanner);
     </script>
 </body>
