@@ -2,7 +2,8 @@
 const supabaseUrl = "https://vphihqysgdhdnuszybib.supabase.co"; // 例如：https://xxxx.supabase.co
 const supabaseKey = "sb_publishable_yQ8Br7S-Zk2YdmhtD2dAyg_8Gho4wDS";   // 例如：eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
-// 全域變數初始化
+
+// 全域變數初始化（僅定義，不主動初始化）
 window.dbManager = {
     client: null,
     initialized: false,
@@ -29,13 +30,8 @@ window.dbManager = {
             return true;
         } catch (err) {
             console.error("❌ 資料庫初始化失敗：", err.message);
-            // 只在需要資料庫的頁面彈出提示，首頁不彈出
-            const currentPage = window.location.pathname.split('/').pop();
-            if (currentPage !== "index.html") {
-                alert(`❌ 資料庫初始化失敗：${err.message}`);
-            }
             this.initialized = false;
-            return false;
+            return false; // 只返回結果，不彈窗
         }
     }
 };
