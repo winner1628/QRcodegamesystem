@@ -58,10 +58,10 @@
         <div id="scan-result" class="info">請點擊按鈕開啟掃描器</div>
     </div>
 
-    <!-- Load JS -->
+    <!-- Load JS in CORRECT ORDER (config.js FIRST) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-    <script src="js/config.js"></script>
+    <script src="js/config.js"></script> <!-- Critical: Load config first -->
     <script src="js/database.js"></script>
     <script src="js/auth.js"></script>
     <script>
@@ -76,6 +76,18 @@
         }
 
         async function toggleScanner() {
+            // Pre-check database initialization
+            if (!window.dbManager) {
+                updateScanStatus("❌ 找不到資料庫配置！請檢查config.js", "error");
+                return;
+            }
+
+            const initOk = await window.dbManager.init();
+            if (!initOk) {
+                updateScanStatus("❌ 資料庫初始化失敗！請檢查Supabase配置", "error");
+                return;
+            }
+
             if (scannerActive) {
                 stopScanner();
                 updateScanStatus("掃描器已關閉", "info");
@@ -166,6 +178,15 @@
                 console.error("QR解析錯誤：", err);
             }
         }
+
+        // Check config on page load
+        window.addEventListener('load', async () => {
+            if (!window.dbManager) {
+                alert("❌ 關鍵錯誤：找不到config.js文件！\n請確認js/config.js已創建且路徑正確");
+            } else {
+                await window.dbManager.init(); // Pre-initialize database
+            }
+        });
 
         window.addEventListener('beforeunload', stopScanner);
     </script>
