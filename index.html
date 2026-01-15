@@ -25,7 +25,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- 頁頭（顯示用戶名 + 登出按鈕） -->
         <div class="header">
             <div class="logo">QR碼遊戲系統</div>
             <div class="user-info">
@@ -34,7 +33,6 @@
             </div>
         </div>
 
-        <!-- 系統介紹 -->
         <div class="intro">
             <h2>關於本系統</h2>
             <p>QR碼遊戲系統是一款專為遊戲場景設計的QR碼掃描記錄工具，支持用戶通過掃描遊戲QR碼快速記錄遊戲分數，管理員可後台查看所有用戶的遊戲紀錄。</p>
@@ -42,12 +40,11 @@
             <h2>系統功能</h2>
             <ul class="feature-list">
                 <li>✅ 用戶登入：支持手動輸入用戶名或掃描QR碼快速登入</li>
-                <li>✅ QR碼掃描：掃描遊戲QR碼（格式：GAME:代碼:分數）自動記錄分數</li>
+                <li>✅ QR碼掃描：掃描遊戲QR碼（格式：GAME001 或 GAME001:800）自動記錄分數</li>
+                <li>✅ 數據統計：實時查看個人遊戲總分和歷史紀錄</li>
                 <li>✅ 管理員後台：查看所有用戶、遊戲、遊戲紀錄，新增遊戲</li>
-                <li>✅ 數據持久化：所有紀錄存儲於Supabase資料庫，安全可靠</li>
             </ul>
 
-            <!-- 前往掃碼頁按鈕 -->
             <a href="scan.html" class="btn-scan-page">前往掃描遊戲QR碼</a>
         </div>
 
@@ -56,16 +53,13 @@
         </div>
     </div>
 
-    <!-- 加載JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/database.js"></script>
     <script src="js/auth.js"></script>
     <script>
-        // 頁面加載時驗證登入狀態
         window.onload = function() {
             if (!checkLogin()) return;
-            // 顯示當前登入用戶名
             document.getElementById('user-name').textContent = `歡迎，${window.currentUser.username}`;
         };
     </script>
