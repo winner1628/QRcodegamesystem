@@ -217,10 +217,13 @@
                     document.getElementById('total-records').textContent = recordsData || 0;
                 }
 
-                // 4. 獲取全站最高分
+                // 4. 獲取全站最高分 (修正查詢方式)
                 const { data: highestData, error: highestError } = await window.dbManager.client
                     .from('game_records')
-                    .select('score', { order: { score: 'desc' }, limit: 1, head: true });
+                    .select('score')
+                    .order('score', { ascending: false })
+                    .limit(1)
+                    .single();
                 
                 if (!highestError && highestData) {
                     document.getElementById('highest-score').textContent = highestData.score || 0;
@@ -231,7 +234,7 @@
             }
         }
 
-        // 加載用戶最高分列表 (新增核心功能)
+        // 加載用戶最高分列表 (核心修正：改用分兩步查詢)
         async function loadUserScoresList() {
             const scoresList = document.getElementById('user-scores-list');
             
@@ -242,33 +245,55 @@
                     return;
                 }
 
-                // 查詢每個用戶的最高分（按用戶分組，取最高分）
-                const { data, error } = await window.dbManager.client
-                    .from('game_records')
-                    .select(`
-                        max(score) as highest_score,
-                        users!inner(id, username),
-                        games!inner(game_name, game_code)
-                    `)
-                    .order('highest_score', { ascending: false });
-
-                if (error) throw new Error(error.message);
-
-                if (data.length === 0) {
-                    scoresList.innerHTML = '<div class="loading">暫無用戶分數數據</div>';
+                // Step 1: 獲取所有用戶列表
+                const { data: users, error: usersError } = await window.dbManager.client
+                    .from('users')
+                    .select('id, username');
+                
+                if (usersError) throw new Error(`獲取用戶列表失敗：${usersError.message}`);
+                
+                if (users.length === 0) {
+                    scoresList.innerHTML = '<div class="loading">暫無用戶數據</div>';
                     return;
                 }
 
-                // 去重處理 (每個用戶只顯示一條最高分記錄)
-                const userScoresMap = new Map();
-                data.forEach(item => {
-                    const userId = item.users.id;
-                    if (!userScoresMap.has(userId) || item.highest_score > userScoresMap.get(userId).highest_score) {
-                        userScoresMap.set(userId, item);
+                // Step 2: 逐個用戶查詢最高分記錄
+                const userScores = [];
+                for (const user of users) {
+                    // 查詢當前用戶的所有遊戲紀錄，按分數降序排列
+                    const { data: records, error: recordsError } = await window.dbManager.client
+                        .from('game_records')
+                        .select(`
+                            score,
+                            games(game_name, game_code)
+                        `)
+                        .eq('user_id', user.id)
+                        .order('score', { ascending: false })
+                        .limit(1)
+                        .single();
+                    
+                    if (!recordsError && records) {
+                        userScores.push({
+                            user_id: user.id,
+                            username: user.username,
+                            highest_score: records.score,
+                            game_name: records.games?.game_name || '未知遊戲',
+                            game_code: records.games?.game_code || '未知代碼'
+                        });
+                    } else if (recordsError && recordsError.code === 'PGRST116') {
+                        // 用戶無遊戲紀錄
+                        userScores.push({
+                            user_id: user.id,
+                            username: user.username,
+                            highest_score: 0,
+                            game_name: '無遊戲紀錄',
+                            game_code: '-'
+                        });
                     }
-                });
+                }
 
-                const uniqueUserScores = Array.from(userScoresMap.values());
+                // 按最高分降序排序
+                userScores.sort((a, b) => b.highest_score - a.highest_score);
 
                 // 生成表格
                 let tableHTML = `
@@ -285,14 +310,14 @@
                         <tbody>
                 `;
 
-                uniqueUserScores.forEach((item, index) => {
+                userScores.forEach((item, index) => {
                     tableHTML += `
                         <tr>
                             <td>${index + 1}</td>
-                            <td>${item.users.username}</td>
+                            <td>${item.username}</td>
                             <td>${item.highest_score}</td>
-                            <td>${item.games.game_name}</td>
-                            <td>${item.games.game_code}</td>
+                            <td>${item.game_name}</td>
+                            <td>${item.game_code}</td>
                         </tr>
                     `;
                 });
@@ -359,6 +384,7 @@
                 loadGamesList();
                 // 更新儀表板統計
                 loadDashboardStats();
+                loadUserScoresList();
 
             } catch (err) {
                 showMessage('game-msg', `❌ 新增失敗：${err.message}`, false);
