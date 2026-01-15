@@ -14,8 +14,28 @@
         button { width: 100%; padding: 12px; background: #2563eb; color: #fff; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; margin-bottom: 10px; }
         button:hover { background: #1d4ed8; }
         .btn-scan { background: #16a34a; }
-        #camera { width: 100%; max-height: 300px; display: none; margin: 10px 0; }
-        .divider { text-align: center; margin: 15px 0; color: #999; }
+        #camera { width: 100%; max-height: 300px; display: none; margin: 10px 0; border: 1px solid #eee; border-radius: 4px; }
+        #scan-result { 
+            text-align:center; 
+            margin-top:10px; 
+            padding: 8px; 
+            border-radius: 4px;
+            min-height: 20px;
+        }
+        .divider { text-align: center; margin: 15px 0; color: #999; position: relative; }
+        .divider::before, .divider::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background: #eee;
+        }
+        .divider::before { left: 0; }
+        .divider::after { right: 0; }
+        .success { color: #16a34a; background: #f0fdf4; }
+        .error { color: #dc2626; background: #fef2f2; }
+        .info { color: #2563eb; background: #eff6ff; }
     </style>
 </head>
 <body>
@@ -34,7 +54,7 @@
         <!-- QR掃描登入 -->
         <button class="btn-scan" onclick="toggleScanner()">開啟QR掃描器</button>
         <video id="camera" autoplay playsinline></video>
-        <div id="scan-result" style="text-align:center; margin-top:10px; color:#2563eb;"></div>
+        <div id="scan-result" class="info">請點擊按鈕開啟掃描器</div>
     </div>
 
     <!-- 加載JS（順序不可改） -->
@@ -45,59 +65,131 @@
     <script src="js/auth.js"></script>
     <script>
         let scannerActive = false;
+        let scanInterval = null; // 定時掃描，提高穩定性
         const camera = document.getElementById('camera');
         const scanResult = document.getElementById('scan-result');
+
+        // 更新掃描狀態提示
+        function updateScanStatus(text, type = "info") {
+            scanResult.textContent = text;
+            scanResult.className = type; // info/success/error
+        }
 
         // 切換QR掃描器
         async function toggleScanner() {
             if (scannerActive) {
                 // 關閉掃描器
-                camera.srcObject.getTracks().forEach(track => track.stop());
-                camera.style.display = 'none';
-                scannerActive = false;
-                scanResult.textContent = '';
+                stopScanner();
+                updateScanStatus("掃描器已關閉", "info");
                 return;
             }
 
             // 開啟掃描器
             try {
+                // 請求相機權限（強制要求HTTPS/localhost）
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: "environment" }
+                    video: { 
+                        facingMode: "environment", // 優先後置鏡頭（手機）
+                        width: { ideal: 400 },
+                        height: { ideal: 300 }
+                    }
                 });
+                
+                // 設置相機流
                 camera.srcObject = stream;
                 camera.style.display = 'block';
                 scannerActive = true;
-                scanResult.textContent = '正在掃描QR碼...';
-                scanLoop();
+                
+                updateScanStatus("相機已開啟，請掃描包含用戶名的QR碼", "info");
+                
+                // 改用定時掃描（每100ms一次，比requestAnimationFrame更穩定）
+                scanInterval = setInterval(scanQRCode, 100);
+
             } catch (e) {
-                alert(`無法開啟相機：${e.message}`);
-                scanResult.textContent = '相機開啟失敗';
+                let errorMsg = "無法開啟相機：";
+                if (e.name === "NotAllowedError") {
+                    errorMsg += "請授予相機使用權限";
+                } else if (e.name === "NotFoundError") {
+                    errorMsg += "未檢測到相機設備";
+                } else if (e.message.includes("HTTPS")) {
+                    errorMsg += "請使用HTTPS協議打開頁面（本地測試可用localhost）";
+                } else {
+                    errorMsg += e.message;
+                }
+                updateScanStatus(errorMsg, "error");
+                console.error("相機錯誤：", e);
             }
         }
 
-        // QR掃描迴圈（解析用戶名）
-        async function scanLoop() {
+        // 停止掃描器
+        function stopScanner() {
+            scannerActive = false;
+            // 停止相機流
+            if (camera.srcObject) {
+                camera.srcObject.getTracks().forEach(track => track.stop());
+            }
+            camera.style.display = 'none';
+            // 清除掃描定時器
+            if (scanInterval) {
+                clearInterval(scanInterval);
+                scanInterval = null;
+            }
+        }
+
+        // QR碼解析核心函數（獨立函數，便於調試）
+        async function scanQRCode() {
             if (!scannerActive) return;
 
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = camera.videoWidth;
-            canvas.height = camera.videoHeight;
-            ctx.drawImage(camera, 0, 0);
+            try {
+                // 建立畫布並適配相機尺寸
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // 同步畫布尺寸和相機實際顯示尺寸
+                canvas.width = camera.videoWidth || camera.clientWidth;
+                canvas.height = camera.videoHeight || camera.clientHeight;
+                
+                // 繪製當前相機畫面到畫布
+                ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
+                
+                // 解析QR碼
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, canvas.width, canvas.height);
 
-            const code = jsQR(ctx.getImageData(0,0,canvas.width,canvas.height).data, canvas.width, canvas.height);
-            if (code) {
-                const username = code.data.trim();
-                scanResult.textContent = `掃描到用戶名：${username}`;
-                // 自動填入用戶名並登入
-                document.getElementById('username').value = username;
-                userLoginByUsername();
-                // 關閉掃描器
-                toggleScanner();
-            } else {
-                requestAnimationFrame(scanLoop);
+                if (code) {
+                    const qrContent = code.data.trim();
+                    updateScanStatus(`掃描到內容：${qrContent}`, "success");
+                    
+                    // 驗證內容是否為有效用戶名（僅字母/數字/下劃線）
+                    if (/^[a-zA-Z0-9_]+$/.test(qrContent)) {
+                        // 自動填入用戶名並觸發登入
+                        document.getElementById('username').value = qrContent;
+                        updateScanStatus(`自動填入用戶名：${qrContent}，正在登入...`, "success");
+                        
+                        // 延遲1秒登入（讓你看到反饋）
+                        setTimeout(() => {
+                            userLoginByUsername();
+                            stopScanner(); // 登入後關閉掃描器
+                        }, 1000);
+                    } else {
+                        updateScanStatus(`QR碼內容無效：${qrContent}，請掃描僅包含用戶名的QR碼`, "error");
+                        // 繼續掃描，不停止
+                    }
+                } else {
+                    // 未掃到QR碼，維持提示（不刷屏）
+                    if (scanResult.textContent.includes("相機已開啟")) {
+                        updateScanStatus("相機已開啟，請將QR碼對準鏡頭", "info");
+                    }
+                }
+
+            } catch (err) {
+                updateScanStatus(`掃描出錯：${err.message}`, "error");
+                console.error("QR解析錯誤：", err);
             }
         }
+
+        // 頁面關閉時自動停止掃描器
+        window.addEventListener('beforeunload', stopScanner);
     </script>
 </body>
 </html>
