@@ -24,7 +24,7 @@ async function userLoginByUsername() {
         return;
     }
 
-    // 初始化資料庫
+    // 手動初始化資料庫
     const initOk = await window.dbManager.init();
     if (!initOk) {
         alert("❌ 無法連接資料庫，請稍後再試！");
@@ -63,21 +63,14 @@ async function userLoginByUsername() {
 }
 
 // --------------------------
-// 2. Admin Login
+// 2. Admin Login (全域函數)
 // --------------------------
-async function adminLogin() {
+window.adminLogin = async function() {
     const username = document.getElementById('admin-username').value.trim();
     const password = document.getElementById('admin-password').value.trim();
 
     if (!username || !password) {
-        alert("❌ 請輸入完整的管理員帳號和密碼！");
-        return;
-    }
-
-    const initOk = await window.dbManager.init();
-    if (!initOk) {
-        alert("❌ 無法連接資料庫，請稍後再試！");
-        return;
+        throw new Error("請輸入完整的管理員帳號和密碼！");
     }
 
     try {
@@ -89,15 +82,13 @@ async function adminLogin() {
             .single();
 
         if (error) {
-            let errorMsg = `❌ 管理員登入失敗：${error.message}`;
-            if (error.code === 'PGRST116') errorMsg += "\n提示：帳號或密碼錯誤！測試帳號：admin / 密碼：admin123";
-            alert(errorMsg);
-            return;
+            let errorMsg = error.message;
+            if (error.code === 'PGRST116') errorMsg = "帳號或密碼錯誤！測試帳號：admin / 密碼：admin123";
+            throw new Error(errorMsg);
         }
         
         if (!data || data.username !== "admin") {
-            alert("❌ 非管理員帳號，無法登入後台！");
-            return;
+            throw new Error("非管理員帳號，無法登入後台！");
         }
 
         saveUserToStorage(data);
@@ -107,10 +98,10 @@ async function adminLogin() {
         window.location.href = "admin-management.html";
 
     } catch (err) {
-        alert(`❌ 管理員登入異常：${err.message}`);
         console.error("Admin Login Error：", err);
+        throw err; // 拋出錯誤給調用方處理
     }
-}
+};
 
 // --------------------------
 // 3. Logout Function
@@ -123,14 +114,13 @@ function logout() {
 }
 
 // --------------------------
-// 4. Login Validation
+// 4. Login Validation (僅檢查狀態，不彈窗)
 // --------------------------
 function checkLogin() {
     window.currentUser = getUserFromStorage();
     
     if (!window.currentUser) {
         setTimeout(() => {
-            alert("❌ 請先登入系統！");
             window.location.href = "user-login.html";
         }, 300);
         return false;
