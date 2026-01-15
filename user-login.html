@@ -83,7 +83,7 @@
                 return;
             }
 
-            // 初始化資料庫
+            // 手動初始化資料庫（失敗才彈窗）
             const initOk = await window.dbManager.init();
             if (!initOk) {
                 updateScanStatus("❌ 資料庫連接失敗，無法使用QR登入", "error");
@@ -165,12 +165,6 @@
                 console.error("QR解析錯誤：", err);
             }
         }
-
-        // 頁面加載完成後初始化
-        window.addEventListener('load', async () => {
-            // 預先初始化資料庫（只在後台列印，不彈窗）
-            await window.dbManager.init();
-        });
 
         // 頁面關閉時停止掃描器
         window.addEventListener('beforeunload', stopScanner);
