@@ -18,7 +18,7 @@ function clearUserStorage() {
 window.currentUser = getUserFromStorage();
 
 // --------------------------
-// 1. User Login (Username Only - No Password)
+// 1. User Login (Username Only - Redirect to scan.html)
 // --------------------------
 async function userLoginByUsername() {
     const username = document.getElementById('username').value.trim();
@@ -59,7 +59,7 @@ async function userLoginByUsername() {
         saveUserToStorage(data);
         
         alert(`✅ 登入成功！歡迎你，${data.username}！`);
-        window.location.href = "scan.html";
+        window.location.href = "scan.html"; // Fixed: Redirect to scan.html
 
     } catch (err) {
         alert(`❌ 登入異常：${err.message}`);
@@ -163,7 +163,7 @@ function checkAdmin() {
 }
 
 // --------------------------
-// 6. New: Get User Game Records (For scan.html stats)
+// 6. Get User Game Records (For scan.html stats)
 // --------------------------
 async function getUserGameRecords() {
     try {
@@ -192,7 +192,7 @@ async function getUserGameRecords() {
 }
 
 // --------------------------
-// 7. New: Calculate Total Score (For scan.html stats)
+// 7. Calculate Total Score (For scan.html stats)
 // --------------------------
 function calculateTotalScore(records) {
     return records.reduce((total, record) => total + record.score, 0);
