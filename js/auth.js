@@ -18,7 +18,7 @@ function clearUserStorage() {
 window.currentUser = getUserFromStorage();
 
 // --------------------------
-// 1. User Login (Username Only - Redirect to scan.html)
+// 1. User Login (Username Only - Redirect to scan.html + Config Checks)
 // --------------------------
 async function userLoginByUsername() {
     const username = document.getElementById('username').value.trim();
@@ -28,17 +28,20 @@ async function userLoginByUsername() {
         return;
     }
 
+    // Critical: Check config first
+    if (!window.dbManager) {
+        alert("❌ 找不到資料庫配置！\n請確認：\n1. js/config.js文件已創建\n2. 文件路徑正確\n3. Supabase配置已填寫");
+        return;
+    }
+
+    // Force database initialization (with error handling)
+    const initOk = await window.dbManager.init();
+    if (!initOk) {
+        alert("❌ 資料庫初始化失敗！\n請檢查：\n1. config.js中的Supabase URL是否正確\n2. config.js中的Anon Key是否正確\n3. 網路連接是否正常");
+        return;
+    }
+
     try {
-        if (!window.dbManager) {
-            alert("❌ 資料庫模組加載失敗，請檢查js/database.js是否正確");
-            return;
-        }
-
-        if (!window.dbManager.initialized) {
-            const initOk = await window.dbManager.init();
-            if (!initOk) return;
-        }
-
         const { data, error } = await window.dbManager.client
             .from('users')
             .select('*')
@@ -46,9 +49,14 @@ async function userLoginByUsername() {
             .single();
 
         if (error) {
-            alert(`❌ 登入失敗：${error.message}\n請確認用戶名是否正確（測試用戶：testuser1）`);
+            let errorMsg = `❌ 登入失敗：${error.message}`;
+            if (error.code === 'PGRST116') {
+                errorMsg += "\n提示：該用戶名不存在！測試用戶名：testuser1";
+            }
+            alert(errorMsg);
             return;
         }
+        
         if (!data) {
             alert("❌ 查無此用戶！測試用戶名：testuser1");
             return;
@@ -59,7 +67,7 @@ async function userLoginByUsername() {
         saveUserToStorage(data);
         
         alert(`✅ 登入成功！歡迎你，${data.username}！`);
-        window.location.href = "scan.html"; // Fixed: Redirect to scan.html
+        window.location.href = "scan.html"; // Redirect to scan page
 
     } catch (err) {
         alert(`❌ 登入異常：${err.message}`);
@@ -68,7 +76,7 @@ async function userLoginByUsername() {
 }
 
 // --------------------------
-// 2. Admin Login (Username + Password)
+// 2. Admin Login (Username + Password + Config Checks)
 // --------------------------
 async function adminLogin() {
     const username = document.getElementById('admin-username').value.trim();
@@ -79,17 +87,20 @@ async function adminLogin() {
         return;
     }
 
+    // Critical: Check config first
+    if (!window.dbManager) {
+        alert("❌ 找不到資料庫配置！\n請確認：\n1. js/config.js文件已創建\n2. 文件路徑正確\n3. Supabase配置已填寫");
+        return;
+    }
+
+    // Force database initialization
+    const initOk = await window.dbManager.init();
+    if (!initOk) {
+        alert("❌ 資料庫初始化失敗！\n請檢查：\n1. config.js中的Supabase URL是否正確\n2. config.js中的Anon Key是否正確\n3. 網路連接是否正常");
+        return;
+    }
+
     try {
-        if (!window.dbManager) {
-            alert("❌ 資料庫模組加載失敗，請檢查js/database.js是否正確");
-            return;
-        }
-
-        if (!window.dbManager.initialized) {
-            const initOk = await window.dbManager.init();
-            if (!initOk) return;
-        }
-
         const { data, error } = await window.dbManager.client
             .from('admins')
             .select('*')
@@ -98,9 +109,14 @@ async function adminLogin() {
             .single();
 
         if (error) {
-            alert(`❌ 管理員登入失敗：${error.message}\n測試管理員帳號：admin / admin123`);
+            let errorMsg = `❌ 管理員登入失敗：${error.message}`;
+            if (error.code === 'PGRST116') {
+                errorMsg += "\n提示：帳號或密碼錯誤！測試帳號：admin / 密碼：admin123";
+            }
+            alert(errorMsg);
             return;
         }
+        
         if (!data || data.username !== "admin") {
             alert("❌ 非管理員帳號，無法登入後台！");
             return;
@@ -130,9 +146,16 @@ function logout() {
 }
 
 // --------------------------
-// 4. Login Validation (Fix "Please Login" Popup)
+// 4. Login Validation (Fix "Please Login" Popup + Config Checks)
 // --------------------------
 function checkLogin() {
+    // Pre-check config
+    if (!window.dbManager) {
+        alert("❌ 找不到資料庫配置！請檢查js/config.js");
+        window.location.href = "user-login.html";
+        return false;
+    }
+
     window.currentUser = getUserFromStorage();
     
     if (!window.currentUser) {
@@ -166,6 +189,12 @@ function checkAdmin() {
 // 6. Get User Game Records (For scan.html stats)
 // --------------------------
 async function getUserGameRecords() {
+    // Pre-check config
+    if (!window.dbManager) {
+        console.error("❌ 找不到資料庫配置！");
+        return [];
+    }
+
     try {
         if (!window.dbManager.initialized) {
             await window.dbManager.init();
