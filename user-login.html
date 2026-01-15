@@ -6,14 +6,15 @@
     <title>用戶登入 - QR碼遊戲系統</title>
     <style>
         body { font-family: 'Microsoft JhengHei', sans-serif; max-width: 400px; margin: 50px auto; padding: 20px; background: #f5f5f5; }
-        .login-box { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .login-box { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #333; margin-bottom: 25px; }
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; color: #555; }
         input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
-        button { width: 100%; padding: 12px; background: #2563eb; color: #fff; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; margin-bottom: 10px; }
+        button { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; margin-bottom: 10px; }
         button:hover { background: #1d4ed8; }
         .btn-scan { background: #16a34a; }
+        .btn-scan:hover { background: #15803d; }
         #camera { width: 100%; max-height: 300px; display: none; margin: 10px 0; border: 1px solid #eee; border-radius: 4px; }
         #scan-result { 
             text-align:center; 
@@ -42,7 +43,7 @@
     <div class="login-box">
         <h1>QR碼遊戲系統 - 用戶登入</h1>
         
-        <!-- 手動輸入用戶名（移除默認值） -->
+        <!-- Manual Login (No Default Username) -->
         <div class="form-group">
             <label>用戶名</label>
             <input id="username" type="text" placeholder="請輸入用戶名" value="">
@@ -51,13 +52,13 @@
         
         <div class="divider">—— 或掃QR碼登入 ——</div>
         
-        <!-- QR掃描登入 -->
+        <!-- QR Code Login -->
         <button class="btn-scan" onclick="toggleScanner()">開啟QR掃描器</button>
         <video id="camera" autoplay playsinline></video>
         <div id="scan-result" class="info">請點擊按鈕開啟掃描器</div>
     </div>
 
-    <!-- 加載JS（順序不可改） -->
+    <!-- Load JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script src="js/config.js"></script>
@@ -65,17 +66,15 @@
     <script src="js/auth.js"></script>
     <script>
         let scannerActive = false;
-        let scanInterval = null; 
+        let scanInterval = null;
         const camera = document.getElementById('camera');
         const scanResult = document.getElementById('scan-result');
 
-        // 更新掃描狀態提示
         function updateScanStatus(text, type = "info") {
             scanResult.textContent = text;
-            scanResult.className = type; 
+            scanResult.className = type;
         }
 
-        // 切換QR掃描器
         async function toggleScanner() {
             if (scannerActive) {
                 stopScanner();
@@ -86,7 +85,7 @@
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
                     video: { 
-                        facingMode: "environment", 
+                        facingMode: "environment",
                         width: { ideal: 400 },
                         height: { ideal: 300 }
                     }
@@ -106,7 +105,7 @@
                 } else if (e.name === "NotFoundError") {
                     errorMsg += "未檢測到相機設備";
                 } else if (e.message.includes("HTTPS")) {
-                    errorMsg += "請使用HTTPS協議打開頁面（本地測試可用localhost）";
+                    errorMsg += "請使用HTTPS協議打開頁面";
                 } else {
                     errorMsg += e.message;
                 }
@@ -115,7 +114,6 @@
             }
         }
 
-        // 停止掃描器
         function stopScanner() {
             scannerActive = false;
             if (camera.srcObject) {
@@ -128,7 +126,6 @@
             }
         }
 
-        // QR碼解析核心函數
         async function scanQRCode() {
             if (!scannerActive) return;
 
@@ -140,7 +137,6 @@
                 canvas.height = camera.videoHeight || camera.clientHeight;
                 
                 ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
-                
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const code = jsQR(imageData.data, canvas.width, canvas.height);
 
@@ -154,7 +150,7 @@
                         
                         setTimeout(() => {
                             userLoginByUsername();
-                            stopScanner(); 
+                            stopScanner();
                         }, 1000);
                     } else {
                         updateScanStatus(`QR碼內容無效：${qrContent}，請掃描僅包含用戶名的QR碼`, "error");
