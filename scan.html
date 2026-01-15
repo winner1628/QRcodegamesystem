@@ -113,7 +113,7 @@
                 return;
             }
 
-            // 初始化資料庫
+            // 手動初始化資料庫
             const initOk = await window.dbManager.init();
             if (!initOk) {
                 updateStatus("❌ 資料庫連接失敗，無法掃描", "error");
