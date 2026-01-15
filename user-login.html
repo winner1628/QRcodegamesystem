@@ -42,10 +42,10 @@
     <div class="login-box">
         <h1>QR碼遊戲系統 - 用戶登入</h1>
         
-        <!-- 手動輸入用戶名 -->
+        <!-- 手動輸入用戶名（移除默認值） -->
         <div class="form-group">
             <label>用戶名</label>
-            <input id="username" type="text" placeholder="請輸入用戶名" value="testuser1">
+            <input id="username" type="text" placeholder="請輸入用戶名" value="">
         </div>
         <button onclick="userLoginByUsername()">手動登入</button>
         
@@ -65,44 +65,38 @@
     <script src="js/auth.js"></script>
     <script>
         let scannerActive = false;
-        let scanInterval = null; // 定時掃描，提高穩定性
+        let scanInterval = null; 
         const camera = document.getElementById('camera');
         const scanResult = document.getElementById('scan-result');
 
         // 更新掃描狀態提示
         function updateScanStatus(text, type = "info") {
             scanResult.textContent = text;
-            scanResult.className = type; // info/success/error
+            scanResult.className = type; 
         }
 
         // 切換QR掃描器
         async function toggleScanner() {
             if (scannerActive) {
-                // 關閉掃描器
                 stopScanner();
                 updateScanStatus("掃描器已關閉", "info");
                 return;
             }
 
-            // 開啟掃描器
             try {
-                // 請求相機權限（強制要求HTTPS/localhost）
                 const stream = await navigator.mediaDevices.getUserMedia({
                     video: { 
-                        facingMode: "environment", // 優先後置鏡頭（手機）
+                        facingMode: "environment", 
                         width: { ideal: 400 },
                         height: { ideal: 300 }
                     }
                 });
                 
-                // 設置相機流
                 camera.srcObject = stream;
                 camera.style.display = 'block';
                 scannerActive = true;
                 
                 updateScanStatus("相機已開啟，請掃描包含用戶名的QR碼", "info");
-                
-                // 改用定時掃描（每100ms一次，比requestAnimationFrame更穩定）
                 scanInterval = setInterval(scanQRCode, 100);
 
             } catch (e) {
@@ -124,35 +118,29 @@
         // 停止掃描器
         function stopScanner() {
             scannerActive = false;
-            // 停止相機流
             if (camera.srcObject) {
                 camera.srcObject.getTracks().forEach(track => track.stop());
             }
             camera.style.display = 'none';
-            // 清除掃描定時器
             if (scanInterval) {
                 clearInterval(scanInterval);
                 scanInterval = null;
             }
         }
 
-        // QR碼解析核心函數（獨立函數，便於調試）
+        // QR碼解析核心函數
         async function scanQRCode() {
             if (!scannerActive) return;
 
             try {
-                // 建立畫布並適配相機尺寸
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 
-                // 同步畫布尺寸和相機實際顯示尺寸
                 canvas.width = camera.videoWidth || camera.clientWidth;
                 canvas.height = camera.videoHeight || camera.clientHeight;
                 
-                // 繪製當前相機畫面到畫布
                 ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
                 
-                // 解析QR碼
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const code = jsQR(imageData.data, canvas.width, canvas.height);
 
@@ -160,23 +148,18 @@
                     const qrContent = code.data.trim();
                     updateScanStatus(`掃描到內容：${qrContent}`, "success");
                     
-                    // 驗證內容是否為有效用戶名（僅字母/數字/下劃線）
                     if (/^[a-zA-Z0-9_]+$/.test(qrContent)) {
-                        // 自動填入用戶名並觸發登入
                         document.getElementById('username').value = qrContent;
                         updateScanStatus(`自動填入用戶名：${qrContent}，正在登入...`, "success");
                         
-                        // 延遲1秒登入（讓你看到反饋）
                         setTimeout(() => {
                             userLoginByUsername();
-                            stopScanner(); // 登入後關閉掃描器
+                            stopScanner(); 
                         }, 1000);
                     } else {
                         updateScanStatus(`QR碼內容無效：${qrContent}，請掃描僅包含用戶名的QR碼`, "error");
-                        // 繼續掃描，不停止
                     }
                 } else {
-                    // 未掃到QR碼，維持提示（不刷屏）
                     if (scanResult.textContent.includes("相機已開啟")) {
                         updateScanStatus("相機已開啟，請將QR碼對準鏡頭", "info");
                     }
@@ -188,7 +171,6 @@
             }
         }
 
-        // 頁面關閉時自動停止掃描器
         window.addEventListener('beforeunload', stopScanner);
     </script>
 </body>
