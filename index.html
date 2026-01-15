@@ -10,9 +10,6 @@
         .container { max-width: 800px; margin: 0 auto; padding: 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 2px solid #e2e8f0; }
         .logo { font-size: 24px; font-weight: bold; color: #2563eb; }
-        .user-info { display: flex; align-items: center; gap: 10px; }
-        .btn-logout { padding: 8px 16px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .btn-logout:hover { background: #b91c1c; }
         .intro { margin: 40px 0; }
         .intro h2 { font-size: 20px; margin-bottom: 20px; color: #1e293b; }
         .intro p { line-height: 1.8; margin-bottom: 15px; }
@@ -27,10 +24,6 @@
     <div class="container">
         <div class="header">
             <div class="logo">QR碼遊戲系統</div>
-            <div class="user-info">
-                <span id="user-name">歡迎回來！</span>
-                <button class="btn-logout" onclick="logout()">登出</button>
-            </div>
         </div>
 
         <div class="intro">
@@ -45,36 +38,12 @@
                 <li>✅ 管理員後台：查看所有用戶、遊戲、遊戲紀錄，新增遊戲</li>
             </ul>
 
-            <a href="scan.html" class="btn-scan-page">前往掃描遊戲QR碼</a>
+            <a href="user-login.html" class="btn-scan-page">前往用戶登入</a>
         </div>
 
         <div class="footer">
             © 2026 QR碼遊戲系統 - 版權所有
         </div>
     </div>
-
-    <!-- 僅加載必要的JS，移除資料庫相關依賴 -->
-    <script>
-        // 簡化的登出功能（無需資料庫）
-        function logout() {
-            localStorage.removeItem('qrGameUser');
-            alert("✅ 已成功登出！");
-            window.location.href = "user-login.html";
-        }
-
-        // 頁面加載時檢查登入狀態
-        window.onload = function() {
-            const userStr = localStorage.getItem('qrGameUser');
-            const user = userStr ? JSON.parse(userStr) : null;
-            
-            if (!user) {
-                alert("❌ 請先登入系統！");
-                window.location.href = "user-login.html";
-                return;
-            }
-            
-            document.getElementById('user-name').textContent = `歡迎，${user.username}`;
-        };
-    </script>
 </body>
 </html>
