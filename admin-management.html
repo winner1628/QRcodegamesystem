@@ -5,200 +5,376 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>管理員後台 - QR碼遊戲系統</title>
     <style>
-        body { font-family: 'Microsoft JhengHei', sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .tab-container { margin-bottom: 20px; }
-        .tab-btn { 
-            padding: 10px 20px; border: none; background: #f5f5f5; border-radius: 4px; cursor: pointer; margin-right: 5px;
-        }
-        .tab-btn.active { background: #2563eb; color: white; }
-        .tab-content { display: none; padding: 20px; border: 1px solid #eee; border-radius: 4px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft JhengHei', sans-serif; background: #f8fafc; color: #334155; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 2px solid #e2e8f0; margin-bottom: 30px; }
+        .logo { font-size: 24px; font-weight: bold; color: #dc2626; }
+        .btn-logout { padding: 8px 16px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-logout:hover { background: #b91c1c; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { padding: 10px 20px; background: #e2e8f0; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        .tab-btn.active { background: #dc2626; color: white; }
+        .tab-content { display: none; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .tab-content.active { display: block; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 12px; border: 1px solid #eee; text-align: left; }
-        th { background: #f5f5f5; }
-        .btn-add { background: #16a34a; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-bottom: 10px; }
+        .add-form { display: grid; gap: 15px; max-width: 500px; margin-bottom: 30px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-weight: 600; }
+        .form-group input { padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        .btn-submit { padding: 10px 20px; background: #16a34a; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-submit:hover { background: #15803d; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        .data-table th { background: #f1f5f9; font-weight: 600; }
+        .msg-box { padding: 10px; border-radius: 4px; margin-bottom: 20px; display: none; }
+        .success-msg { background: #f0fdf4; color: #16a34a; }
+        .error-msg { background: #fef2f2; color: #dc2626; }
+        .loading { text-align: center; padding: 20px; color: #64748b; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>QR碼遊戲系統 - 管理員後台</h1>
-        <button onclick="logout()">登出管理員</button>
+    <div class="container">
+        <div class="header">
+            <div class="logo">管理員後台</div>
+            <button class="btn-logout" onclick="logout()">登出</button>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('games')">遊戲管理</button>
+            <button class="tab-btn" onclick="switchTab('users')">用戶管理</button>
+            <button class="tab-btn" onclick="switchTab('records')">遊戲紀錄</button>
+        </div>
+
+        <!-- 遊戲管理標籤 -->
+        <div id="games" class="tab-content active">
+            <h2>新增遊戲</h2>
+            <div class="add-form">
+                <div class="form-group">
+                    <label>遊戲代碼 (例如：GAME001)</label>
+                    <input id="game-code" type="text" placeholder="請輸入遊戲代碼">
+                </div>
+                <div class="form-group">
+                    <label>遊戲名稱</label>
+                    <input id="game-name" type="text" placeholder="請輸入遊戲名稱">
+                </div>
+                <div class="form-group">
+                    <label>最高分數</label>
+                    <input id="game-max-score" type="number" placeholder="請輸入最高分數" min="0">
+                </div>
+                <div class="form-group">
+                    <label>默認分數</label>
+                    <input id="game-default-score" type="number" placeholder="請輸入默認分數" min="0">
+                </div>
+                <button class="btn-submit" onclick="addNewGame()">新增遊戲</button>
+            </div>
+
+            <div id="game-msg" class="msg-box"></div>
+            <div id="games-list" class="loading">加載遊戲列表中...</div>
+        </div>
+
+        <!-- 用戶管理標籤 -->
+        <div id="users" class="tab-content">
+            <h2>用戶列表</h2>
+            <div id="users-list" class="loading">加載用戶列表中...</div>
+        </div>
+
+        <!-- 遊戲紀錄標籤 -->
+        <div id="records" class="tab-content">
+            <h2>遊戲紀錄</h2>
+            <div id="records-list" class="loading">加載遊戲紀錄中...</div>
+        </div>
     </div>
 
-    <div class="tab-container">
-        <button class="tab-btn active" onclick="switchTab('games')">遊戲管理</button>
-        <button class="tab-btn" onclick="switchTab('users')">普通用戶管理</button>
-        <button class="tab-btn" onclick="switchTab('admins')">管理員管理</button>
-        <button class="tab-btn" onclick="switchTab('records')">遊戲紀錄</button>
-    </div>
-
-    <!-- 遊戲管理標籤 -->
-    <div id="games" class="tab-content active">
-        <h2>遊戲列表</h2>
-        <button class="btn-add" onclick="addNewGame()">新增遊戲</button>
-        <table id="games-table">
-            <thead>
-                <tr><th>遊戲代碼</th><th>遊戲名稱</th><th>最高分數</th></tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
-
-    <!-- 普通用戶管理標籤 -->
-    <div id="users" class="tab-content">
-        <h2>普通用戶列表</h2>
-        <table id="users-table">
-            <thead>
-                <tr><th>用戶名</th><th>用戶ID</th><th>註冊時間</th></tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
-
-    <!-- 管理員管理標籤 -->
-    <div id="admins" class="tab-content">
-        <h2>管理員列表</h2>
-        <table id="admins-table">
-            <thead>
-                <tr><th>管理員帳號</th><th>建立時間</th></tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
-
-    <!-- 遊戲紀錄標籤 -->
-    <div id="records" class="tab-content">
-        <h2>遊戲紀錄</h2>
-        <table id="records-table">
-            <thead>
-                <tr><th>用戶名</th><th>遊戲名稱</th><th>遊戲代碼</th><th>分數</th><th>掃描時間</th></tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
-
-    <!-- 加載JS（順序不可改） -->
+    <!-- JS加載 (手動初始化，不彈窗) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
-    <script src="js/database.js"></script>
     <script src="js/auth.js"></script>
     <script>
-        // 頁面加載時驗證管理員身份 + 加載數據
+        // 頁面加載時檢查管理員權限
         window.onload = async function() {
+            // 檢查是否登入且為管理員
             if (!checkAdmin()) return;
-            // 加載所有數據
-            await loadGamesData();
-            await loadUsersData();
-            await loadAdminsData();
-            await loadRecordsData();
+            
+            // 手動初始化資料庫 (只在控制台輸出，不彈窗)
+            await window.dbManager.init();
+            
+            // 加載初始數據
+            loadGamesList();
         };
 
         // 切換標籤
-        function switchTab(tabName) {
-            // 移除所有active狀態
-            document.querySelectorAll('.tab-btn, .tab-content').forEach(el => el.classList.remove('active'));
-            // 激活當前標籤
-            document.querySelector(`.tab-btn[onclick*="${tabName}"]`).classList.add('active');
-            document.getElementById(tabName).classList.add('active');
+        function switchTab(tabId) {
+            // 移除所有active類
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // 新增當前active類
+            document.querySelector(`.tab-btn[onclick="switchTab('${tabId}')"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            
+            // 加載對應數據
+            if (tabId === 'users' && document.getElementById('users-list').classList.contains('loading')) {
+                loadUsersList();
+            }
+            if (tabId === 'records' && document.getElementById('records-list').classList.contains('loading')) {
+                loadRecordsList();
+            }
         }
 
-        // 加載遊戲數據
-        async function loadGamesData() {
-            const games = await window.dbManager.getAllGames();
-            const tbody = document.querySelector('#games-table tbody');
-            tbody.innerHTML = '';
-            if (games.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">暂无遊戲數據</td></tr>';
-                return;
-            }
-            games.forEach(game => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${game.game_code}</td>
-                        <td>${game.game_name}</td>
-                        <td>${game.max_score}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        // 加載普通用戶數據
-        async function loadUsersData() {
-            const users = await window.dbManager.getAllUsers();
-            const tbody = document.querySelector('#users-table tbody');
-            tbody.innerHTML = '';
-            if (users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">暂无普通用戶數據</td></tr>';
-                return;
-            }
-            users.forEach(user => {
-                // 格式化時間
-                const createTime = new Date(user.created_at).toLocaleString('zh-TW');
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${user.username}</td>
-                        <td>${user.id.substring(0, 8)}...</td>
-                        <td>${createTime}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        // 加載管理員數據
-        async function loadAdminsData() {
-            const admins = await window.dbManager.getAllAdmins();
-            const tbody = document.querySelector('#admins-table tbody');
-            tbody.innerHTML = '';
-            if (admins.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;">暂无管理員數據</td></tr>';
-                return;
-            }
-            admins.forEach(admin => {
-                const createTime = new Date(admin.created_at).toLocaleString('zh-TW');
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${admin.username}</td>
-                        <td>${createTime}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        // 加載遊戲紀錄數據
-        async function loadRecordsData() {
-            const records = await window.dbManager.getAllGameRecords();
-            const tbody = document.querySelector('#records-table tbody');
-            tbody.innerHTML = '';
-            if (records.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">暂无遊戲紀錄</td></tr>';
-                return;
-            }
-            records.forEach(record => {
-                const scanTime = new Date(record.scanned_at).toLocaleString('zh-TW');
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${record.users?.username || '未知用戶'}</td>
-                        <td>${record.games?.game_name || '未知遊戲'}</td>
-                        <td>${record.games?.game_code || '未知代碼'}</td>
-                        <td>${record.score}</td>
-                        <td>${scanTime}</td>
-                    </tr>
-                `;
-            });
+        // 顯示消息
+        function showMessage(elementId, text, isSuccess = true) {
+            const msgBox = document.getElementById(elementId);
+            msgBox.textContent = text;
+            msgBox.className = `msg-box ${isSuccess ? 'success-msg' : 'error-msg'}`;
+            msgBox.style.display = 'block';
+            
+            // 3秒後隱藏
+            setTimeout(() => {
+                msgBox.style.display = 'none';
+            }, 3000);
         }
 
         // 新增遊戲
         async function addNewGame() {
-            const gameCode = prompt('請輸入遊戲代碼（例如：GAME003）');
-            if (!gameCode) return;
-            const gameName = prompt('請輸入遊戲名稱（例如：闖關挑戰）');
-            if (!gameName) return;
-            const maxScore = prompt('請輸入最高分數（預設1000）', '1000');
+            const gameCode = document.getElementById('game-code').value.trim();
+            const gameName = document.getElementById('game-name').value.trim();
+            const maxScore = parseInt(document.getElementById('game-max-score').value) || 0;
+            const defaultScore = parseInt(document.getElementById('game-default-score').value) || 0;
+
+            // 表單驗證
+            if (!gameCode) {
+                showMessage('game-msg', '❌ 請輸入遊戲代碼！', false);
+                return;
+            }
+            if (!gameName) {
+                showMessage('game-msg', '❌ 請輸入遊戲名稱！', false);
+                return;
+            }
+
+            // 初始化資料庫
+            const initOk = await window.dbManager.init();
+            if (!initOk) {
+                showMessage('game-msg', '❌ 資料庫連接失敗！', false);
+                return;
+            }
+
+            try {
+                // 插入數據
+                const { error } = await window.dbManager.client
+                    .from('games')
+                    .insert([{
+                        game_code: gameCode,
+                        game_name: gameName,
+                        max_score: maxScore,
+                        default_score: defaultScore
+                    }]);
+
+                if (error) throw new Error(error.message);
+
+                // 清空表單
+                document.getElementById('game-code').value = '';
+                document.getElementById('game-name').value = '';
+                document.getElementById('game-max-score').value = '';
+                document.getElementById('game-default-score').value = '';
+
+                showMessage('game-msg', '✅ 遊戲新增成功！');
+                
+                // 重新加載列表
+                loadGamesList();
+
+            } catch (err) {
+                showMessage('game-msg', `❌ 新增失敗：${err.message}`, false);
+                console.error("Add Game Error:", err);
+            }
+        }
+
+        // 加載遊戲列表
+        async function loadGamesList() {
+            const gamesList = document.getElementById('games-list');
             
-            const success = await window.dbManager.addGame(gameCode, gameName, parseInt(maxScore));
-            if (success) {
-                loadGamesData(); // 重新加載遊戲列表
+            try {
+                const initOk = await window.dbManager.init();
+                if (!initOk) {
+                    gamesList.innerHTML = '<div class="error-msg" style="display:block">❌ 無法加載數據：資料庫連接失敗</div>';
+                    return;
+                }
+
+                const { data, error } = await window.dbManager.client
+                    .from('games')
+                    .select('*')
+                    .order('game_code');
+
+                if (error) throw new Error(error.message);
+
+                if (data.length === 0) {
+                    gamesList.innerHTML = '<div class="loading">暫無遊戲數據</div>';
+                    return;
+                }
+
+                // 生成表格
+                let tableHTML = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>遊戲代碼</th>
+                                <th>遊戲名稱</th>
+                                <th>最高分數</th>
+                                <th>默認分數</th>
+                                <th>創建時間</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                data.forEach(game => {
+                    const createTime = new Date(game.created_at).toLocaleString('zh-TW');
+                    tableHTML += `
+                        <tr>
+                            <td>${game.game_code}</td>
+                            <td>${game.game_name}</td>
+                            <td>${game.max_score}</td>
+                            <td>${game.default_score}</td>
+                            <td>${createTime}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHTML += `
+                        </tbody>
+                    </table>
+                `;
+
+                gamesList.innerHTML = tableHTML;
+
+            } catch (err) {
+                gamesList.innerHTML = `<div class="error-msg" style="display:block">❌ 加載失敗：${err.message}</div>`;
+                console.error("Load Games Error:", err);
+            }
+        }
+
+        // 加載用戶列表
+        async function loadUsersList() {
+            const usersList = document.getElementById('users-list');
+            
+            try {
+                const initOk = await window.dbManager.init();
+                if (!initOk) {
+                    usersList.innerHTML = '<div class="error-msg" style="display:block">❌ 無法加載數據：資料庫連接失敗</div>';
+                    return;
+                }
+
+                const { data, error } = await window.dbManager.client
+                    .from('users')
+                    .select('*')
+                    .order('username');
+
+                if (error) throw new Error(error.message);
+
+                if (data.length === 0) {
+                    usersList.innerHTML = '<div class="loading">暫無用戶數據</div>';
+                    return;
+                }
+
+                let tableHTML = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>用戶ID</th>
+                                <th>用戶名</th>
+                                <th>創建時間</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                data.forEach(user => {
+                    const createTime = new Date(user.created_at).toLocaleString('zh-TW');
+                    tableHTML += `
+                        <tr>
+                            <td>${user.id}</td>
+                            <td>${user.username}</td>
+                            <td>${createTime}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHTML += `
+                        </tbody>
+                    </table>
+                `;
+
+                usersList.innerHTML = tableHTML;
+
+            } catch (err) {
+                usersList.innerHTML = `<div class="error-msg" style="display:block">❌ 加載失敗：${err.message}</div>`;
+                console.error("Load Users Error:", err);
+            }
+        }
+
+        // 加載遊戲紀錄
+        async function loadRecordsList() {
+            const recordsList = document.getElementById('records-list');
+            
+            try {
+                const initOk = await window.dbManager.init();
+                if (!initOk) {
+                    recordsList.innerHTML = '<div class="error-msg" style="display:block">❌ 無法加載數據：資料庫連接失敗</div>';
+                    return;
+                }
+
+                const { data, error } = await window.dbManager.client
+                    .from('game_records')
+                    .select(`
+                        *,
+                        users(username),
+                        games(game_name, game_code)
+                    `)
+                    .order('scanned_at', { ascending: false });
+
+                if (error) throw new Error(error.message);
+
+                if (data.length === 0) {
+                    recordsList.innerHTML = '<div class="loading">暫無遊戲紀錄</div>';
+                    return;
+                }
+
+                let tableHTML = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>用戶名</th>
+                                <th>遊戲名稱</th>
+                                <th>遊戲代碼</th>
+                                <th>分數</th>
+                                <th>掃描時間</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                data.forEach(record => {
+                    const scanTime = new Date(record.scanned_at).toLocaleString('zh-TW');
+                    tableHTML += `
+                        <tr>
+                            <td>${record.users?.username || '未知用戶'}</td>
+                            <td>${record.games?.game_name || '未知遊戲'}</td>
+                            <td>${record.games?.game_code || '未知代碼'}</td>
+                            <td>${record.score}</td>
+                            <td>${scanTime}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHTML += `
+                        </tbody>
+                    </table>
+                `;
+
+                recordsList.innerHTML = tableHTML;
+
+            } catch (err) {
+                recordsList.innerHTML = `<div class="error-msg" style="display:block">❌ 加載失敗：${err.message}</div>`;
+                console.error("Load Records Error:", err);
             }
         }
     </script>
