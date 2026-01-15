@@ -81,7 +81,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script src="js/config.js"></script>
-    <script src="js/database.js"></script>
     <script src="js/auth.js"></script>
     <script>
         let scannerActive = false;
@@ -95,7 +94,7 @@
         // Page Load
         window.onload = async function() {
             if (!checkLogin()) return;
-            await loadUserStats(); // Load user game records on page load
+            await loadUserStats();
         };
 
         // Update Scan Status
@@ -104,7 +103,7 @@
             scanStatus.className = type;
         }
 
-        // Toggle Scanner (Auto Disable After Scan)
+        // Toggle Scanner
         async function toggleScanner() {
             if (scannerActive) {
                 stopScanner();
@@ -114,7 +113,13 @@
                 return;
             }
 
-            // Disable button during scan
+            // 初始化資料庫
+            const initOk = await window.dbManager.init();
+            if (!initOk) {
+                updateStatus("❌ 資料庫連接失敗，無法掃描", "error");
+                return;
+            }
+
             scanBtn.disabled = true;
             scanBtn.textContent = "關閉掃描器";
 
@@ -136,15 +141,11 @@
 
             } catch (e) {
                 let errorMsg = "無法開啟相機：";
-                if (e.name === "NotAllowedError") {
-                    errorMsg += "請授予相機使用權限";
-                } else if (e.name === "NotFoundError") {
-                    errorMsg += "未檢測到相機設備";
-                } else if (e.message.includes("HTTPS")) {
-                    errorMsg += "請使用HTTPS協議打開頁面";
-                } else {
-                    errorMsg += e.message;
-                }
+                if (e.name === "NotAllowedError") errorMsg += "請授予相機使用權限";
+                else if (e.name === "NotFoundError") errorMsg += "未檢測到相機設備";
+                else if (e.message.includes("HTTPS")) errorMsg += "請使用HTTPS協議打開頁面";
+                else errorMsg += e.message;
+                
                 updateStatus(errorMsg, "error");
                 scanBtn.disabled = false;
                 scanBtn.textContent = "開啟掃描器";
@@ -152,20 +153,18 @@
             }
         }
 
-        // Stop Scanner (Auto Pause After Successful Scan)
+        // Stop Scanner
         function stopScanner() {
             scannerActive = false;
             if (camera.srcObject) {
                 camera.srcObject.getTracks().forEach(track => track.stop());
             }
             camera.style.display = 'none';
-            if (scanInterval) {
-                clearInterval(scanInterval);
-                scanInterval = null;
-            }
+            clearInterval(scanInterval);
+            scanInterval = null;
         }
 
-        // Scan Game QR Code (Fixed 0-Score Issue)
+        // Scan Game QR Code
         async function scanGameQR() {
             if (!scannerActive) return;
 
@@ -184,7 +183,7 @@
                     const qrContent = code.data.trim();
                     updateStatus(`掃描到內容：${qrContent}`, "success");
                     
-                    // Parse QR Code (support GAME001 or GAME001:800)
+                    // Parse QR Code
                     let gameCode, score;
                     if (qrContent.includes(':')) {
                         const parts = qrContent.split(':');
@@ -192,12 +191,12 @@
                         score = parseInt(parts[1]) || 0;
                     } else {
                         gameCode = qrContent.trim();
-                        // Get default score from database (fix 0-score issue)
+                        // Get default score from database
                         const gameData = await getGameDefaultScore(gameCode);
                         score = gameData?.default_score || gameData?.max_score || 0;
                     }
 
-                    // Validate game code format
+                    // Validate game code
                     if (!gameCode.startsWith('GAME')) {
                         updateStatus(`QR碼格式錯誤：${qrContent}\n正確格式：GAME001 或 GAME001:800`, "error");
                         return;
@@ -205,21 +204,16 @@
 
                     updateStatus(`識別到遊戲：${gameCode}，分數：${score}，正在保存...`, "success");
                     
-                    // Save record and auto stop scanner
+                    // Save record
                     await saveGameRecord(gameCode, score);
                     stopScanner();
                     scanBtn.disabled = false;
                     scanBtn.textContent = "開啟掃描器";
                     updateStatus(`✅ 掃描完成！遊戲：${gameCode}，分數：${score}`, "success");
                     
-                    // Refresh stats after new record
+                    // Refresh stats
                     await loadUserStats();
-                } else {
-                    if (scanStatus.textContent.includes("相機已開啟")) {
-                        updateStatus("相機已開啟，請將QR碼對準鏡頭", "info");
-                    }
                 }
-
             } catch (err) {
                 updateStatus(`掃描出錯：${err.message}`, "error");
                 scanBtn.disabled = false;
@@ -228,23 +222,16 @@
             }
         }
 
-        // Get Game Default Score from Database
+        // Get Game Default Score
         async function getGameDefaultScore(gameCode) {
             try {
-                if (!window.dbManager.initialized) {
-                    await window.dbManager.init();
-                }
-
                 const { data, error } = await window.dbManager.client
                     .from('games')
                     .select('id, game_name, max_score, default_score')
                     .eq('game_code', gameCode)
                     .single();
 
-                if (error) {
-                    throw new Error(`遊戲 ${gameCode} 不存在`);
-                }
-
+                if (error) throw new Error(`遊戲 ${gameCode} 不存在`);
                 return data;
             } catch (err) {
                 console.error("獲取遊戲分數失敗：", err);
@@ -252,13 +239,9 @@
             }
         }
 
-        // Save Game Record to Database
+        // Save Game Record
         async function saveGameRecord(gameCode, score) {
             try {
-                if (!window.dbManager.initialized) {
-                    await window.dbManager.init();
-                }
-
                 // Get game ID
                 const { data: gameData, error: gameError } = await window.dbManager.client
                     .from('games')
@@ -266,9 +249,7 @@
                     .eq('game_code', gameCode)
                     .single();
 
-                if (gameError) {
-                    throw new Error(`遊戲不存在：${gameCode}`);
-                }
+                if (gameError) throw new Error(`遊戲不存在：${gameCode}`);
 
                 // Insert record
                 const { error: recordError } = await window.dbManager.client
@@ -279,9 +260,7 @@
                         score: score
                     }]);
 
-                if (recordError) {
-                    throw new Error(`保存紀錄失敗：${recordError.message}`);
-                }
+                if (recordError) throw new Error(`保存紀錄失敗：${recordError.message}`);
 
             } catch (err) {
                 updateStatus(`❌ 保存失敗：${err.message}`, "error");
@@ -289,7 +268,7 @@
             }
         }
 
-        // Load User Stats (Total Score + Game Records)
+        // Load User Stats
         async function loadUserStats() {
             try {
                 const records = await getUserGameRecords();
