@@ -165,7 +165,7 @@
             }
         }
 
-        // Scan Game QR Code (Support GAME001 or GAME001:800 format)
+        // Scan Game QR Code (Fixed 0-Score Issue)
         async function scanGameQR() {
             if (!scannerActive) return;
 
@@ -184,15 +184,17 @@
                     const qrContent = code.data.trim();
                     updateStatus(`掃描到內容：${qrContent}`, "success");
                     
-                    // Support both formats: GAME001 or GAME001:800
+                    // Parse QR Code (support GAME001 or GAME001:800)
                     let gameCode, score;
                     if (qrContent.includes(':')) {
                         const parts = qrContent.split(':');
-                        gameCode = parts[0];
+                        gameCode = parts[0].trim();
                         score = parseInt(parts[1]) || 0;
                     } else {
-                        gameCode = qrContent;
-                        score = 0; // Default score if not provided
+                        gameCode = qrContent.trim();
+                        // Get default score from database (fix 0-score issue)
+                        const gameData = await getGameDefaultScore(gameCode);
+                        score = gameData?.default_score || gameData?.max_score || 0;
                     }
 
                     // Validate game code format
@@ -223,6 +225,30 @@
                 scanBtn.disabled = false;
                 scanBtn.textContent = "開啟掃描器";
                 console.error("掃描錯誤：", err);
+            }
+        }
+
+        // Get Game Default Score from Database
+        async function getGameDefaultScore(gameCode) {
+            try {
+                if (!window.dbManager.initialized) {
+                    await window.dbManager.init();
+                }
+
+                const { data, error } = await window.dbManager.client
+                    .from('games')
+                    .select('id, game_name, max_score, default_score')
+                    .eq('game_code', gameCode)
+                    .single();
+
+                if (error) {
+                    throw new Error(`遊戲 ${gameCode} 不存在`);
+                }
+
+                return data;
+            } catch (err) {
+                console.error("獲取遊戲分數失敗：", err);
+                return null;
             }
         }
 
@@ -293,7 +319,7 @@
 
             } catch (err) {
                 recordsListEl.innerHTML = `<div class="no-records">加載紀錄失敗</div>`;
-                console.error("Load Stats Error:", err);
+                console.error("加載統計數據失敗：", err);
             }
         }
 
