@@ -1,5 +1,5 @@
 // --------------------------
-// Core: User State Management (LocalStorage)
+// Core: User State Management
 // --------------------------
 function saveUserToStorage(user) {
     user.table = user.table || (user.username === "admin" ? "admins" : "users");
@@ -11,14 +11,10 @@ function getUserFromStorage() {
     return userStr ? JSON.parse(userStr) : null;
 }
 
-function clearUserStorage() {
-    localStorage.removeItem('qrGameUser');
-}
-
 window.currentUser = getUserFromStorage();
 
 // --------------------------
-// 1. User Login (Username Only - Redirect to scan.html + Config Checks)
+// 1. User Login (Username Only)
 // --------------------------
 async function userLoginByUsername() {
     const username = document.getElementById('username').value.trim();
@@ -28,16 +24,10 @@ async function userLoginByUsername() {
         return;
     }
 
-    // Critical: Check config first
-    if (!window.dbManager) {
-        alert("❌ 找不到資料庫配置！\n請確認：\n1. js/config.js文件已創建\n2. 文件路徑正確\n3. Supabase配置已填寫");
-        return;
-    }
-
-    // Force database initialization (with error handling)
+    // 初始化資料庫
     const initOk = await window.dbManager.init();
     if (!initOk) {
-        alert("❌ 資料庫初始化失敗！\n請檢查：\n1. config.js中的Supabase URL是否正確\n2. config.js中的Anon Key是否正確\n3. 網路連接是否正常");
+        alert("❌ 無法連接資料庫，請稍後再試！");
         return;
     }
 
@@ -50,9 +40,7 @@ async function userLoginByUsername() {
 
         if (error) {
             let errorMsg = `❌ 登入失敗：${error.message}`;
-            if (error.code === 'PGRST116') {
-                errorMsg += "\n提示：該用戶名不存在！測試用戶名：testuser1";
-            }
+            if (error.code === 'PGRST116') errorMsg += "\n提示：該用戶名不存在！測試用戶名：testuser1";
             alert(errorMsg);
             return;
         }
@@ -62,12 +50,11 @@ async function userLoginByUsername() {
             return;
         }
 
-        data.table = "users";
-        window.currentUser = data;
         saveUserToStorage(data);
+        window.currentUser = data;
         
         alert(`✅ 登入成功！歡迎你，${data.username}！`);
-        window.location.href = "scan.html"; // Redirect to scan page
+        window.location.href = "scan.html";
 
     } catch (err) {
         alert(`❌ 登入異常：${err.message}`);
@@ -76,7 +63,7 @@ async function userLoginByUsername() {
 }
 
 // --------------------------
-// 2. Admin Login (Username + Password + Config Checks)
+// 2. Admin Login
 // --------------------------
 async function adminLogin() {
     const username = document.getElementById('admin-username').value.trim();
@@ -87,16 +74,9 @@ async function adminLogin() {
         return;
     }
 
-    // Critical: Check config first
-    if (!window.dbManager) {
-        alert("❌ 找不到資料庫配置！\n請確認：\n1. js/config.js文件已創建\n2. 文件路徑正確\n3. Supabase配置已填寫");
-        return;
-    }
-
-    // Force database initialization
     const initOk = await window.dbManager.init();
     if (!initOk) {
-        alert("❌ 資料庫初始化失敗！\n請檢查：\n1. config.js中的Supabase URL是否正確\n2. config.js中的Anon Key是否正確\n3. 網路連接是否正常");
+        alert("❌ 無法連接資料庫，請稍後再試！");
         return;
     }
 
@@ -110,9 +90,7 @@ async function adminLogin() {
 
         if (error) {
             let errorMsg = `❌ 管理員登入失敗：${error.message}`;
-            if (error.code === 'PGRST116') {
-                errorMsg += "\n提示：帳號或密碼錯誤！測試帳號：admin / 密碼：admin123";
-            }
+            if (error.code === 'PGRST116') errorMsg += "\n提示：帳號或密碼錯誤！測試帳號：admin / 密碼：admin123";
             alert(errorMsg);
             return;
         }
@@ -122,9 +100,8 @@ async function adminLogin() {
             return;
         }
 
-        data.table = "admins";
-        window.currentUser = data;
         saveUserToStorage(data);
+        window.currentUser = data;
         
         alert("✅ 管理員登入成功！");
         window.location.href = "admin-management.html";
@@ -139,32 +116,22 @@ async function adminLogin() {
 // 3. Logout Function
 // --------------------------
 function logout() {
+    localStorage.removeItem('qrGameUser');
     window.currentUser = null;
-    clearUserStorage();
     alert("✅ 已成功登出！");
     window.location.href = "user-login.html";
 }
 
 // --------------------------
-// 4. Login Validation (Fix "Please Login" Popup + Config Checks)
+// 4. Login Validation
 // --------------------------
 function checkLogin() {
-    // Pre-check config
-    if (!window.dbManager) {
-        alert("❌ 找不到資料庫配置！請檢查js/config.js");
-        window.location.href = "user-login.html";
-        return false;
-    }
-
     window.currentUser = getUserFromStorage();
     
     if (!window.currentUser) {
         setTimeout(() => {
-            window.currentUser = getUserFromStorage();
-            if (!window.currentUser) {
-                alert("❌ 請先登入系統！");
-                window.location.href = "user-login.html";
-            }
+            alert("❌ 請先登入系統！");
+            window.location.href = "user-login.html";
         }, 300);
         return false;
     }
@@ -186,19 +153,12 @@ function checkAdmin() {
 }
 
 // --------------------------
-// 6. Get User Game Records (For scan.html stats)
+// 6. Get User Game Records
 // --------------------------
 async function getUserGameRecords() {
-    // Pre-check config
-    if (!window.dbManager) {
-        console.error("❌ 找不到資料庫配置！");
-        return [];
-    }
-
     try {
-        if (!window.dbManager.initialized) {
-            await window.dbManager.init();
-        }
+        const initOk = await window.dbManager.init();
+        if (!initOk) return [];
 
         const { data, error } = await window.dbManager.client
             .from('game_records')
@@ -209,10 +169,7 @@ async function getUserGameRecords() {
             .eq('user_id', window.currentUser.id)
             .order('scanned_at', { ascending: false });
 
-        if (error) {
-            throw new Error(error.message);
-        }
-
+        if (error) throw new Error(error.message);
         return data || [];
     } catch (err) {
         console.error("Get User Records Error:", err);
@@ -221,7 +178,7 @@ async function getUserGameRecords() {
 }
 
 // --------------------------
-// 7. Calculate Total Score (For scan.html stats)
+// 7. Calculate Total Score
 // --------------------------
 function calculateTotalScore(records) {
     return records.reduce((total, record) => total + record.score, 0);
