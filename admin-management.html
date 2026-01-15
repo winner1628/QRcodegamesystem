@@ -28,7 +28,8 @@
 
     <div class="tab-container">
         <button class="tab-btn active" onclick="switchTab('games')">遊戲管理</button>
-        <button class="tab-btn" onclick="switchTab('users')">用戶管理</button>
+        <button class="tab-btn" onclick="switchTab('users')">普通用戶管理</button>
+        <button class="tab-btn" onclick="switchTab('admins')">管理員管理</button>
         <button class="tab-btn" onclick="switchTab('records')">遊戲紀錄</button>
     </div>
 
@@ -44,12 +45,23 @@
         </table>
     </div>
 
-    <!-- 用戶管理標籤 -->
+    <!-- 普通用戶管理標籤 -->
     <div id="users" class="tab-content">
-        <h2>用戶列表</h2>
+        <h2>普通用戶列表</h2>
         <table id="users-table">
             <thead>
                 <tr><th>用戶名</th><th>用戶ID</th><th>註冊時間</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- 管理員管理標籤 -->
+    <div id="admins" class="tab-content">
+        <h2>管理員列表</h2>
+        <table id="admins-table">
+            <thead>
+                <tr><th>管理員帳號</th><th>建立時間</th></tr>
             </thead>
             <tbody></tbody>
         </table>
@@ -78,6 +90,7 @@
             // 加載所有數據
             await loadGamesData();
             await loadUsersData();
+            await loadAdminsData();
             await loadRecordsData();
         };
 
@@ -110,13 +123,13 @@
             });
         }
 
-        // 加載用戶數據
+        // 加載普通用戶數據
         async function loadUsersData() {
             const users = await window.dbManager.getAllUsers();
             const tbody = document.querySelector('#users-table tbody');
             tbody.innerHTML = '';
             if (users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">暂无用戶數據</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">暂无普通用戶數據</td></tr>';
                 return;
             }
             users.forEach(user => {
@@ -126,6 +139,26 @@
                     <tr>
                         <td>${user.username}</td>
                         <td>${user.id.substring(0, 8)}...</td>
+                        <td>${createTime}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // 加載管理員數據
+        async function loadAdminsData() {
+            const admins = await window.dbManager.getAllAdmins();
+            const tbody = document.querySelector('#admins-table tbody');
+            tbody.innerHTML = '';
+            if (admins.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;">暂无管理員數據</td></tr>';
+                return;
+            }
+            admins.forEach(admin => {
+                const createTime = new Date(admin.created_at).toLocaleString('zh-TW');
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${admin.username}</td>
                         <td>${createTime}</td>
                     </tr>
                 `;
