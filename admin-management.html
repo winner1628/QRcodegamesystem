@@ -277,74 +277,105 @@
 
     <!-- JS加載 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/config.js"></script>
-    <script src="js/auth.js"></script>
     <script>
+        // ===== 核心修復：獨立的資料庫配置與初始化 =====
+        const SUPABASE_URL = "YOUR_SUPABASE_URL"; // 替換為你的Supabase URL
+        const SUPABASE_KEY = "YOUR_SUPABASE_KEY";   // 替換為你的Supabase Key
+        
+        // 初始化Supabase客戶端
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
         // 全局變量
+        let currentUser = null;
         let allGameRecords = [];
         let allUsers = [];       // 存儲所有用戶列表
         let allGames = [];       // 存儲所有遊戲列表
         
-        // 頁面加載時檢查管理員權限
+        // ===== 修復：頁面加載初始化 =====
         window.onload = async function() {
-            if (!checkAdmin()) return;
-            await window.dbManager.init();
-            loadDashboardStats();
-            loadUserTotalScoresList();
+            try {
+                // 1. 檢查管理員登錄狀態
+                currentUser = JSON.parse(localStorage.getItem('qrGameUser'));
+                if (!currentUser || currentUser.role !== 'admin') {
+                    alert("⚠️ 請先以管理員身份登錄！");
+                    window.location.href = "admin-login.html";
+                    return;
+                }
+                
+                // 2. 初始化數據加載
+                await loadDashboardStats();
+                await loadUserTotalScoresList();
+                
+                // 3. 預加載基礎數據
+                await Promise.all([
+                    loadUsersForFilter(),
+                    loadGamesForFilter()
+                ]);
+                
+                console.log("✅ 管理後台初始化完成");
+            } catch (error) {
+                console.error("❌ 初始化失敗：", error);
+                alert(`初始化失敗：${error.message}\n請刷新頁面重試`);
+            }
         };
 
-        // 管理員登出
+        // ===== 修復：登出功能 =====
         function adminLogout() {
-            localStorage.removeItem('qrGameUser');
-            window.currentUser = null;
-            alert("✅ 管理員已成功登出！");
-            window.location.href = "admin-login.html";
-        }
-
-        // 切換標籤
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            document.querySelector(`.tab-btn[onclick="switchTab('${tabId}')"]`).classList.add('active');
-            document.getElementById(tabId).classList.add('active');
-            
-            if (tabId === 'games' && document.getElementById('games-list').classList.contains('loading')) {
-                loadGamesList();
-            }
-            if (tabId === 'users' && document.getElementById('users-list').classList.contains('loading')) {
-                loadUsersList();
-            }
-            if (tabId === 'records') {
-                // 加載遊戲紀錄的同時加載用戶/遊戲下拉列表
-                await loadUsersForFilter();
-                await loadGamesForFilter();
-                if (document.getElementById('records-list').classList.contains('loading')) {
-                    loadRecordsList();
-                }
-            }
-            if (tabId === 'user-scores' && document.getElementById('user-scores-list').classList.contains('loading')) {
-                loadUserTotalScoresList();
-            }
-            if (tabId === 'data-management') {
-                updateDataStatus();
+            try {
+                localStorage.removeItem('qrGameUser');
+                currentUser = null;
+                alert("✅ 管理員已成功登出！");
+                window.location.href = "admin-login.html";
+            } catch (error) {
+                console.error("登出失敗：", error);
+                alert(`登出失敗：${error.message}`);
             }
         }
 
-        // 加載用戶列表到下拉選單
+        // ===== 修復：標籤切換功能 =====
+        async function switchTab(tabId) {
+            try {
+                // 切換標籤樣式
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                document.querySelector(`.tab-btn[onclick="switchTab('${tabId}')"]`).classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+                
+                // 延遲加載數據，避免卡頓
+                setTimeout(async () => {
+                    if (tabId === 'games' && document.getElementById('games-list').classList.contains('loading')) {
+                        await loadGamesList();
+                    }
+                    if (tabId === 'users' && document.getElementById('users-list').classList.contains('loading')) {
+                        await loadUsersList();
+                    }
+                    if (tabId === 'records') {
+                        if (document.getElementById('records-list').classList.contains('loading')) {
+                            await loadRecordsList();
+                        }
+                    }
+                    if (tabId === 'data-management') {
+                        await updateDataStatus();
+                    }
+                }, 50);
+            } catch (error) {
+                console.error("切換標籤失敗：", error);
+                showMessage('score-msg', `切換標籤失敗：${error.message}`, false);
+            }
+        }
+
+        // ===== 篩選下拉列表加載 =====
         async function loadUsersForFilter() {
             try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) return;
-
-                const { data: users } = await window.dbManager.client
+                const { data: users, error } = await supabase
                     .from('users')
                     .select('id, username')
                     .order('username');
                 
+                if (error) throw error;
+                
                 allUsers = users || [];
                 const selectElement = document.getElementById('filter-username');
-                
-                // 清空並重新加載
                 selectElement.innerHTML = '<option value="">-- 所有用戶 --</option>';
                 
                 if (users && users.length > 0) {
@@ -356,25 +387,21 @@
                     });
                 }
             } catch (err) {
-                console.error("Load Users For Filter Error:", err);
+                console.error("加載用戶篩選列表失敗：", err);
             }
         }
 
-        // 加載遊戲列表到下拉選單
         async function loadGamesForFilter() {
             try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) return;
-
-                const { data: games } = await window.dbManager.client
+                const { data: games, error } = await supabase
                     .from('games')
                     .select('id, game_name')
                     .order('game_name');
                 
+                if (error) throw error;
+                
                 allGames = games || [];
                 const selectElement = document.getElementById('filter-gamename');
-                
-                // 清空並重新加載
                 selectElement.innerHTML = '<option value="">-- 所有遊戲 --</option>';
                 
                 if (games && games.length > 0) {
@@ -386,33 +413,37 @@
                     });
                 }
             } catch (err) {
-                console.error("Load Games For Filter Error:", err);
+                console.error("加載遊戲篩選列表失敗：", err);
             }
         }
 
-        // 顯示消息
+        // ===== 通用工具函數 =====
         function showMessage(elementId, text, isSuccess = true) {
             const msgBox = document.getElementById(elementId);
+            if (!msgBox) return;
+            
             msgBox.textContent = text;
             msgBox.className = `msg-box ${isSuccess ? 'success-msg' : 'error-msg'}`;
             msgBox.style.display = 'block';
+            
             setTimeout(() => {
                 msgBox.style.display = 'none';
             }, 3000);
         }
 
-        // 顯示批量/導出結果
         function showResult(elementId, text, isSuccess = true) {
             const resultBox = document.getElementById(elementId);
+            if (!resultBox) return;
+            
             resultBox.textContent = text;
             resultBox.className = `${elementId.includes('export') ? 'export-result' : 'batch-result'} ${isSuccess ? 'success-result' : 'error-result'}`;
             resultBox.style.display = 'block';
+            
             setTimeout(() => {
                 resultBox.style.display = 'none';
             }, 5000);
         }
 
-        // 解析CSV文件
         function parseCSV(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -420,7 +451,6 @@
                     const text = e.target.result;
                     const lines = text.trim().split('\n');
                     
-                    // 移除空白行
                     const validLines = lines.filter(line => line.trim() !== '');
                     
                     if (validLines.length === 0) {
@@ -428,11 +458,9 @@
                         return;
                     }
 
-                    // 解析標題行
                     const headers = validLines[0].split(',').map(header => header.trim());
                     const rows = [];
 
-                    // 解析數據行
                     for (let i = 1; i < validLines.length; i++) {
                         const line = validLines[i].trim();
                         if (line === '') continue;
@@ -458,7 +486,6 @@
             });
         }
 
-        // 生成並下載CSV文件
         function downloadCSV(csvContent, fileName) {
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
@@ -474,21 +501,19 @@
             URL.revokeObjectURL(url);
         }
 
-        // 更新數據狀態
+        // ===== 數據管理功能 =====
         async function updateDataStatus() {
             const dataStatus = document.getElementById('data-status');
             try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) {
-                    dataStatus.innerHTML = '<div class="error-msg" style="display:block">❌ 資料庫連接失敗</div>';
-                    return;
-                }
-
                 const [usersRes, gamesRes, recordsRes] = await Promise.all([
-                    window.dbManager.client.from('users').select('id'),
-                    window.dbManager.client.from('games').select('id'),
-                    window.dbManager.client.from('game_records').select('id')
+                    supabase.from('users').select('id'),
+                    supabase.from('games').select('id'),
+                    supabase.from('game_records').select('id')
                 ]);
+
+                if (usersRes.error) throw usersRes.error;
+                if (gamesRes.error) throw gamesRes.error;
+                if (recordsRes.error) throw recordsRes.error;
 
                 const usersCount = usersRes.data ? usersRes.data.length : 0;
                 const gamesCount = gamesRes.data ? gamesRes.data.length : 0;
@@ -502,11 +527,11 @@
                 `;
             } catch (err) {
                 dataStatus.innerHTML = `<div class="error-msg" style="display:block">❌ 獲取數據狀態失敗：${err.message}</div>`;
-                console.error("Update Data Status Error:", err);
+                console.error("更新數據狀態失敗：", err);
             }
         }
 
-        // 確認刪除所有系統數據 (增強版：刪除所有數據，僅保留管理員)
+        // ===== 增強版：刪除所有系統數據 =====
         async function confirmDeleteAllData() {
             if (!confirm('⚠️ 確定要刪除所有系統數據嗎？此操作將刪除所有用戶、遊戲、紀錄，僅保留管理員帳號！此操作不可撤銷！')) {
                 return;
@@ -516,74 +541,69 @@
             const dataStatus = document.getElementById('data-status');
             
             try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) {
-                    showMessage('data-msg', '❌ 資料庫連接失敗，無法執行刪除操作', false);
-                    return;
-                }
-
                 dataStatus.innerHTML = '<div class="loading">正在刪除所有系統數據...</div>';
                 
                 // 1. 刪除所有遊戲紀錄
-                await window.dbManager.client.from('game_records').delete().not('id', 'eq', 0);
+                const deleteRecords = await supabase.from('game_records').delete().not('id', 'eq', 0);
+                if (deleteRecords.error) throw deleteRecords.error;
                 
                 // 2. 刪除所有遊戲
-                await window.dbManager.client.from('games').delete().not('id', 'eq', 0);
+                const deleteGames = await supabase.from('games').delete().not('id', 'eq', 0);
+                if (deleteGames.error) throw deleteGames.error;
                 
                 // 3. 刪除所有普通用戶
-                await window.dbManager.client.from('users').delete().not('id', 'eq', 0);
+                const deleteUsers = await supabase.from('users').delete().not('id', 'eq', 0);
+                if (deleteUsers.error) throw deleteUsers.error;
                 
                 // 4. 確保管理員帳號存在 (刪除舊的再重建)
-                await window.dbManager.client.from('admins').delete().eq('username', 'admin');
-                await window.dbManager.client.from('admins').insert([{ 
+                await supabase.from('admins').delete().eq('username', 'admin');
+                const createAdmin = await supabase.from('admins').insert([{ 
                     username: 'admin', 
                     password: 'admin123'  // 默認管理員密碼
                 }]);
+                if (createAdmin.error) throw createAdmin.error;
 
                 showMessage('data-msg', '✅ 所有系統數據已成功刪除，管理員帳號已重建！', true);
                 
                 // 更新所有列表和狀態
-                updateDataStatus();
-                loadDashboardStats();
-                loadUserTotalScoresList();
-                loadGamesList();
-                loadUsersList();
-                loadRecordsList();
-                loadUsersForFilter();
-                loadGamesForFilter();
+                await Promise.all([
+                    updateDataStatus(),
+                    loadDashboardStats(),
+                    loadUserTotalScoresList(),
+                    loadGamesList(),
+                    loadUsersList(),
+                    loadRecordsList(),
+                    loadUsersForFilter(),
+                    loadGamesForFilter()
+                ]);
 
             } catch (err) {
                 showMessage('data-msg', `❌ 操作失敗：${err.message}`, false);
-                console.error("Delete All Data Error:", err);
-                updateDataStatus();
+                console.error("刪除數據失敗：", err);
+                await updateDataStatus();
             }
         }
 
-        // 加載儀表板統計
+        // ===== 儀表板統計 =====
         async function loadDashboardStats() {
             try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) {
-                    showMessage('score-msg', '❌ 無法加載統計數據：資料庫連接失敗', false);
-                    return;
-                }
+                // 加載用戶數量
+                const usersRes = await supabase.from('users').select('id');
+                document.getElementById('total-users').textContent = usersRes.data ? usersRes.data.length : 0;
 
-                const { data: usersData } = await window.dbManager.client.from('users').select('id');
-                document.getElementById('total-users').textContent = usersData ? usersData.length : 0;
+                // 加載遊戲數量
+                const gamesRes = await supabase.from('games').select('id');
+                document.getElementById('total-games').textContent = gamesRes.data ? gamesRes.data.length : 0;
 
-                const { data: gamesData } = await window.dbManager.client.from('games').select('id');
-                document.getElementById('total-games').textContent = gamesData ? gamesData.length : 0;
+                // 加載紀錄數量
+                const recordsRes = await supabase.from('game_records').select('id');
+                document.getElementById('total-records').textContent = recordsRes.data ? recordsRes.data.length : 0;
 
-                const { data: recordsData } = await window.dbManager.client.from('game_records').select('id');
-                document.getElementById('total-records').textContent = recordsData ? recordsData.length : 0;
-
-                const { data: allRecords } = await window.dbManager.client
-                    .from('game_records')
-                    .select('user_id, score');
-                
-                if (allRecords && allRecords.length > 0) {
+                // 計算最高分
+                const allRecordsRes = await supabase.from('game_records').select('user_id, score');
+                if (allRecordsRes.data && allRecordsRes.data.length > 0) {
                     const userTotalScores = {};
-                    allRecords.forEach(record => {
+                    allRecordsRes.data.forEach(record => {
                         userTotalScores[record.user_id] = (userTotalScores[record.user_id] || 0) + record.score;
                     });
                     const highestTotal = Math.max(...Object.values(userTotalScores), 0);
@@ -593,24 +613,21 @@
                 }
 
             } catch (err) {
-                console.error("Load Dashboard Stats Error:", err);
+                console.error("加載儀表板統計失敗：", err);
+                showMessage('score-msg', `加載統計數據失敗：${err.message}`, false);
             }
         }
 
-        // 加載用戶總分列表
+        // ===== 用戶總分列表 =====
         async function loadUserTotalScoresList() {
             const scoresList = document.getElementById('user-scores-list');
             
             try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) {
-                    scoresList.innerHTML = '<div class="error-msg" style="display:block">❌ 無法加載數據：資料庫連接失敗</div>';
-                    return;
-                }
-
-                const { data: users } = await window.dbManager.client
+                const { data: users, error } = await supabase
                     .from('users')
                     .select('id, username');
+                
+                if (error) throw error;
                 
                 if (!users || users.length === 0) {
                     scoresList.innerHTML = '<div class="loading">暫無用戶數據</div>';
@@ -619,7 +636,7 @@
 
                 const userTotalScores = [];
                 for (const user of users) {
-                    const { data: records } = await window.dbManager.client
+                    const { data: records } = await supabase
                         .from('game_records')
                         .select('score, games(game_name, game_code)')
                         .eq('user_id', user.id);
@@ -686,11 +703,11 @@
 
             } catch (err) {
                 scoresList.innerHTML = `<div class="error-msg" style="display:block">❌ 加載失敗：${err.message}</div>`;
-                console.error("Load User Total Scores Error:", err);
+                console.error("加載用戶總分失敗：", err);
             }
         }
 
-        // 新增單個遊戲
+        // ===== 遊戲管理功能 =====
         async function addNewGame() {
             const gameCode = document.getElementById('game-code').value.trim();
             const gameName = document.getElementById('game-name').value.trim();
@@ -706,14 +723,8 @@
                 return;
             }
 
-            const initOk = await window.dbManager.init();
-            if (!initOk) {
-                showMessage('game-msg', '❌ 資料庫連接失敗！', false);
-                return;
-            }
-
             try {
-                const { error } = await window.dbManager.client
+                const { error } = await supabase
                     .from('games')
                     .insert([{
                         game_code: gameCode,
@@ -722,7 +733,7 @@
                         default_score: defaultScore
                     }]);
 
-                if (error) throw new Error(error.message);
+                if (error) throw error;
 
                 // 清空表單
                 document.getElementById('game-code').value = '';
@@ -731,18 +742,21 @@
                 document.getElementById('game-default-score').value = '';
 
                 showMessage('game-msg', '✅ 遊戲新增成功！');
-                loadGamesList();
-                loadDashboardStats();
-                loadUserTotalScoresList();
-                loadGamesForFilter(); // 更新遊戲下拉列表
+                
+                // 更新相關列表
+                await Promise.all([
+                    loadGamesList(),
+                    loadDashboardStats(),
+                    loadUserTotalScoresList(),
+                    loadGamesForFilter()
+                ]);
 
             } catch (err) {
                 showMessage('game-msg', `❌ 新增失敗：${err.message}`, false);
-                console.error("Add Game Error:", err);
+                console.error("新增遊戲失敗：", err);
             }
         }
 
-        // 批量導入遊戲
         async function importGamesFromCSV() {
             const fileInput = document.getElementById('game-csv-file');
             const file = fileInput.files[0];
@@ -753,7 +767,6 @@
             }
 
             try {
-                // 解析CSV
                 const { headers, rows } = await parseCSV(file);
                 
                 // 驗證標題
@@ -770,14 +783,12 @@
                     return;
                 }
 
-                // 準備導入數據
                 const gamesToImport = [];
                 const errors = [];
 
                 rows.forEach((row, index) => {
-                    const rowNum = index + 2; // 標題行+當前行
+                    const rowNum = index + 2;
                     
-                    // 驗證必填欄位
                     if (!row.game_code) {
                         errors.push(`第${rowNum}行：遊戲代碼為空`);
                         return;
@@ -787,7 +798,6 @@
                         return;
                     }
                     
-                    // 轉換數字欄位
                     const maxScore = parseInt(row.max_score) || 0;
                     const defaultScore = parseInt(row.default_score) || 0;
 
@@ -799,179 +809,42 @@
                     });
                 });
 
-                // 顯示驗證錯誤
                 if (errors.length > 0) {
                     showResult('game-batch-result', `❌ 數據驗證失敗：${errors.join('；')}`, false);
                     return;
                 }
 
-                // 導入數據到資料庫
-                const initOk = await window.dbManager.init();
-                if (!initOk) {
-                    showResult('game-batch-result', '❌ 資料庫連接失敗', false);
-                    return;
-                }
-
-                // 批量插入
-                const { error } = await window.dbManager.client
+                const { error } = await supabase
                     .from('games')
                     .insert(gamesToImport);
 
-                if (error) throw new Error(error.message);
+                if (error) throw error;
 
-                // 顯示成功消息
                 showResult('game-batch-result', `✅ 成功導入 ${gamesToImport.length} 個遊戲`, true);
-                
-                // 清空文件選擇
                 fileInput.value = '';
                 
-                // 更新列表
-                loadGamesList();
-                loadDashboardStats();
-                loadGamesForFilter(); // 更新遊戲下拉列表
+                await Promise.all([
+                    loadGamesList(),
+                    loadDashboardStats(),
+                    loadGamesForFilter()
+                ]);
 
             } catch (err) {
                 showResult('game-batch-result', `❌ 導入失敗：${err.message}`, false);
-                console.error("Import Games Error:", err);
+                console.error("批量導入遊戲失敗：", err);
             }
         }
 
-        // 新增單個用戶
-        async function addNewUser() {
-            const username = document.getElementById('user-username').value.trim();
-
-            if (!username) {
-                showMessage('user-msg', '❌ 請輸入用戶名！', false);
-                return;
-            }
-
-            const initOk = await window.dbManager.init();
-            if (!initOk) {
-                showMessage('user-msg', '❌ 資料庫連接失敗！', false);
-                return;
-            }
-
-            try {
-                const { error } = await window.dbManager.client
-                    .from('users')
-                    .insert([{ username: username }]);
-
-                if (error) throw new Error(error.message);
-
-                // 清空表單
-                document.getElementById('user-username').value = '';
-
-                showMessage('user-msg', '✅ 用戶新增成功！');
-                loadUsersList();
-                loadDashboardStats();
-                loadUserTotalScoresList();
-                loadUsersForFilter(); // 更新用戶下拉列表
-
-            } catch (err) {
-                showMessage('user-msg', `❌ 新增失敗：${err.message}`, false);
-                console.error("Add User Error:", err);
-            }
-        }
-
-        // 批量導入用戶
-        async function importUsersFromCSV() {
-            const fileInput = document.getElementById('user-csv-file');
-            const file = fileInput.files[0];
-            
-            if (!file) {
-                showResult('user-batch-result', '❌ 請選擇CSV文件', false);
-                return;
-            }
-
-            try {
-                // 解析CSV
-                const { headers, rows } = await parseCSV(file);
-                
-                // 驗證標題
-                if (!headers.includes('username')) {
-                    showResult('user-batch-result', '❌ CSV格式錯誤：缺少 username 欄位', false);
-                    return;
-                }
-
-                if (rows.length === 0) {
-                    showResult('user-batch-result', '❌ CSV文件中沒有數據行', false);
-                    return;
-                }
-
-                // 準備導入數據
-                const usersToImport = [];
-                const errors = [];
-                const usernameSet = new Set(); // 避免重複用戶名
-
-                rows.forEach((row, index) => {
-                    const rowNum = index + 2;
-                    
-                    if (!row.username) {
-                        errors.push(`第${rowNum}行：用戶名為空`);
-                        return;
-                    }
-                    
-                    if (usernameSet.has(row.username)) {
-                        errors.push(`第${rowNum}行：用戶名 ${row.username} 重複`);
-                        return;
-                    }
-                    
-                    usernameSet.add(row.username);
-                    usersToImport.push({ username: row.username });
-                });
-
-                // 顯示驗證錯誤
-                if (errors.length > 0) {
-                    showResult('user-batch-result', `❌ 數據驗證失敗：${errors.join('；')}`, false);
-                    return;
-                }
-
-                // 導入數據到資料庫
-                const initOk = await window.dbManager.init();
-                if (!initOk) {
-                    showResult('user-batch-result', '❌ 資料庫連接失敗', false);
-                    return;
-                }
-
-                // 批量插入
-                const { error } = await window.dbManager.client
-                    .from('users')
-                    .insert(usersToImport);
-
-                if (error) throw new Error(error.message);
-
-                // 顯示成功消息
-                showResult('user-batch-result', `✅ 成功導入 ${usersToImport.length} 個用戶`, true);
-                
-                // 清空文件選擇
-                fileInput.value = '';
-                
-                // 更新列表
-                loadUsersList();
-                loadDashboardStats();
-                loadUsersForFilter(); // 更新用戶下拉列表
-
-            } catch (err) {
-                showResult('user-batch-result', `❌ 導入失敗：${err.message}`, false);
-                console.error("Import Users Error:", err);
-            }
-        }
-
-        // 加載遊戲列表
         async function loadGamesList() {
             const gamesList = document.getElementById('games-list');
             
             try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) {
-                    gamesList.innerHTML = '<div class="error-msg" style="display:block">❌ 無法加載數據：資料庫連接失敗</div>';
-                    return;
-                }
-
-                const { data } = await window.dbManager.client
+                const { data, error } = await supabase
                     .from('games')
                     .select('*')
                     .order('game_code');
+
+                if (error) throw error;
 
                 if (!data || data.length === 0) {
                     gamesList.innerHTML = '<div class="loading">暫無遊戲數據</div>';
@@ -1014,25 +887,122 @@
 
             } catch (err) {
                 gamesList.innerHTML = `<div class="error-msg" style="display:block">❌ 加載失敗：${err.message}</div>`;
-                console.error("Load Games Error:", err);
+                console.error("加載遊戲列表失敗：", err);
             }
         }
 
-        // 加載用戶列表
+        // ===== 用戶管理功能 =====
+        async function addNewUser() {
+            const username = document.getElementById('user-username').value.trim();
+
+            if (!username) {
+                showMessage('user-msg', '❌ 請輸入用戶名！', false);
+                return;
+            }
+
+            try {
+                const { error } = await supabase
+                    .from('users')
+                    .insert([{ username: username }]);
+
+                if (error) throw error;
+
+                document.getElementById('user-username').value = '';
+
+                showMessage('user-msg', '✅ 用戶新增成功！');
+                
+                await Promise.all([
+                    loadUsersList(),
+                    loadDashboardStats(),
+                    loadUserTotalScoresList(),
+                    loadUsersForFilter()
+                ]);
+
+            } catch (err) {
+                showMessage('user-msg', `❌ 新增失敗：${err.message}`, false);
+                console.error("新增用戶失敗：", err);
+            }
+        }
+
+        async function importUsersFromCSV() {
+            const fileInput = document.getElementById('user-csv-file');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showResult('user-batch-result', '❌ 請選擇CSV文件', false);
+                return;
+            }
+
+            try {
+                const { headers, rows } = await parseCSV(file);
+                
+                if (!headers.includes('username')) {
+                    showResult('user-batch-result', '❌ CSV格式錯誤：缺少 username 欄位', false);
+                    return;
+                }
+
+                if (rows.length === 0) {
+                    showResult('user-batch-result', '❌ CSV文件中沒有數據行', false);
+                    return;
+                }
+
+                const usersToImport = [];
+                const errors = [];
+                const usernameSet = new Set();
+
+                rows.forEach((row, index) => {
+                    const rowNum = index + 2;
+                    
+                    if (!row.username) {
+                        errors.push(`第${rowNum}行：用戶名為空`);
+                        return;
+                    }
+                    
+                    if (usernameSet.has(row.username)) {
+                        errors.push(`第${rowNum}行：用戶名 ${row.username} 重複`);
+                        return;
+                    }
+                    
+                    usernameSet.add(row.username);
+                    usersToImport.push({ username: row.username });
+                });
+
+                if (errors.length > 0) {
+                    showResult('user-batch-result', `❌ 數據驗證失敗：${errors.join('；')}`, false);
+                    return;
+                }
+
+                const { error } = await supabase
+                    .from('users')
+                    .insert(usersToImport);
+
+                if (error) throw error;
+
+                showResult('user-batch-result', `✅ 成功導入 ${usersToImport.length} 個用戶`, true);
+                fileInput.value = '';
+                
+                await Promise.all([
+                    loadUsersList(),
+                    loadDashboardStats(),
+                    loadUsersForFilter()
+                ]);
+
+            } catch (err) {
+                showResult('user-batch-result', `❌ 導入失敗：${err.message}`, false);
+                console.error("批量導入用戶失敗：", err);
+            }
+        }
+
         async function loadUsersList() {
             const usersList = document.getElementById('users-list');
             
             try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) {
-                    usersList.innerHTML = '<div class="error-msg" style="display:block">❌ 無法加載數據：資料庫連接失敗</div>';
-                    return;
-                }
-
-                const { data } = await window.dbManager.client
+                const { data, error } = await supabase
                     .from('users')
                     .select('*')
                     .order('username');
+
+                if (error) throw error;
 
                 if (!data || data.length === 0) {
                     usersList.innerHTML = '<div class="loading">暫無用戶數據</div>';
@@ -1071,22 +1041,16 @@
 
             } catch (err) {
                 usersList.innerHTML = `<div class="error-msg" style="display:block">❌ 加載失敗：${err.message}</div>`;
-                console.error("Load Users Error:", err);
+                console.error("加載用戶列表失敗：", err);
             }
         }
 
-        // 加載遊戲紀錄
+        // ===== 遊戲紀錄管理 =====
         async function loadRecordsList() {
             const recordsList = document.getElementById('records-list');
             
             try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) {
-                    recordsList.innerHTML = '<div class="error-msg" style="display:block">❌ 無法加載數據：資料庫連接失敗</div>';
-                    return;
-                }
-
-                const { data } = await window.dbManager.client
+                const { data, error } = await supabase
                     .from('game_records')
                     .select(`
                         *,
@@ -1095,7 +1059,8 @@
                     `)
                     .order('scanned_at', { ascending: false });
 
-                // 存儲原始數據
+                if (error) throw error;
+
                 allGameRecords = data || [];
 
                 if (!data || data.length === 0) {
@@ -1103,16 +1068,14 @@
                     return;
                 }
 
-                // 渲染表格
                 renderRecordsTable(data);
 
             } catch (err) {
                 recordsList.innerHTML = `<div class="error-msg" style="display:block">❌ 加載失敗：${err.message}</div>`;
-                console.error("Load Records Error:", err);
+                console.error("加載遊戲紀錄失敗：", err);
             }
         }
 
-        // 渲染遊戲紀錄表格
         function renderRecordsTable(records) {
             const recordsList = document.getElementById('records-list');
             
@@ -1156,43 +1119,36 @@
             recordsList.innerHTML = tableHTML;
         }
 
-        // 篩選遊戲紀錄 (適配下拉選單)
         function filterRecords() {
             if (allGameRecords.length === 0) {
                 showResult('export-result', '❌ 沒有可用的遊戲紀錄數據', false);
                 return;
             }
 
-            // 获取筛选条件 (下拉選單值)
             const usernameFilter = document.getElementById('filter-username').value.trim().toLowerCase();
             const gamenameFilter = document.getElementById('filter-gamename').value.trim().toLowerCase();
             const scoreMin = parseInt(document.getElementById('filter-score-min').value) || 0;
             const scoreMax = parseInt(document.getElementById('filter-score-max').value) || 999999;
             const sortBy = document.getElementById('sort-by').value;
 
-            // 应用筛选
             let filteredRecords = [...allGameRecords];
             
-            // 用户名筛选 (下拉選單)
             if (usernameFilter) {
                 filteredRecords = filteredRecords.filter(record => 
                     (record.users?.username || '').toLowerCase() === usernameFilter
                 );
             }
 
-            // 游戏名筛选 (下拉選單)
             if (gamenameFilter) {
                 filteredRecords = filteredRecords.filter(record => 
                     (record.games?.game_name || '').toLowerCase() === gamenameFilter
                 );
             }
 
-            // 分数范围筛选
             filteredRecords = filteredRecords.filter(record => 
                 record.score >= scoreMin && record.score <= scoreMax
             );
 
-            // 应用排序
             switch (sortBy) {
                 case 'scanned_at_desc':
                     filteredRecords.sort((a, b) => new Date(b.scanned_at) - new Date(a.scanned_at));
@@ -1218,12 +1174,10 @@
                     break;
             }
 
-            // 渲染筛选后的表格
             renderRecordsTable(filteredRecords);
             showResult('export-result', `✅ 篩選完成，共找到 ${filteredRecords.length} 條紀錄`, true);
         }
 
-        // 重置筛选条件
         function resetFilter() {
             document.getElementById('filter-username').value = '';
             document.getElementById('filter-gamename').value = '';
@@ -1231,12 +1185,10 @@
             document.getElementById('filter-score-max').value = '';
             document.getElementById('sort-by').value = 'scanned_at_desc';
             
-            // 重新渲染原始数据
             renderRecordsTable(allGameRecords);
             showResult('export-result', '✅ 篩選條件已重置', true);
         }
 
-        // 点击表头排序
         function sortRecords(sortType) {
             const sortMap = {
                 'username': 'username_asc',
@@ -1250,31 +1202,25 @@
             filterRecords();
         }
 
-        // 導出用戶總分統計CSV
+        // ===== 數據導出功能 =====
         async function exportUserTotalScores() {
             try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) {
-                    showResult('export-result', '❌ 資料庫連接失敗', false);
-                    return;
-                }
-
-                // 获取用户总分数据
-                const { data: users } = await window.dbManager.client
+                const { data: users, error } = await supabase
                     .from('users')
                     .select('id, username');
+                
+                if (error) throw error;
                 
                 if (!users || users.length === 0) {
                     showResult('export-result', '❌ 沒有可用的用戶數據', false);
                     return;
                 }
 
-                // 构建CSV内容
                 let csvContent = "排名,用戶名,總分數,參與遊戲次數,最後參與遊戲,遊戲代碼\n";
                 const userTotalScores = [];
 
                 for (const user of users) {
-                    const { data: records } = await window.dbManager.client
+                    const { data: records } = await supabase
                         .from('game_records')
                         .select('score, games(game_name, game_code)')
                         .eq('user_id', user.id);
@@ -1301,13 +1247,11 @@
                     });
                 }
 
-                // 排序并生成CSV
                 userTotalScores.sort((a, b) => b.total_score - a.total_score);
                 userTotalScores.forEach((item, index) => {
                     csvContent += `${index + 1},${item.username},${item.total_score},${item.game_count},${item.last_game_name},${item.last_game_code}\n`;
                 });
 
-                // 下载CSV
                 const fileName = `用戶總分統計_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
                 downloadCSV(csvContent, fileName);
                 
@@ -1315,37 +1259,30 @@
 
             } catch (err) {
                 showResult('export-result', `❌ 導出失敗：${err.message}`, false);
-                console.error("Export User Total Scores Error:", err);
+                console.error("導出用戶總分失敗：", err);
             }
         }
 
-        // 導出遊戲管理CSV
         async function exportGames() {
             try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) {
-                    showResult('export-result', '❌ 資料庫連接失敗', false);
-                    return;
-                }
-
-                const { data: games } = await window.dbManager.client
+                const { data: games, error } = await supabase
                     .from('games')
                     .select('*')
                     .order('game_code');
+                
+                if (error) throw error;
                 
                 if (!games || games.length === 0) {
                     showResult('export-result', '❌ 沒有可用的遊戲數據', false);
                     return;
                 }
 
-                // 构建CSV内容
                 let csvContent = "遊戲代碼,遊戲名稱,最高分數,默認分數,創建時間\n";
                 games.forEach(game => {
                     const createTime = new Date(game.created_at).toLocaleString('zh-TW');
                     csvContent += `${game.game_code},${game.game_name},${game.max_score},${game.default_score},${createTime}\n`;
                 });
 
-                // 下载CSV
                 const fileName = `遊戲管理數據_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
                 downloadCSV(csvContent, fileName);
                 
@@ -1353,37 +1290,30 @@
 
             } catch (err) {
                 showResult('export-result', `❌ 導出失敗：${err.message}`, false);
-                console.error("Export Games Error:", err);
+                console.error("導出遊戲數據失敗：", err);
             }
         }
 
-        // 導出用戶管理CSV
         async function exportUsers() {
             try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) {
-                    showResult('export-result', '❌ 資料庫連接失敗', false);
-                    return;
-                }
-
-                const { data: users } = await window.dbManager.client
+                const { data: users, error } = await supabase
                     .from('users')
                     .select('*')
                     .order('username');
+                
+                if (error) throw error;
                 
                 if (!users || users.length === 0) {
                     showResult('export-result', '❌ 沒有可用的用戶數據', false);
                     return;
                 }
 
-                // 构建CSV内容
                 let csvContent = "用戶ID,用戶名,創建時間\n";
                 users.forEach(user => {
                     const createTime = new Date(user.created_at).toLocaleString('zh-TW');
                     csvContent += `${user.id},${user.username},${createTime}\n`;
                 });
 
-                // 下载CSV
                 const fileName = `用戶管理數據_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
                 downloadCSV(csvContent, fileName);
                 
@@ -1391,20 +1321,13 @@
 
             } catch (err) {
                 showResult('export-result', `❌ 導出失敗：${err.message}`, false);
-                console.error("Export Users Error:", err);
+                console.error("導出用戶數據失敗：", err);
             }
         }
 
-        // 導出遊戲紀錄CSV
         async function exportGameRecords() {
             try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) {
-                    showResult('export-result', '❌ 資料庫連接失敗', false);
-                    return;
-                }
-
-                const { data: records } = await window.dbManager.client
+                const { data: records, error } = await supabase
                     .from('game_records')
                     .select(`
                         *,
@@ -1413,19 +1336,19 @@
                     `)
                     .order('scanned_at', { ascending: false });
                 
+                if (error) throw error;
+                
                 if (!records || records.length === 0) {
                     showResult('export-result', '❌ 沒有可用的遊戲紀錄數據', false);
                     return;
                 }
 
-                // 构建CSV内容
                 let csvContent = "用戶名,遊戲名稱,遊戲代碼,分數,掃描時間\n";
                 records.forEach(record => {
                     const scanTime = new Date(record.scanned_at).toLocaleString('zh-TW');
                     csvContent += `${record.users?.username || '未知用戶'},${record.games?.game_name || '未知遊戲'},${record.games?.game_code || '未知代碼'},${record.score},${scanTime}\n`;
                 });
 
-                // 下载CSV
                 const fileName = `遊戲紀錄數據_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
                 downloadCSV(csvContent, fileName);
                 
@@ -1433,7 +1356,7 @@
 
             } catch (err) {
                 showResult('export-result', `❌ 導出失敗：${err.message}`, false);
-                console.error("Export Game Records Error:", err);
+                console.error("導出遊戲紀錄失敗：", err);
             }
         }
     </script>
