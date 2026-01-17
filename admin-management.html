@@ -200,7 +200,7 @@
             }, 3000);
         }
 
-        // 更新數據狀態 (新增)
+        // 更新數據狀態 (修復：正確獲取數據量)
         async function updateDataStatus() {
             const dataStatus = document.getElementById('data-status');
             try {
@@ -210,25 +210,31 @@
                     return;
                 }
 
-                // 獲取各表數據量
-                const [usersCount, gamesCount, recordsCount] = await Promise.all([
-                    window.dbManager.client.from('users').select('count', { count: 'exact', head: true }),
-                    window.dbManager.client.from('games').select('count', { count: 'exact', head: true }),
-                    window.dbManager.client.from('game_records').select('count', { count: 'exact', head: true })
+                // 修正：正確獲取各表數據量 (移除 head: true 導致的錯誤)
+                const [usersRes, gamesRes, recordsRes] = await Promise.all([
+                    window.dbManager.client.from('users').select('id'),
+                    window.dbManager.client.from('games').select('id'),
+                    window.dbManager.client.from('game_records').select('id')
                 ]);
+
+                // 計算數據量
+                const usersCount = usersRes.data ? usersRes.data.length : 0;
+                const gamesCount = gamesRes.data ? gamesRes.data.length : 0;
+                const recordsCount = recordsRes.data ? recordsRes.data.length : 0;
 
                 dataStatus.innerHTML = `
                     <div>📊 當前數據狀態：</div>
-                    <div>• 用戶數量：${usersCount.data || 0}</div>
-                    <div>• 遊戲數量：${gamesCount.data || 0}</div>
-                    <div>• 遊戲紀錄：${recordsCount.data || 0}</div>
+                    <div>• 用戶數量：${usersCount}</div>
+                    <div>• 遊戲數量：${gamesCount}</div>
+                    <div>• 遊戲紀錄：${recordsCount}</div>
                 `;
             } catch (err) {
                 dataStatus.innerHTML = `<div class="error-msg" style="display:block">❌ 獲取數據狀態失敗：${err.message}</div>`;
+                console.error("Update Data Status Error:", err);
             }
         }
 
-        // 確認刪除所有數據 (新增)
+        // 確認刪除所有數據 (修復：避免重複創建測試用戶)
         async function confirmDeleteAllData() {
             if (!confirm('⚠️ 確定要刪除所有系統數據嗎？此操作不可撤銷！刪除後將自動創建測試數據。')) {
                 return;
@@ -246,30 +252,50 @@
 
                 dataStatus.innerHTML = '<div class="loading">正在刪除所有數據...</div>';
                 
-                // 1. 刪除所有遊戲紀錄
-                await window.dbManager.client.from('game_records').delete().not('id', 'eq', 0);
+                // 1. 先檢查並刪除已存在的測試用戶 (避免重複)
+                await window.dbManager.client.from('users').delete().eq('username', 'testuser1');
                 
-                // 2. 刪除所有遊戲
-                await window.dbManager.client.from('games').delete().not('id', 'eq', 0);
+                // 2. 先檢查並刪除已存在的測試遊戲 (避免重複)
+                await window.dbManager.client.from('games').delete().eq('game_code', 'GAME001');
                 
-                // 3. 刪除所有普通用戶
-                await window.dbManager.client.from('users').delete().not('id', 'eq', 0);
+                // 3. 刪除所有遊戲紀錄
+                const deleteRecords = await window.dbManager.client.from('game_records').delete().not('id', 'eq', 0);
+                if (deleteRecords.error) console.warn("刪除遊戲紀錄警告：", deleteRecords.error.message);
                 
-                // 4. 保留管理員帳號，刪除其他管理員（如有）
-                await window.dbManager.client.from('admins').delete().neq('username', 'admin');
+                // 4. 刪除所有遊戲 (除了可能的測試遊戲，已單獨刪除)
+                const deleteGames = await window.dbManager.client.from('games').delete().not('id', 'eq', 0);
+                if (deleteGames.error) console.warn("刪除遊戲警告：", deleteGames.error.message);
+                
+                // 5. 刪除所有普通用戶 (除了管理員相關)
+                const deleteUsers = await window.dbManager.client.from('users').delete().not('id', 'eq', 0);
+                if (deleteUsers.error) console.warn("刪除用戶警告：", deleteUsers.error.message);
 
                 showMessage('data-msg', '✅ 所有數據已成功刪除，正在創建測試數據...');
                 
-                // 5. 創建測試用戶
+                // 6. 創建測試用戶 (保證唯一性)
                 const { data: testUser, error: userError } = await window.dbManager.client
                     .from('users')
                     .insert([{ username: 'testuser1' }])
                     .select()
                     .single();
                 
-                if (userError) throw new Error(`創建測試用戶失敗：${userError.message}`);
+                if (userError) {
+                    // 如果創建失敗，嘗試查詢已存在的testuser1
+                    const { data: existingUser } = await window.dbManager.client
+                        .from('users')
+                        .select('id')
+                        .eq('username', 'testuser1')
+                        .single();
+                    
+                    if (existingUser) {
+                        testUser = existingUser;
+                        console.log("使用已存在的測試用戶：testuser1");
+                    } else {
+                        throw new Error(`創建測試用戶失敗：${userError.message}`);
+                    }
+                }
 
-                // 6. 創建測試遊戲
+                // 7. 創建測試遊戲 (保證唯一性)
                 const { data: testGame, error: gameError } = await window.dbManager.client
                     .from('games')
                     .insert([{ 
@@ -281,9 +307,23 @@
                     .select()
                     .single();
                 
-                if (gameError) throw new Error(`創建測試遊戲失敗：${gameError.message}`);
+                if (gameError) {
+                    // 如果創建失敗，嘗試查詢已存在的GAME001
+                    const { data: existingGame } = await window.dbManager.client
+                        .from('games')
+                        .select('id')
+                        .eq('game_code', 'GAME001')
+                        .single();
+                    
+                    if (existingGame) {
+                        testGame = existingGame;
+                        console.log("使用已存在的測試遊戲：GAME001");
+                    } else {
+                        throw new Error(`創建測試遊戲失敗：${gameError.message}`);
+                    }
+                }
 
-                // 7. 創建測試紀錄（給測試用戶加初始分數）
+                // 8. 創建測試紀錄（給測試用戶加初始分數）
                 await window.dbManager.client
                     .from('game_records')
                     .insert([{ 
@@ -305,6 +345,8 @@
             } catch (err) {
                 showMessage('data-msg', `❌ 操作失敗：${err.message}`, false);
                 console.error("Delete All Data Error:", err);
+                // 即使出錯也更新數據狀態
+                updateDataStatus();
             }
         }
 
@@ -317,39 +359,24 @@
                     return;
                 }
 
-                // 1. 獲取總用戶數
-                const { data: usersData, error: usersError } = await window.dbManager.client
-                    .from('users')
-                    .select('count', { count: 'exact', head: true });
-                
-                if (!usersError) {
-                    document.getElementById('total-users').textContent = usersData || 0;
-                }
+                // 1. 獲取總用戶數 (修正：正確計數)
+                const { data: usersData } = await window.dbManager.client.from('users').select('id');
+                document.getElementById('total-users').textContent = usersData ? usersData.length : 0;
 
-                // 2. 獲取總遊戲數
-                const { data: gamesData, error: gamesError } = await window.dbManager.client
-                    .from('games')
-                    .select('count', { count: 'exact', head: true });
-                
-                if (!gamesError) {
-                    document.getElementById('total-games').textContent = gamesData || 0;
-                }
+                // 2. 獲取總遊戲數 (修正：正確計數)
+                const { data: gamesData } = await window.dbManager.client.from('games').select('id');
+                document.getElementById('total-games').textContent = gamesData ? gamesData.length : 0;
 
-                // 3. 獲取總紀錄數
-                const { data: recordsData, error: recordsError } = await window.dbManager.client
-                    .from('game_records')
-                    .select('count', { count: 'exact', head: true });
-                
-                if (!recordsError) {
-                    document.getElementById('total-records').textContent = recordsData || 0;
-                }
+                // 3. 獲取總紀錄數 (修正：正確計數)
+                const { data: recordsData } = await window.dbManager.client.from('game_records').select('id');
+                document.getElementById('total-records').textContent = recordsData ? recordsData.length : 0;
 
                 // 4. 獲取全站總分最高 (修改為計算用戶總分)
                 const { data: allRecords, error: recordsErr } = await window.dbManager.client
                     .from('game_records')
                     .select('user_id, score');
                 
-                if (!recordsErr && allRecords.length > 0) {
+                if (!recordsErr && allRecords && allRecords.length > 0) {
                     // 計算每個用戶的總分
                     const userTotalScores = {};
                     allRecords.forEach(record => {
@@ -389,7 +416,7 @@
                 
                 if (usersError) throw new Error(`獲取用戶列表失敗：${usersError.message}`);
                 
-                if (users.length === 0) {
+                if (!users || users.length === 0) {
                     scoresList.innerHTML = '<div class="loading">暫無用戶數據</div>';
                     return;
                 }
@@ -548,7 +575,7 @@
 
                 if (error) throw new Error(error.message);
 
-                if (data.length === 0) {
+                if (!data || data.length === 0) {
                     gamesList.innerHTML = '<div class="loading">暫無遊戲數據</div>';
                     return;
                 }
@@ -612,7 +639,7 @@
 
                 if (error) throw new Error(error.message);
 
-                if (data.length === 0) {
+                if (!data || data.length === 0) {
                     usersList.innerHTML = '<div class="loading">暫無用戶數據</div>';
                     return;
                 }
@@ -675,7 +702,7 @@
 
                 if (error) throw new Error(error.message);
 
-                if (data.length === 0) {
+                if (!data || data.length === 0) {
                     recordsList.innerHTML = '<div class="loading">暫無遊戲紀錄</div>';
                     return;
                 }
