@@ -23,6 +23,8 @@
         .form-group input { padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
         .btn-submit { padding: 10px 20px; background: #16a34a; color: white; border: none; border-radius: 4px; cursor: pointer; }
         .btn-submit:hover { background: #15803d; }
+        .btn-danger { padding: 10px 20px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px; }
+        .btn-danger:hover { background: #b91c1c; }
         .data-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
         .data-table th { background: #f1f5f9; font-weight: 600; }
@@ -35,6 +37,7 @@
         .stat-item { flex: 1; min-width: 200px; background: white; padding: 15px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .stat-item h3 { font-size: 16px; color: #64748b; margin-bottom: 10px; }
         .stat-item .value { font-size: 24px; font-weight: bold; color: #dc2626; }
+        .warning-box { background: #fffbeb; border: 1px solid #fbbf24; padding: 15px; border-radius: 6px; margin-bottom: 20px; color: #92400e; }
     </style>
 </head>
 <body>
@@ -45,15 +48,16 @@
         </div>
 
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('user-scores')">用戶最高分統計</button>
+            <button class="tab-btn active" onclick="switchTab('user-scores')">用戶總分統計</button>
             <button class="tab-btn" onclick="switchTab('games')">遊戲管理</button>
             <button class="tab-btn" onclick="switchTab('users')">用戶管理</button>
             <button class="tab-btn" onclick="switchTab('records')">遊戲紀錄</button>
+            <button class="tab-btn" onclick="switchTab('data-management')">數據管理</button>
         </div>
 
-        <!-- 用戶最高分統計標籤 (新增) -->
+        <!-- 用戶總分統計標籤 (修改為總分) -->
         <div id="user-scores" class="tab-content active">
-            <h2>用戶最高分統計</h2>
+            <h2>用戶總分統計</h2>
             <div class="stats-card">
                 <div class="stat-item">
                     <h3>總註冊用戶數</h3>
@@ -68,13 +72,13 @@
                     <div id="total-records" class="value">0</div>
                 </div>
                 <div class="stat-item">
-                    <h3>全站最高分</h3>
-                    <div id="highest-score" class="value">0</div>
+                    <h3>全站總分最高</h3>
+                    <div id="highest-total-score" class="value">0</div>
                 </div>
             </div>
 
             <div id="score-msg" class="msg-box"></div>
-            <div id="user-scores-list" class="loading">加載用戶最高分數據中...</div>
+            <div id="user-scores-list" class="loading">加載用戶總分數據中...</div>
         </div>
 
         <!-- 遊戲管理標籤 -->
@@ -115,6 +119,18 @@
             <h2>遊戲紀錄</h2>
             <div id="records-list" class="loading">加載遊戲紀錄中...</div>
         </div>
+
+        <!-- 數據管理標籤 (新增) -->
+        <div id="data-management" class="tab-content">
+            <h2>系統數據管理</h2>
+            <div class="warning-box">
+                <strong>⚠️ 警告：</strong> 以下操作將刪除系統內所有數據，請謹慎操作！刪除後將自動創建測試用戶和測試遊戲。
+            </div>
+            
+            <button class="btn-danger" onclick="confirmDeleteAllData()">刪除所有系統數據</button>
+            <div id="data-msg" class="msg-box"></div>
+            <div id="data-status" class="loading">數據狀態：正常</div>
+        </div>
     </div>
 
     <!-- JS加載 (手動初始化，不彈窗) -->
@@ -130,9 +146,9 @@
             // 手動初始化資料庫 (只在控制台輸出，不彈窗)
             await window.dbManager.init();
             
-            // 加載初始數據 (優先加載用戶最高分)
+            // 加載初始數據 (優先加載用戶總分)
             loadDashboardStats();
-            loadUserScoresList();
+            loadUserTotalScoresList();
         };
 
         // 管理員專用登出函數 (返回管理員登入頁)
@@ -164,7 +180,10 @@
                 loadRecordsList();
             }
             if (tabId === 'user-scores' && document.getElementById('user-scores-list').classList.contains('loading')) {
-                loadUserScoresList();
+                loadUserTotalScoresList();
+            }
+            if (tabId === 'data-management') {
+                updateDataStatus();
             }
         }
 
@@ -181,7 +200,115 @@
             }, 3000);
         }
 
-        // 加載儀表板統計數據 (新增)
+        // 更新數據狀態 (新增)
+        async function updateDataStatus() {
+            const dataStatus = document.getElementById('data-status');
+            try {
+                const initOk = await window.dbManager.init();
+                if (!initOk) {
+                    dataStatus.innerHTML = '<div class="error-msg" style="display:block">❌ 資料庫連接失敗</div>';
+                    return;
+                }
+
+                // 獲取各表數據量
+                const [usersCount, gamesCount, recordsCount] = await Promise.all([
+                    window.dbManager.client.from('users').select('count', { count: 'exact', head: true }),
+                    window.dbManager.client.from('games').select('count', { count: 'exact', head: true }),
+                    window.dbManager.client.from('game_records').select('count', { count: 'exact', head: true })
+                ]);
+
+                dataStatus.innerHTML = `
+                    <div>📊 當前數據狀態：</div>
+                    <div>• 用戶數量：${usersCount.data || 0}</div>
+                    <div>• 遊戲數量：${gamesCount.data || 0}</div>
+                    <div>• 遊戲紀錄：${recordsCount.data || 0}</div>
+                `;
+            } catch (err) {
+                dataStatus.innerHTML = `<div class="error-msg" style="display:block">❌ 獲取數據狀態失敗：${err.message}</div>`;
+            }
+        }
+
+        // 確認刪除所有數據 (新增)
+        async function confirmDeleteAllData() {
+            if (!confirm('⚠️ 確定要刪除所有系統數據嗎？此操作不可撤銷！刪除後將自動創建測試數據。')) {
+                return;
+            }
+
+            const dataMsg = document.getElementById('data-msg');
+            const dataStatus = document.getElementById('data-status');
+            
+            try {
+                const initOk = await window.dbManager.init();
+                if (!initOk) {
+                    showMessage('data-msg', '❌ 資料庫連接失敗，無法執行刪除操作', false);
+                    return;
+                }
+
+                dataStatus.innerHTML = '<div class="loading">正在刪除所有數據...</div>';
+                
+                // 1. 刪除所有遊戲紀錄
+                await window.dbManager.client.from('game_records').delete().not('id', 'eq', 0);
+                
+                // 2. 刪除所有遊戲
+                await window.dbManager.client.from('games').delete().not('id', 'eq', 0);
+                
+                // 3. 刪除所有普通用戶
+                await window.dbManager.client.from('users').delete().not('id', 'eq', 0);
+                
+                // 4. 保留管理員帳號，刪除其他管理員（如有）
+                await window.dbManager.client.from('admins').delete().neq('username', 'admin');
+
+                showMessage('data-msg', '✅ 所有數據已成功刪除，正在創建測試數據...');
+                
+                // 5. 創建測試用戶
+                const { data: testUser, error: userError } = await window.dbManager.client
+                    .from('users')
+                    .insert([{ username: 'testuser1' }])
+                    .select()
+                    .single();
+                
+                if (userError) throw new Error(`創建測試用戶失敗：${userError.message}`);
+
+                // 6. 創建測試遊戲
+                const { data: testGame, error: gameError } = await window.dbManager.client
+                    .from('games')
+                    .insert([{ 
+                        game_code: 'GAME001', 
+                        game_name: '測試遊戲1', 
+                        max_score: 1000, 
+                        default_score: 500 
+                    }])
+                    .select()
+                    .single();
+                
+                if (gameError) throw new Error(`創建測試遊戲失敗：${gameError.message}`);
+
+                // 7. 創建測試紀錄（給測試用戶加初始分數）
+                await window.dbManager.client
+                    .from('game_records')
+                    .insert([{ 
+                        user_id: testUser.id, 
+                        game_id: testGame.id, 
+                        score: 500 
+                    }]);
+
+                showMessage('data-msg', '✅ 所有數據已刪除，並成功創建測試用戶和測試遊戲！');
+                
+                // 更新數據狀態和各列表
+                updateDataStatus();
+                loadDashboardStats();
+                loadUserTotalScoresList();
+                loadGamesList();
+                loadUsersList();
+                loadRecordsList();
+
+            } catch (err) {
+                showMessage('data-msg', `❌ 操作失敗：${err.message}`, false);
+                console.error("Delete All Data Error:", err);
+            }
+        }
+
+        // 加載儀表板統計數據 (修改為總分統計)
         async function loadDashboardStats() {
             try {
                 const initOk = await window.dbManager.init();
@@ -217,16 +344,26 @@
                     document.getElementById('total-records').textContent = recordsData || 0;
                 }
 
-                // 4. 獲取全站最高分 (修正查詢方式)
-                const { data: highestData, error: highestError } = await window.dbManager.client
+                // 4. 獲取全站總分最高 (修改為計算用戶總分)
+                const { data: allRecords, error: recordsErr } = await window.dbManager.client
                     .from('game_records')
-                    .select('score')
-                    .order('score', { ascending: false })
-                    .limit(1)
-                    .single();
+                    .select('user_id, score');
                 
-                if (!highestError && highestData) {
-                    document.getElementById('highest-score').textContent = highestData.score || 0;
+                if (!recordsErr && allRecords.length > 0) {
+                    // 計算每個用戶的總分
+                    const userTotalScores = {};
+                    allRecords.forEach(record => {
+                        if (!userTotalScores[record.user_id]) {
+                            userTotalScores[record.user_id] = 0;
+                        }
+                        userTotalScores[record.user_id] += record.score;
+                    });
+
+                    // 找出最高總分
+                    const highestTotal = Math.max(...Object.values(userTotalScores), 0);
+                    document.getElementById('highest-total-score').textContent = highestTotal;
+                } else {
+                    document.getElementById('highest-total-score').textContent = 0;
                 }
 
             } catch (err) {
@@ -234,8 +371,8 @@
             }
         }
 
-        // 加載用戶最高分列表 (核心修正：改用分兩步查詢)
-        async function loadUserScoresList() {
+        // 加載用戶總分列表 (核心修改：計算所有遊戲分數累加)
+        async function loadUserTotalScoresList() {
             const scoresList = document.getElementById('user-scores-list');
             
             try {
@@ -257,43 +394,42 @@
                     return;
                 }
 
-                // Step 2: 逐個用戶查詢最高分記錄
-                const userScores = [];
+                // Step 2: 計算每個用戶的總分
+                const userTotalScores = [];
                 for (const user of users) {
-                    // 查詢當前用戶的所有遊戲紀錄，按分數降序排列
+                    // 查詢當前用戶的所有遊戲紀錄
                     const { data: records, error: recordsError } = await window.dbManager.client
                         .from('game_records')
-                        .select(`
-                            score,
-                            games(game_name, game_code)
-                        `)
-                        .eq('user_id', user.id)
-                        .order('score', { ascending: false })
-                        .limit(1)
-                        .single();
+                        .select('score, games(game_name, game_code)')
+                        .eq('user_id', user.id);
                     
-                    if (!recordsError && records) {
-                        userScores.push({
-                            user_id: user.id,
-                            username: user.username,
-                            highest_score: records.score,
-                            game_name: records.games?.game_name || '未知遊戲',
-                            game_code: records.games?.game_code || '未知代碼'
-                        });
-                    } else if (recordsError && recordsError.code === 'PGRST116') {
-                        // 用戶無遊戲紀錄
-                        userScores.push({
-                            user_id: user.id,
-                            username: user.username,
-                            highest_score: 0,
-                            game_name: '無遊戲紀錄',
-                            game_code: '-'
-                        });
+                    let totalScore = 0;
+                    let gameCount = 0;
+                    let lastGameName = '無遊戲紀錄';
+                    let lastGameCode = '-';
+
+                    if (!recordsError && records && records.length > 0) {
+                        // 計算總分
+                        totalScore = records.reduce((sum, record) => sum + record.score, 0);
+                        gameCount = records.length;
+                        // 取最後一條紀錄的遊戲信息
+                        const lastRecord = records[records.length - 1];
+                        lastGameName = lastRecord.games?.game_name || '未知遊戲';
+                        lastGameCode = lastRecord.games?.game_code || '未知代碼';
                     }
+
+                    userTotalScores.push({
+                        user_id: user.id,
+                        username: user.username,
+                        total_score: totalScore,
+                        game_count: gameCount,
+                        last_game_name: lastGameName,
+                        last_game_code: lastGameCode
+                    });
                 }
 
-                // 按最高分降序排序
-                userScores.sort((a, b) => b.highest_score - a.highest_score);
+                // 按總分降序排序
+                userTotalScores.sort((a, b) => b.total_score - a.total_score);
 
                 // 生成表格
                 let tableHTML = `
@@ -302,22 +438,24 @@
                             <tr>
                                 <th>排名</th>
                                 <th>用戶名</th>
-                                <th>最高分數</th>
-                                <th>獲取最高分遊戲</th>
+                                <th>總分數</th>
+                                <th>參與遊戲次數</th>
+                                <th>最後參與遊戲</th>
                                 <th>遊戲代碼</th>
                             </tr>
                         </thead>
                         <tbody>
                 `;
 
-                userScores.forEach((item, index) => {
+                userTotalScores.forEach((item, index) => {
                     tableHTML += `
                         <tr>
                             <td>${index + 1}</td>
                             <td>${item.username}</td>
-                            <td>${item.highest_score}</td>
-                            <td>${item.game_name}</td>
-                            <td>${item.game_code}</td>
+                            <td>${item.total_score}</td>
+                            <td>${item.game_count}</td>
+                            <td>${item.last_game_name}</td>
+                            <td>${item.last_game_code}</td>
                         </tr>
                     `;
                 });
@@ -331,7 +469,7 @@
 
             } catch (err) {
                 scoresList.innerHTML = `<div class="error-msg" style="display:block">❌ 加載失敗：${err.message}</div>`;
-                console.error("Load User Scores Error:", err);
+                console.error("Load User Total Scores Error:", err);
             }
         }
 
@@ -384,7 +522,7 @@
                 loadGamesList();
                 // 更新儀表板統計
                 loadDashboardStats();
-                loadUserScoresList();
+                loadUserTotalScoresList();
 
             } catch (err) {
                 showMessage('game-msg', `❌ 新增失敗：${err.message}`, false);
