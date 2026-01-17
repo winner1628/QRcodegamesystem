@@ -18,20 +18,24 @@
         .tab-content { display: none; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .tab-content.active { display: block; }
         .add-form { display: grid; gap: 15px; max-width: 500px; margin-bottom: 30px; }
-        .batch-form { margin: 20px 0; padding: 20px; border: 1px dashed #cbd5e1; border-radius: 8px; }
+        .batch-form, .filter-form, .export-form { margin: 20px 0; padding: 20px; border: 1px dashed #cbd5e1; border-radius: 8px; }
         .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-row { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px; }
+        .form-row .form-group { flex: 1; min-width: 200px; }
         .form-group label { font-weight: 600; }
-        .form-group input { padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        .form-group input, .form-group select { padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
         .file-input { padding: 5px; }
         .btn-submit { padding: 10px 20px; background: #16a34a; color: white; border: none; border-radius: 4px; cursor: pointer; }
         .btn-submit:hover { background: #15803d; }
-        .btn-batch { padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; }
-        .btn-batch:hover { background: #1d4ed8; }
+        .btn-batch, .btn-export { padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; }
+        .btn-batch:hover, .btn-export:hover { background: #1d4ed8; }
         .btn-danger { padding: 10px 20px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px; }
         .btn-danger:hover { background: #b91c1c; }
         .data-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-        .data-table th { background: #f1f5f9; font-weight: 600; }
+        .data-table th { background: #f1f5f9; font-weight: 600; cursor: pointer; position: relative; }
+        .data-table th:hover { background: #e2e8f0; }
+        .data-table th::after { content: " ↕"; font-size: 12px; opacity: 0.5; }
         .data-table tr:hover { background: #f8fafc; }
         .msg-box { padding: 10px; border-radius: 4px; margin-bottom: 20px; display: none; }
         .success-msg { background: #f0fdf4; color: #16a34a; }
@@ -44,9 +48,11 @@
         .warning-box { background: #fffbeb; border: 1px solid #fbbf24; padding: 15px; border-radius: 6px; margin-bottom: 20px; color: #92400e; }
         .csv-template { margin-top: 10px; font-size: 14px; color: #64748b; }
         .csv-template a { color: #2563eb; text-decoration: none; }
-        .batch-result { margin-top: 15px; padding: 10px; border-radius: 4px; display: none; }
+        .batch-result, .export-result { margin-top: 15px; padding: 10px; border-radius: 4px; display: none; }
         .success-result { background: #f0fdf4; color: #16a34a; }
         .error-result { background: #fef2f2; color: #dc2626; }
+        .export-item { margin: 10px 0; padding: 10px; border: 1px solid #e2e8f0; border-radius: 4px; }
+        .export-btn { margin-top: 5px; padding: 8px 16px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -62,6 +68,7 @@
             <button class="tab-btn" onclick="switchTab('users')">用戶管理</button>
             <button class="tab-btn" onclick="switchTab('records')">遊戲紀錄</button>
             <button class="tab-btn" onclick="switchTab('data-management')">數據管理</button>
+            <button class="tab-btn" onclick="switchTab('data-export')">數據導出</button>
         </div>
 
         <!-- 用戶總分統計標籤 -->
@@ -90,7 +97,7 @@
             <div id="user-scores-list" class="loading">加載用戶總分數據中...</div>
         </div>
 
-        <!-- 遊戲管理標籤 (新增CSV批量導入) -->
+        <!-- 遊戲管理標籤 -->
         <div id="games" class="tab-content">
             <h2>遊戲管理</h2>
             
@@ -137,7 +144,7 @@
             <div id="games-list" class="loading">加載遊戲列表中...</div>
         </div>
 
-        <!-- 用戶管理標籤 (新增單個用戶 + CSV批量導入) -->
+        <!-- 用戶管理標籤 -->
         <div id="users" class="tab-content">
             <h2>用戶管理</h2>
             
@@ -173,22 +180,91 @@
             <div id="users-list" class="loading">加載用戶列表中...</div>
         </div>
 
-        <!-- 遊戲紀錄標籤 -->
+        <!-- 遊戲紀錄標籤 (新增篩選功能) -->
         <div id="records" class="tab-content">
-            <h2>遊戲紀錄</h2>
+            <h2>遊戲紀錄管理</h2>
+            
+            <!-- 篩選表單 -->
+            <div class="filter-form">
+                <h3 style="margin-bottom: 15px;">篩選與排序</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>用戶名篩選</label>
+                        <input type="text" id="filter-username" placeholder="輸入用戶名關鍵字">
+                    </div>
+                    <div class="form-group">
+                        <label>遊戲名篩選</label>
+                        <input type="text" id="filter-gamename" placeholder="輸入遊戲名關鍵字">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>分數範圍 (最小值)</label>
+                        <input type="number" id="filter-score-min" placeholder="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>分數範圍 (最大值)</label>
+                        <input type="number" id="filter-score-max" placeholder="9999" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>排序方式</label>
+                        <select id="sort-by">
+                            <option value="scanned_at_desc">時間 (最新在前)</option>
+                            <option value="scanned_at_asc">時間 (最舊在前)</option>
+                            <option value="score_desc">分數 (從高到低)</option>
+                            <option value="score_asc">分數 (從低到高)</option>
+                            <option value="username_asc">用戶名 (A-Z)</option>
+                            <option value="gamename_asc">遊戲名 (A-Z)</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn-submit" onclick="filterRecords()">應用篩選與排序</button>
+                <button class="btn-submit" onclick="resetFilter()" style="margin-left: 10px;">重置篩選條件</button>
+            </div>
+
             <div id="records-list" class="loading">加載遊戲紀錄中...</div>
         </div>
 
-        <!-- 數據管理標籤 -->
+        <!-- 數據管理標籤 (修改為刪除所有紀錄) -->
         <div id="data-management" class="tab-content">
             <h2>系統數據管理</h2>
             <div class="warning-box">
-                <strong>⚠️ 警告：</strong> 以下操作將刪除系統內所有數據，請謹慎操作！刪除後將自動創建測試用戶和測試遊戲。
+                <strong>⚠️ 警告：</strong> 以下操作將刪除系統內所有遊戲紀錄，請謹慎操作！刪除後將確保管理員帳號存在。
             </div>
             
-            <button class="btn-danger" onclick="confirmDeleteAllData()">刪除所有系統數據</button>
+            <button class="btn-danger" onclick="confirmDeleteAllRecords()">刪除所有遊戲紀錄</button>
             <div id="data-msg" class="msg-box"></div>
             <div id="data-status" class="loading">數據狀態：正常</div>
+        </div>
+
+        <!-- 數據導出標籤 (新增) -->
+        <div id="data-export" class="tab-content">
+            <h2>數據導出 (CSV)</h2>
+            <div class="export-form">
+                <div class="export-item">
+                    <h3>用戶總分統計數據</h3>
+                    <p>導出所有用戶的總分、遊戲次數等統計信息</p>
+                    <button class="btn-export export-btn" onclick="exportUserTotalScores()">導出CSV文件</button>
+                </div>
+                <div class="export-item">
+                    <h3>遊戲管理數據</h3>
+                    <p>導出所有遊戲的基本信息</p>
+                    <button class="btn-export export-btn" onclick="exportGames()">導出CSV文件</button>
+                </div>
+                <div class="export-item">
+                    <h3>用戶管理數據</h3>
+                    <p>導出所有用戶的基本信息</p>
+                    <button class="btn-export export-btn" onclick="exportUsers()">導出CSV文件</button>
+                </div>
+                <div class="export-item">
+                    <h3>遊戲紀錄數據</h3>
+                    <p>導出所有遊戲紀錄的詳細信息</p>
+                    <button class="btn-export export-btn" onclick="exportGameRecords()">導出CSV文件</button>
+                </div>
+                <div id="export-result" class="export-result"></div>
+            </div>
         </div>
     </div>
 
@@ -197,6 +273,9 @@
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
     <script>
+        // 全局變量：存儲原始遊戲紀錄數據
+        let allGameRecords = [];
+        
         // 頁面加載時檢查管理員權限
         window.onload = async function() {
             if (!checkAdmin()) return;
@@ -248,11 +327,11 @@
             }, 3000);
         }
 
-        // 顯示批量導入結果
-        function showBatchResult(elementId, text, isSuccess = true) {
+        // 顯示批量/導出結果
+        function showResult(elementId, text, isSuccess = true) {
             const resultBox = document.getElementById(elementId);
             resultBox.textContent = text;
-            resultBox.className = `batch-result ${isSuccess ? 'success-result' : 'error-result'}`;
+            resultBox.className = `${elementId.includes('export') ? 'export-result' : 'batch-result'} ${isSuccess ? 'success-result' : 'error-result'}`;
             resultBox.style.display = 'block';
             setTimeout(() => {
                 resultBox.style.display = 'none';
@@ -305,6 +384,22 @@
             });
         }
 
+        // 生成並下載CSV文件
+        function downloadCSV(csvContent, fileName) {
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", fileName);
+            link.style.display = "none";
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
         // 更新數據狀態
         async function updateDataStatus() {
             const dataStatus = document.getElementById('data-status');
@@ -337,9 +432,9 @@
             }
         }
 
-        // 刪除所有數據
-        async function confirmDeleteAllData() {
-            if (!confirm('⚠️ 確定要刪除所有系統數據嗎？此操作不可撤銷！刪除後將自動創建測試數據。')) {
+        // 確認刪除所有遊戲紀錄 (修改：只刪除紀錄，保留用戶/遊戲)
+        async function confirmDeleteAllRecords() {
+            if (!confirm('⚠️ 確定要刪除所有遊戲紀錄嗎？此操作不可撤銷！')) {
                 return;
             }
 
@@ -353,84 +448,44 @@
                     return;
                 }
 
-                dataStatus.innerHTML = '<div class="loading">正在刪除所有數據...</div>';
+                dataStatus.innerHTML = '<div class="loading">正在刪除所有遊戲紀錄...</div>';
                 
-                // 先刪除測試數據
-                await window.dbManager.client.from('users').delete().eq('username', 'testuser1');
-                await window.dbManager.client.from('games').delete().eq('game_code', 'GAME001');
-                
-                // 刪除所有數據
-                await window.dbManager.client.from('game_records').delete().not('id', 'eq', 0);
-                await window.dbManager.client.from('games').delete().not('id', 'eq', 0);
-                await window.dbManager.client.from('users').delete().not('id', 'eq', 0);
-
-                showMessage('data-msg', '✅ 所有數據已成功刪除，正在創建測試數據...');
-                
-                // 創建測試用戶
-                let testUser;
-                const userRes = await window.dbManager.client
-                    .from('users')
-                    .insert([{ username: 'testuser1' }])
-                    .select()
-                    .single();
-                
-                if (userRes.error) {
-                    const existingUser = await window.dbManager.client
-                        .from('users')
-                        .select('id')
-                        .eq('username', 'testuser1')
-                        .single();
-                    testUser = existingUser.data;
-                } else {
-                    testUser = userRes.data;
-                }
-
-                // 創建測試遊戲
-                let testGame;
-                const gameRes = await window.dbManager.client
-                    .from('games')
-                    .insert([{ 
-                        game_code: 'GAME001', 
-                        game_name: '測試遊戲1', 
-                        max_score: 1000, 
-                        default_score: 500 
-                    }])
-                    .select()
-                    .single();
-                
-                if (gameRes.error) {
-                    const existingGame = await window.dbManager.client
-                        .from('games')
-                        .select('id')
-                        .eq('game_code', 'GAME001')
-                        .single();
-                    testGame = existingGame.data;
-                } else {
-                    testGame = gameRes.data;
-                }
-
-                // 創建測試紀錄
-                await window.dbManager.client
+                // 只刪除所有遊戲紀錄
+                const deleteResult = await window.dbManager.client
                     .from('game_records')
-                    .insert([{ 
-                        user_id: testUser.id, 
-                        game_id: testGame.id, 
-                        score: 500 
-                    }]);
+                    .delete()
+                    .not('id', 'eq', 0);
+                
+                if (deleteResult.error) {
+                    console.warn("刪除遊戲紀錄警告：", deleteResult.error.message);
+                }
 
-                showMessage('data-msg', '✅ 所有數據已刪除，並成功創建測試用戶和測試遊戲！');
+                // 檢查管理員帳號是否存在，不存在則創建
+                const adminCheck = await window.dbManager.client
+                    .from('admins')
+                    .select('id')
+                    .eq('username', 'admin')
+                    .single();
+                
+                if (adminCheck.error && adminCheck.error.code === 'PGRST116') {
+                    // 管理員帳號不存在，創建默認管理員
+                    await window.dbManager.client
+                        .from('admins')
+                        .insert([{ username: 'admin', password: 'admin123' }]);
+                    showMessage('data-msg', '✅ 所有遊戲紀錄已刪除，並創建默認管理員帳號！', true);
+                } else {
+                    showMessage('data-msg', '✅ 所有遊戲紀錄已成功刪除！', true);
+                }
                 
                 // 更新所有列表
                 updateDataStatus();
                 loadDashboardStats();
                 loadUserTotalScoresList();
-                loadGamesList();
-                loadUsersList();
                 loadRecordsList();
 
             } catch (err) {
                 showMessage('data-msg', `❌ 操作失敗：${err.message}`, false);
-                console.error("Delete All Data Error:", err);
+                console.error("Delete All Records Error:", err);
                 updateDataStatus();
             }
         }
@@ -623,7 +678,7 @@
             const file = fileInput.files[0];
             
             if (!file) {
-                showBatchResult('game-batch-result', '❌ 請選擇CSV文件', false);
+                showResult('game-batch-result', '❌ 請選擇CSV文件', false);
                 return;
             }
 
@@ -636,12 +691,12 @@
                 const missingHeaders = requiredHeaders.filter(header => !headers.includes(header));
                 
                 if (missingHeaders.length > 0) {
-                    showBatchResult('game-batch-result', `❌ CSV格式錯誤：缺少必要欄位 ${missingHeaders.join(', ')}`, false);
+                    showResult('game-batch-result', `❌ CSV格式錯誤：缺少必要欄位 ${missingHeaders.join(', ')}`, false);
                     return;
                 }
 
                 if (rows.length === 0) {
-                    showBatchResult('game-batch-result', '❌ CSV文件中沒有數據行', false);
+                    showResult('game-batch-result', '❌ CSV文件中沒有數據行', false);
                     return;
                 }
 
@@ -676,14 +731,14 @@
 
                 // 顯示驗證錯誤
                 if (errors.length > 0) {
-                    showBatchResult('game-batch-result', `❌ 數據驗證失敗：${errors.join('；')}`, false);
+                    showResult('game-batch-result', `❌ 數據驗證失敗：${errors.join('；')}`, false);
                     return;
                 }
 
                 // 導入數據到資料庫
                 const initOk = await window.dbManager.init();
                 if (!initOk) {
-                    showBatchResult('game-batch-result', '❌ 資料庫連接失敗', false);
+                    showResult('game-batch-result', '❌ 資料庫連接失敗', false);
                     return;
                 }
 
@@ -695,7 +750,7 @@
                 if (error) throw new Error(error.message);
 
                 // 顯示成功消息
-                showBatchResult('game-batch-result', `✅ 成功導入 ${gamesToImport.length} 個遊戲`, true);
+                showResult('game-batch-result', `✅ 成功導入 ${gamesToImport.length} 個遊戲`, true);
                 
                 // 清空文件選擇
                 fileInput.value = '';
@@ -705,7 +760,7 @@
                 loadDashboardStats();
 
             } catch (err) {
-                showBatchResult('game-batch-result', `❌ 導入失敗：${err.message}`, false);
+                showResult('game-batch-result', `❌ 導入失敗：${err.message}`, false);
                 console.error("Import Games Error:", err);
             }
         }
@@ -752,7 +807,7 @@
             const file = fileInput.files[0];
             
             if (!file) {
-                showBatchResult('user-batch-result', '❌ 請選擇CSV文件', false);
+                showResult('user-batch-result', '❌ 請選擇CSV文件', false);
                 return;
             }
 
@@ -762,12 +817,12 @@
                 
                 // 驗證標題
                 if (!headers.includes('username')) {
-                    showBatchResult('user-batch-result', '❌ CSV格式錯誤：缺少 username 欄位', false);
+                    showResult('user-batch-result', '❌ CSV格式錯誤：缺少 username 欄位', false);
                     return;
                 }
 
                 if (rows.length === 0) {
-                    showBatchResult('user-batch-result', '❌ CSV文件中沒有數據行', false);
+                    showResult('user-batch-result', '❌ CSV文件中沒有數據行', false);
                     return;
                 }
 
@@ -795,14 +850,14 @@
 
                 // 顯示驗證錯誤
                 if (errors.length > 0) {
-                    showBatchResult('user-batch-result', `❌ 數據驗證失敗：${errors.join('；')}`, false);
+                    showResult('user-batch-result', `❌ 數據驗證失敗：${errors.join('；')}`, false);
                     return;
                 }
 
                 // 導入數據到資料庫
                 const initOk = await window.dbManager.init();
                 if (!initOk) {
-                    showBatchResult('user-batch-result', '❌ 資料庫連接失敗', false);
+                    showResult('user-batch-result', '❌ 資料庫連接失敗', false);
                     return;
                 }
 
@@ -814,7 +869,7 @@
                 if (error) throw new Error(error.message);
 
                 // 顯示成功消息
-                showBatchResult('user-batch-result', `✅ 成功導入 ${usersToImport.length} 個用戶`, true);
+                showResult('user-batch-result', `✅ 成功導入 ${usersToImport.length} 個用戶`, true);
                 
                 // 清空文件選擇
                 fileInput.value = '';
@@ -825,7 +880,7 @@
                 loadUserTotalScoresList();
 
             } catch (err) {
-                showBatchResult('user-batch-result', `❌ 導入失敗：${err.message}`, false);
+                showResult('user-batch-result', `❌ 導入失敗：${err.message}`, false);
                 console.error("Import Users Error:", err);
             }
         }
@@ -948,7 +1003,7 @@
             }
         }
 
-        // 加載遊戲紀錄
+        // 加載遊戲紀錄 (新增：存儲原始數據)
         async function loadRecordsList() {
             const recordsList = document.getElementById('records-list');
             
@@ -968,48 +1023,345 @@
                     `)
                     .order('scanned_at', { ascending: false });
 
+                // 存儲原始數據
+                allGameRecords = data || [];
+
                 if (!data || data.length === 0) {
                     recordsList.innerHTML = '<div class="loading">暫無遊戲紀錄</div>';
                     return;
                 }
 
-                let tableHTML = `
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>用戶名</th>
-                                <th>遊戲名稱</th>
-                                <th>遊戲代碼</th>
-                                <th>分數</th>
-                                <th>掃描時間</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-
-                data.forEach(record => {
-                    const scanTime = new Date(record.scanned_at).toLocaleString('zh-TW');
-                    tableHTML += `
-                        <tr>
-                            <td>${record.users?.username || '未知用戶'}</td>
-                            <td>${record.games?.game_name || '未知遊戲'}</td>
-                            <td>${record.games?.game_code || '未知代碼'}</td>
-                            <td>${record.score}</td>
-                            <td>${scanTime}</td>
-                        </tr>
-                    `;
-                });
-
-                tableHTML += `
-                        </tbody>
-                    </table>
-                `;
-
-                recordsList.innerHTML = tableHTML;
+                // 渲染表格
+                renderRecordsTable(data);
 
             } catch (err) {
                 recordsList.innerHTML = `<div class="error-msg" style="display:block">❌ 加載失敗：${err.message}</div>`;
                 console.error("Load Records Error:", err);
+            }
+        }
+
+        // 渲染遊戲紀錄表格
+        function renderRecordsTable(records) {
+            const recordsList = document.getElementById('records-list');
+            
+            if (!records || records.length === 0) {
+                recordsList.innerHTML = '<div class="loading">沒有符合條件的遊戲紀錄</div>';
+                return;
+            }
+
+            let tableHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th onclick="sortRecords('username')">用戶名</th>
+                            <th onclick="sortRecords('gamename')">遊戲名稱</th>
+                            <th onclick="sortRecords('gamecode')">遊戲代碼</th>
+                            <th onclick="sortRecords('score')">分數</th>
+                            <th onclick="sortRecords('time')">掃描時間</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            records.forEach(record => {
+                const scanTime = new Date(record.scanned_at).toLocaleString('zh-TW');
+                tableHTML += `
+                    <tr>
+                        <td>${record.users?.username || '未知用戶'}</td>
+                        <td>${record.games?.game_name || '未知遊戲'}</td>
+                        <td>${record.games?.game_code || '未知代碼'}</td>
+                        <td>${record.score}</td>
+                        <td>${scanTime}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+
+            recordsList.innerHTML = tableHTML;
+        }
+
+        // 篩選遊戲紀錄
+        function filterRecords() {
+            if (allGameRecords.length === 0) {
+                showResult('export-result', '❌ 沒有可用的遊戲紀錄數據', false);
+                return;
+            }
+
+            // 获取筛选条件
+            const usernameFilter = document.getElementById('filter-username').value.trim().toLowerCase();
+            const gamenameFilter = document.getElementById('filter-gamename').value.trim().toLowerCase();
+            const scoreMin = parseInt(document.getElementById('filter-score-min').value) || 0;
+            const scoreMax = parseInt(document.getElementById('filter-score-max').value) || 999999;
+            const sortBy = document.getElementById('sort-by').value;
+
+            // 应用筛选
+            let filteredRecords = [...allGameRecords];
+            
+            // 用户名筛选
+            if (usernameFilter) {
+                filteredRecords = filteredRecords.filter(record => 
+                    (record.users?.username || '').toLowerCase().includes(usernameFilter)
+                );
+            }
+
+            // 游戏名筛选
+            if (gamenameFilter) {
+                filteredRecords = filteredRecords.filter(record => 
+                    (record.games?.game_name || '').toLowerCase().includes(gamenameFilter)
+                );
+            }
+
+            // 分数范围筛选
+            filteredRecords = filteredRecords.filter(record => 
+                record.score >= scoreMin && record.score <= scoreMax
+            );
+
+            // 应用排序
+            switch (sortBy) {
+                case 'scanned_at_desc':
+                    filteredRecords.sort((a, b) => new Date(b.scanned_at) - new Date(a.scanned_at));
+                    break;
+                case 'scanned_at_asc':
+                    filteredRecords.sort((a, b) => new Date(a.scanned_at) - new Date(b.scanned_at));
+                    break;
+                case 'score_desc':
+                    filteredRecords.sort((a, b) => b.score - a.score);
+                    break;
+                case 'score_asc':
+                    filteredRecords.sort((a, b) => a.score - b.score);
+                    break;
+                case 'username_asc':
+                    filteredRecords.sort((a, b) => 
+                        (a.users?.username || '').localeCompare(b.users?.username || '')
+                    );
+                    break;
+                case 'gamename_asc':
+                    filteredRecords.sort((a, b) => 
+                        (a.games?.game_name || '').localeCompare(b.games?.game_name || '')
+                    );
+                    break;
+            }
+
+            // 渲染筛选后的表格
+            renderRecordsTable(filteredRecords);
+            showResult('export-result', `✅ 篩選完成，共找到 ${filteredRecords.length} 條紀錄`, true);
+        }
+
+        // 重置筛选条件
+        function resetFilter() {
+            document.getElementById('filter-username').value = '';
+            document.getElementById('filter-gamename').value = '';
+            document.getElementById('filter-score-min').value = '';
+            document.getElementById('filter-score-max').value = '';
+            document.getElementById('sort-by').value = 'scanned_at_desc';
+            
+            // 重新渲染原始数据
+            renderRecordsTable(allGameRecords);
+            showResult('export-result', '✅ 篩選條件已重置', true);
+        }
+
+        // 点击表头排序
+        function sortRecords(sortType) {
+            const sortMap = {
+                'username': 'username_asc',
+                'gamename': 'gamename_asc',
+                'gamecode': 'gamename_asc',
+                'score': 'score_desc',
+                'time': 'scanned_at_desc'
+            };
+            
+            document.getElementById('sort-by').value = sortMap[sortType];
+            filterRecords();
+        }
+
+        // 導出用戶總分統計CSV
+        async function exportUserTotalScores() {
+            try {
+                const initOk = await window.dbManager.init();
+                if (!initOk) {
+                    showResult('export-result', '❌ 資料庫連接失敗', false);
+                    return;
+                }
+
+                // 获取用户总分数据
+                const { data: users } = await window.dbManager.client
+                    .from('users')
+                    .select('id, username');
+                
+                if (!users || users.length === 0) {
+                    showResult('export-result', '❌ 沒有可用的用戶數據', false);
+                    return;
+                }
+
+                // 构建CSV内容
+                let csvContent = "排名,用戶名,總分數,參與遊戲次數,最後參與遊戲,遊戲代碼\n";
+                const userTotalScores = [];
+
+                for (const user of users) {
+                    const { data: records } = await window.dbManager.client
+                        .from('game_records')
+                        .select('score, games(game_name, game_code)')
+                        .eq('user_id', user.id);
+                    
+                    let totalScore = 0;
+                    let gameCount = 0;
+                    let lastGameName = '無遊戲紀錄';
+                    let lastGameCode = '-';
+
+                    if (records && records.length > 0) {
+                        totalScore = records.reduce((sum, record) => sum + record.score, 0);
+                        gameCount = records.length;
+                        const lastRecord = records[records.length - 1];
+                        lastGameName = lastRecord.games?.game_name || '未知遊戲';
+                        lastGameCode = lastRecord.games?.game_code || '未知代碼';
+                    }
+
+                    userTotalScores.push({
+                        username: user.username,
+                        total_score: totalScore,
+                        game_count: gameCount,
+                        last_game_name: lastGameName,
+                        last_game_code: lastGameCode
+                    });
+                }
+
+                // 排序并生成CSV
+                userTotalScores.sort((a, b) => b.total_score - a.total_score);
+                userTotalScores.forEach((item, index) => {
+                    csvContent += `${index + 1},${item.username},${item.total_score},${item.game_count},${item.last_game_name},${item.last_game_code}\n`;
+                });
+
+                // 下载CSV
+                const fileName = `用戶總分統計_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
+                downloadCSV(csvContent, fileName);
+                
+                showResult('export-result', `✅ 成功導出 ${userTotalScores.length} 個用戶的總分統計數據`, true);
+
+            } catch (err) {
+                showResult('export-result', `❌ 導出失敗：${err.message}`, false);
+                console.error("Export User Total Scores Error:", err);
+            }
+        }
+
+        // 導出遊戲管理CSV
+        async function exportGames() {
+            try {
+                const initOk = await window.dbManager.init();
+                if (!initOk) {
+                    showResult('export-result', '❌ 資料庫連接失敗', false);
+                    return;
+                }
+
+                const { data: games } = await window.dbManager.client
+                    .from('games')
+                    .select('*')
+                    .order('game_code');
+                
+                if (!games || games.length === 0) {
+                    showResult('export-result', '❌ 沒有可用的遊戲數據', false);
+                    return;
+                }
+
+                // 构建CSV内容
+                let csvContent = "遊戲代碼,遊戲名稱,最高分數,默認分數,創建時間\n";
+                games.forEach(game => {
+                    const createTime = new Date(game.created_at).toLocaleString('zh-TW');
+                    csvContent += `${game.game_code},${game.game_name},${game.max_score},${game.default_score},${createTime}\n`;
+                });
+
+                // 下载CSV
+                const fileName = `遊戲管理數據_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
+                downloadCSV(csvContent, fileName);
+                
+                showResult('export-result', `✅ 成功導出 ${games.length} 個遊戲的數據`, true);
+
+            } catch (err) {
+                showResult('export-result', `❌ 導出失敗：${err.message}`, false);
+                console.error("Export Games Error:", err);
+            }
+        }
+
+        // 導出用戶管理CSV
+        async function exportUsers() {
+            try {
+                const initOk = await window.dbManager.init();
+                if (!initOk) {
+                    showResult('export-result', '❌ 資料庫連接失敗', false);
+                    return;
+                }
+
+                const { data: users } = await window.dbManager.client
+                    .from('users')
+                    .select('*')
+                    .order('username');
+                
+                if (!users || users.length === 0) {
+                    showResult('export-result', '❌ 沒有可用的用戶數據', false);
+                    return;
+                }
+
+                // 构建CSV内容
+                let csvContent = "用戶ID,用戶名,創建時間\n";
+                users.forEach(user => {
+                    const createTime = new Date(user.created_at).toLocaleString('zh-TW');
+                    csvContent += `${user.id},${user.username},${createTime}\n`;
+                });
+
+                // 下载CSV
+                const fileName = `用戶管理數據_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
+                downloadCSV(csvContent, fileName);
+                
+                showResult('export-result', `✅ 成功導出 ${users.length} 個用戶的數據`, true);
+
+            } catch (err) {
+                showResult('export-result', `❌ 導出失敗：${err.message}`, false);
+                console.error("Export Users Error:", err);
+            }
+        }
+
+        // 導出遊戲紀錄CSV
+        async function exportGameRecords() {
+            try {
+                const initOk = await window.dbManager.init();
+                if (!initOk) {
+                    showResult('export-result', '❌ 資料庫連接失敗', false);
+                    return;
+                }
+
+                const { data: records } = await window.dbManager.client
+                    .from('game_records')
+                    .select(`
+                        *,
+                        users(username),
+                        games(game_name, game_code)
+                    `)
+                    .order('scanned_at', { ascending: false });
+                
+                if (!records || records.length === 0) {
+                    showResult('export-result', '❌ 沒有可用的遊戲紀錄數據', false);
+                    return;
+                }
+
+                // 构建CSV内容
+                let csvContent = "用戶名,遊戲名稱,遊戲代碼,分數,掃描時間\n";
+                records.forEach(record => {
+                    const scanTime = new Date(record.scanned_at).toLocaleString('zh-TW');
+                    csvContent += `${record.users?.username || '未知用戶'},${record.games?.game_name || '未知遊戲'},${record.games?.game_code || '未知代碼'},${record.score},${scanTime}\n`;
+                });
+
+                // 下载CSV
+                const fileName = `遊戲紀錄數據_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
+                downloadCSV(csvContent, fileName);
+                
+                showResult('export-result', `✅ 成功導出 ${records.length} 條遊戲紀錄數據`, true);
+
+            } catch (err) {
+                showResult('export-result', `❌ 導出失敗：${err.message}`, false);
+                console.error("Export Game Records Error:", err);
             }
         }
     </script>
