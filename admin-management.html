@@ -47,26 +47,12 @@
         .stat-item .value { font-size: 24px; font-weight: bold; color: #dc2626; }
         .warning-box { background: #fffbeb; border: 1px solid #fbbf24; padding: 15px; border-radius: 6px; margin-bottom: 20px; color: #92400e; }
         .csv-template { margin-top: 10px; font-size: 14px; color: #64748b; }
+        .csv-template a { color: #2563eb; text-decoration: none; }
         .batch-result, .export-result { margin-top: 15px; padding: 10px; border-radius: 4px; display: none; }
         .success-result { background: #f0fdf4; color: #16a34a; }
         .error-result { background: #fef2f2; color: #dc2626; }
         .export-item { margin: 10px 0; padding: 10px; border: 1px solid #e2e8f0; border-radius: 4px; }
         .export-btn { margin-top: 5px; padding: 8px 16px; font-size: 14px; }
-        /* 新增：登錄驗證提示樣式 */
-        .auth-error { 
-            background: #fef2f2; 
-            border: 1px solid #dc2626; 
-            padding: 20px; 
-            border-radius: 8px; 
-            margin: 20px 0; 
-            text-align: center;
-            color: #dc2626;
-            font-size: 18px;
-        }
-        .auth-error a {
-            color: #2563eb;
-            text-decoration: underline;
-        }
     </style>
 </head>
 <body>
@@ -76,24 +62,17 @@
             <button class="btn-logout" onclick="adminLogout()">登出</button>
         </div>
 
-        <!-- 登錄驗證錯誤提示（默認隱藏） -->
-        <div id="auth-error" class="auth-error" style="display: none;">
-            <p>❌ 您尚未登錄或登錄狀態已失效</p>
-            <p>請點擊 <a href="admin-login.html">這裡</a> 返回管理員登錄頁面</p>
-        </div>
-
-        <!-- 調整標籤排序：數據管理移至最後 -->
-        <div class="tabs" id="main-tabs" style="display: none;">
+        <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('user-scores')">用戶總分統計</button>
             <button class="tab-btn" onclick="switchTab('games')">遊戲管理</button>
             <button class="tab-btn" onclick="switchTab('users')">用戶管理</button>
             <button class="tab-btn" onclick="switchTab('records')">遊戲紀錄</button>
-            <button class="tab-btn" onclick="switchTab('data-export')">數據導出</button>
             <button class="tab-btn" onclick="switchTab('data-management')">數據管理</button>
+            <button class="tab-btn" onclick="switchTab('data-export')">數據導出</button>
         </div>
 
         <!-- 用戶總分統計標籤 -->
-        <div id="user-scores" class="tab-content active" style="display: none;">
+        <div id="user-scores" class="tab-content active">
             <h2>用戶總分統計</h2>
             <div class="stats-card">
                 <div class="stat-item">
@@ -119,7 +98,7 @@
         </div>
 
         <!-- 遊戲管理標籤 -->
-        <div id="games" class="tab-content" style="display: none;">
+        <div id="games" class="tab-content">
             <h2>遊戲管理</h2>
             
             <!-- 單個新增遊戲 -->
@@ -166,7 +145,7 @@
         </div>
 
         <!-- 用戶管理標籤 -->
-        <div id="users" class="tab-content" style="display: none;">
+        <div id="users" class="tab-content">
             <h2>用戶管理</h2>
             
             <!-- 單個新增用戶 -->
@@ -201,27 +180,21 @@
             <div id="users-list" class="loading">加載用戶列表中...</div>
         </div>
 
-        <!-- 遊戲紀錄標籤 (優化：下拉選單篩選) -->
-        <div id="records" class="tab-content" style="display: none;">
+        <!-- 遊戲紀錄標籤 (新增篩選功能) -->
+        <div id="records" class="tab-content">
             <h2>遊戲紀錄管理</h2>
             
-            <!-- 篩選表單 (用戶名/遊戲名改為下拉選單) -->
+            <!-- 篩選表單 -->
             <div class="filter-form">
                 <h3 style="margin-bottom: 15px;">篩選與排序</h3>
                 <div class="form-row">
                     <div class="form-group">
                         <label>用戶名篩選</label>
-                        <select id="filter-username" class="form-control">
-                            <option value="">-- 所有用戶 --</option>
-                            <!-- 動態加載用戶列表 -->
-                        </select>
+                        <input type="text" id="filter-username" placeholder="輸入用戶名關鍵字">
                     </div>
                     <div class="form-group">
                         <label>遊戲名篩選</label>
-                        <select id="filter-gamename" class="form-control">
-                            <option value="">-- 所有遊戲 --</option>
-                            <!-- 動態加載遊戲列表 -->
-                        </select>
+                        <input type="text" id="filter-gamename" placeholder="輸入遊戲名關鍵字">
                     </div>
                 </div>
                 <div class="form-row">
@@ -254,8 +227,20 @@
             <div id="records-list" class="loading">加載遊戲紀錄中...</div>
         </div>
 
-        <!-- 數據導出標籤 -->
-        <div id="data-export" class="tab-content" style="display: none;">
+        <!-- 數據管理標籤 (修改為刪除所有紀錄) -->
+        <div id="data-management" class="tab-content">
+            <h2>系統數據管理</h2>
+            <div class="warning-box">
+                <strong>⚠️ 警告：</strong> 以下操作將刪除系統內所有遊戲紀錄，請謹慎操作！刪除後將確保管理員帳號存在。
+            </div>
+            
+            <button class="btn-danger" onclick="confirmDeleteAllRecords()">刪除所有遊戲紀錄</button>
+            <div id="data-msg" class="msg-box"></div>
+            <div id="data-status" class="loading">數據狀態：正常</div>
+        </div>
+
+        <!-- 數據導出標籤 (新增) -->
+        <div id="data-export" class="tab-content">
             <h2>數據導出 (CSV)</h2>
             <div class="export-form">
                 <div class="export-item">
@@ -281,18 +266,6 @@
                 <div id="export-result" class="export-result"></div>
             </div>
         </div>
-
-        <!-- 數據管理標籤 (移至最後，增強刪除功能) -->
-        <div id="data-management" class="tab-content" style="display: none;">
-            <h2>系統數據管理</h2>
-            <div class="warning-box">
-                <strong>⚠️ 警告：</strong> 以下操作將刪除系統內<strong>所有數據</strong>（用戶/遊戲/紀錄），僅保留管理員帳號！此操作不可撤銷！
-            </div>
-            
-            <button class="btn-danger" onclick="confirmDeleteAllData()">刪除所有系統數據</button>
-            <div id="data-msg" class="msg-box"></div>
-            <div id="data-status" class="loading">數據狀態：正常</div>
-        </div>
     </div>
 
     <!-- JS加載 -->
@@ -300,222 +273,55 @@
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
     <script>
-        // 全局變量
+        // 全局變量：存儲原始遊戲紀錄數據
         let allGameRecords = [];
-        let allUsers = [];       // 存儲所有用戶列表
-        let allGames = [];       // 存儲所有遊戲列表
-        let isAdminAuthenticated = false; // 登錄狀態標誌
         
-        // 頁面加載時檢查管理員權限 (增強版)
+        // 頁面加載時檢查管理員權限
         window.onload = async function() {
-            // 1. 首先檢查登錄狀態
-            if (!checkAdminLoginStatus()) {
-                // 顯示登錄錯誤提示，隱藏主內容
-                document.getElementById('auth-error').style.display = 'block';
-                document.getElementById('main-tabs').style.display = 'none';
-                return;
-            }
-            
-            // 2. 登錄狀態有效，顯示主內容
-            document.getElementById('auth-error').style.display = 'none';
-            document.getElementById('main-tabs').style.display = 'flex';
-            
-            // 3. 初始化數據庫連接
-            try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) {
-                    showMessage('score-msg', '❌ 資料庫初始化失敗，請刷新頁面重試', false);
-                    return;
-                }
-                
-                // 4. 加載各項數據
-                await loadDashboardStats();
-                await loadUserTotalScoresList();
-                
-                // 5. 默認顯示第一個標籤內容
-                document.getElementById('user-scores').style.display = 'block';
-                
-                isAdminAuthenticated = true;
-            } catch (err) {
-                showMessage('score-msg', `❌ 頁面加載失敗：${err.message}`, false);
-                console.error("Page Load Error:", err);
-            }
+            if (!checkAdmin()) return;
+            await window.dbManager.init();
+            loadDashboardStats();
+            loadUserTotalScoresList();
         };
-
-        // 增強版：檢查管理員登錄狀態
-        function checkAdminLoginStatus() {
-            // 從localStorage獲取登錄信息
-            const userData = localStorage.getItem('qrGameUser');
-            
-            // 檢查1：是否有登錄數據
-            if (!userData) {
-                console.log("登錄狀態檢查：未找到登錄信息");
-                return false;
-            }
-            
-            try {
-                // 檢查2：數據格式是否正確
-                const user = JSON.parse(userData);
-                if (!user || !user.username || user.role !== 'admin') {
-                    console.log("登錄狀態檢查：不是管理員賬號");
-                    return false;
-                }
-                
-                // 檢查3：登錄過期檢查 (可選)
-                const loginTime = user.loginTime || 0;
-                const now = Date.now();
-                const expireHours = 24; // 24小時過期
-                if (now - loginTime > expireHours * 60 * 60 * 1000) {
-                    console.log("登錄狀態檢查：登錄已過期");
-                    localStorage.removeItem('qrGameUser');
-                    return false;
-                }
-                
-                // 所有檢查通過
-                window.currentUser = user;
-                console.log(`管理員 ${user.username} 登錄狀態有效`);
-                return true;
-            } catch (err) {
-                console.log("登錄狀態檢查：數據解析錯誤", err);
-                localStorage.removeItem('qrGameUser');
-                return false;
-            }
-        }
-
-        // 兼容舊版checkAdmin函數
-        function checkAdmin() {
-            return checkAdminLoginStatus();
-        }
 
         // 管理員登出
         function adminLogout() {
             localStorage.removeItem('qrGameUser');
             window.currentUser = null;
-            isAdminAuthenticated = false;
-            
             alert("✅ 管理員已成功登出！");
             window.location.href = "admin-login.html";
         }
 
-        // 切換標籤 (修復版)
-        async function switchTab(tabId) {
-            // 安全檢查：未登錄則跳轉登錄頁
-            if (!isAdminAuthenticated) {
-                window.location.href = "admin-login.html";
-                return;
-            }
-            
-            // 隱藏所有標籤內容
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.style.display = 'none';
-            });
-            
-            // 移除所有標籤按鈕的active狀態
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // 激活當前標籤
+        // 切換標籤
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             document.querySelector(`.tab-btn[onclick="switchTab('${tabId}')"]`).classList.add('active');
-            const currentTab = document.getElementById(tabId);
-            currentTab.style.display = 'block';
+            document.getElementById(tabId).classList.add('active');
             
-            // 加載對應數據
-            try {
-                if (tabId === 'games' && document.getElementById('games-list').classList.contains('loading')) {
-                    await loadGamesList();
-                }
-                if (tabId === 'users' && document.getElementById('users-list').classList.contains('loading')) {
-                    await loadUsersList();
-                }
-                if (tabId === 'records') {
-                    await loadUsersForFilter();
-                    await loadGamesForFilter();
-                    if (document.getElementById('records-list').classList.contains('loading')) {
-                        await loadRecordsList();
-                    }
-                }
-                if (tabId === 'user-scores' && document.getElementById('user-scores-list').classList.contains('loading')) {
-                    await loadUserTotalScoresList();
-                }
-                if (tabId === 'data-management') {
-                    await updateDataStatus();
-                }
-            } catch (err) {
-                showMessage(`${tabId.split('-')[0]}-msg`, `❌ 加載${tabId}數據失敗：${err.message}`, false);
-                console.error(`Load ${tabId} Error:`, err);
+            if (tabId === 'games' && document.getElementById('games-list').classList.contains('loading')) {
+                loadGamesList();
             }
-        }
-
-        // 加載用戶列表到下拉選單
-        async function loadUsersForFilter() {
-            try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) return;
-
-                const { data: users } = await window.dbManager.client
-                    .from('users')
-                    .select('id, username')
-                    .order('username');
-                
-                allUsers = users || [];
-                const selectElement = document.getElementById('filter-username');
-                
-                // 清空並重新加載
-                selectElement.innerHTML = '<option value="">-- 所有用戶 --</option>';
-                
-                if (users && users.length > 0) {
-                    users.forEach(user => {
-                        const option = document.createElement('option');
-                        option.value = user.username;
-                        option.textContent = user.username;
-                        selectElement.appendChild(option);
-                    });
-                }
-            } catch (err) {
-                console.error("Load Users For Filter Error:", err);
+            if (tabId === 'users' && document.getElementById('users-list').classList.contains('loading')) {
+                loadUsersList();
             }
-        }
-
-        // 加載遊戲列表到下拉選單
-        async function loadGamesForFilter() {
-            try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) return;
-
-                const { data: games } = await window.dbManager.client
-                    .from('games')
-                    .select('id, game_name')
-                    .order('game_name');
-                
-                allGames = games || [];
-                const selectElement = document.getElementById('filter-gamename');
-                
-                // 清空並重新加載
-                selectElement.innerHTML = '<option value="">-- 所有遊戲 --</option>';
-                
-                if (games && games.length > 0) {
-                    games.forEach(game => {
-                        const option = document.createElement('option');
-                        option.value = game.game_name;
-                        option.textContent = game.game_name;
-                        selectElement.appendChild(option);
-                    });
-                }
-            } catch (err) {
-                console.error("Load Games For Filter Error:", err);
+            if (tabId === 'records' && document.getElementById('records-list').classList.contains('loading')) {
+                loadRecordsList();
+            }
+            if (tabId === 'user-scores' && document.getElementById('user-scores-list').classList.contains('loading')) {
+                loadUserTotalScoresList();
+            }
+            if (tabId === 'data-management') {
+                updateDataStatus();
             }
         }
 
         // 顯示消息
         function showMessage(elementId, text, isSuccess = true) {
             const msgBox = document.getElementById(elementId);
-            if (!msgBox) return; // 防護：元素不存在則返回
-            
             msgBox.textContent = text;
             msgBox.className = `msg-box ${isSuccess ? 'success-msg' : 'error-msg'}`;
             msgBox.style.display = 'block';
-            
             setTimeout(() => {
                 msgBox.style.display = 'none';
             }, 3000);
@@ -524,12 +330,9 @@
         // 顯示批量/導出結果
         function showResult(elementId, text, isSuccess = true) {
             const resultBox = document.getElementById(elementId);
-            if (!resultBox) return;
-            
             resultBox.textContent = text;
             resultBox.className = `${elementId.includes('export') ? 'export-result' : 'batch-result'} ${isSuccess ? 'success-result' : 'error-result'}`;
             resultBox.style.display = 'block';
-            
             setTimeout(() => {
                 resultBox.style.display = 'none';
             }, 5000);
@@ -629,16 +432,9 @@
             }
         }
 
-        // 確認刪除所有系統數據 (增強版：刪除所有數據，僅保留管理員)
-        async function confirmDeleteAllData() {
-            // 安全檢查
-            if (!isAdminAuthenticated) {
-                alert("❌ 您需要重新登錄才能執行此操作");
-                window.location.href = "admin-login.html";
-                return;
-            }
-            
-            if (!confirm('⚠️ 確定要刪除所有系統數據嗎？此操作將刪除所有用戶、遊戲、紀錄，僅保留管理員帳號！此操作不可撤銷！')) {
+        // 確認刪除所有遊戲紀錄 (修改：只刪除紀錄，保留用戶/遊戲)
+        async function confirmDeleteAllRecords() {
+            if (!confirm('⚠️ 確定要刪除所有遊戲紀錄嗎？此操作不可撤銷！')) {
                 return;
             }
 
@@ -652,40 +448,45 @@
                     return;
                 }
 
-                dataStatus.innerHTML = '<div class="loading">正在刪除所有系統數據...</div>';
+                dataStatus.innerHTML = '<div class="loading">正在刪除所有遊戲紀錄...</div>';
                 
-                // 1. 刪除所有遊戲紀錄
-                await window.dbManager.client.from('game_records').delete().not('id', 'eq', 0);
+                // 只刪除所有遊戲紀錄
+                const deleteResult = await window.dbManager.client
+                    .from('game_records')
+                    .delete()
+                    .not('id', 'eq', 0);
                 
-                // 2. 刪除所有遊戲
-                await window.dbManager.client.from('games').delete().not('id', 'eq', 0);
-                
-                // 3. 刪除所有普通用戶
-                await window.dbManager.client.from('users').delete().not('id', 'eq', 0);
-                
-                // 4. 確保管理員帳號存在 (刪除舊的再重建)
-                await window.dbManager.client.from('admins').delete().eq('username', 'admin');
-                await window.dbManager.client.from('admins').insert([{ 
-                    username: 'admin', 
-                    password: 'admin123'  // 默認管理員密碼
-                }]);
+                if (deleteResult.error) {
+                    console.warn("刪除遊戲紀錄警告：", deleteResult.error.message);
+                }
 
-                showMessage('data-msg', '✅ 所有系統數據已成功刪除，管理員帳號已重建！', true);
+                // 檢查管理員帳號是否存在，不存在則創建
+                const adminCheck = await window.dbManager.client
+                    .from('admins')
+                    .select('id')
+                    .eq('username', 'admin')
+                    .single();
                 
-                // 更新所有列表和狀態
-                await updateDataStatus();
-                await loadDashboardStats();
-                await loadUserTotalScoresList();
-                await loadGamesList();
-                await loadUsersList();
-                await loadRecordsList();
-                await loadUsersForFilter();
-                await loadGamesForFilter();
+                if (adminCheck.error && adminCheck.error.code === 'PGRST116') {
+                    // 管理員帳號不存在，創建默認管理員
+                    await window.dbManager.client
+                        .from('admins')
+                        .insert([{ username: 'admin', password: 'admin123' }]);
+                    showMessage('data-msg', '✅ 所有遊戲紀錄已刪除，並創建默認管理員帳號！', true);
+                } else {
+                    showMessage('data-msg', '✅ 所有遊戲紀錄已成功刪除！', true);
+                }
+                
+                // 更新所有列表
+                updateDataStatus();
+                loadDashboardStats();
+                loadUserTotalScoresList();
+                loadRecordsList();
 
             } catch (err) {
                 showMessage('data-msg', `❌ 操作失敗：${err.message}`, false);
-                console.error("Delete All Data Error:", err);
-                await updateDataStatus();
+                console.error("Delete All Records Error:", err);
+                updateDataStatus();
             }
         }
 
@@ -724,7 +525,6 @@
 
             } catch (err) {
                 console.error("Load Dashboard Stats Error:", err);
-                showMessage('score-msg', `❌ 加載統計數據失敗：${err.message}`, false);
             }
         }
 
@@ -823,11 +623,6 @@
 
         // 新增單個遊戲
         async function addNewGame() {
-            if (!isAdminAuthenticated) {
-                alert("❌ 請重新登錄後再操作");
-                return;
-            }
-            
             const gameCode = document.getElementById('game-code').value.trim();
             const gameName = document.getElementById('game-name').value.trim();
             const maxScore = parseInt(document.getElementById('game-max-score').value) || 0;
@@ -867,10 +662,9 @@
                 document.getElementById('game-default-score').value = '';
 
                 showMessage('game-msg', '✅ 遊戲新增成功！');
-                await loadGamesList();
-                await loadDashboardStats();
-                await loadUserTotalScoresList();
-                await loadGamesForFilter(); // 更新遊戲下拉列表
+                loadGamesList();
+                loadDashboardStats();
+                loadUserTotalScoresList();
 
             } catch (err) {
                 showMessage('game-msg', `❌ 新增失敗：${err.message}`, false);
@@ -880,11 +674,6 @@
 
         // 批量導入遊戲
         async function importGamesFromCSV() {
-            if (!isAdminAuthenticated) {
-                alert("❌ 請重新登錄後再操作");
-                return;
-            }
-            
             const fileInput = document.getElementById('game-csv-file');
             const file = fileInput.files[0];
             
@@ -967,9 +756,8 @@
                 fileInput.value = '';
                 
                 // 更新列表
-                await loadGamesList();
-                await loadDashboardStats();
-                await loadGamesForFilter(); // 更新遊戲下拉列表
+                loadGamesList();
+                loadDashboardStats();
 
             } catch (err) {
                 showResult('game-batch-result', `❌ 導入失敗：${err.message}`, false);
@@ -979,11 +767,6 @@
 
         // 新增單個用戶
         async function addNewUser() {
-            if (!isAdminAuthenticated) {
-                alert("❌ 請重新登錄後再操作");
-                return;
-            }
-            
             const username = document.getElementById('user-username').value.trim();
 
             if (!username) {
@@ -1008,10 +791,9 @@
                 document.getElementById('user-username').value = '';
 
                 showMessage('user-msg', '✅ 用戶新增成功！');
-                await loadUsersList();
-                await loadDashboardStats();
-                await loadUserTotalScoresList();
-                await loadUsersForFilter(); // 更新用戶下拉列表
+                loadUsersList();
+                loadDashboardStats();
+                loadUserTotalScoresList();
 
             } catch (err) {
                 showMessage('user-msg', `❌ 新增失敗：${err.message}`, false);
@@ -1021,11 +803,6 @@
 
         // 批量導入用戶
         async function importUsersFromCSV() {
-            if (!isAdminAuthenticated) {
-                alert("❌ 請重新登錄後再操作");
-                return;
-            }
-            
             const fileInput = document.getElementById('user-csv-file');
             const file = fileInput.files[0];
             
@@ -1098,9 +875,9 @@
                 fileInput.value = '';
                 
                 // 更新列表
-                await loadUsersList();
-                await loadDashboardStats();
-                await loadUsersForFilter(); // 更新用戶下拉列表
+                loadUsersList();
+                loadDashboardStats();
+                loadUserTotalScoresList();
 
             } catch (err) {
                 showResult('user-batch-result', `❌ 導入失敗：${err.message}`, false);
@@ -1226,7 +1003,7 @@
             }
         }
 
-        // 加載遊戲紀錄
+        // 加載遊戲紀錄 (新增：存儲原始數據)
         async function loadRecordsList() {
             const recordsList = document.getElementById('records-list');
             
@@ -1307,19 +1084,14 @@
             recordsList.innerHTML = tableHTML;
         }
 
-        // 篩選遊戲紀錄 (適配下拉選單)
+        // 篩選遊戲紀錄
         function filterRecords() {
-            if (!isAdminAuthenticated) {
-                alert("❌ 請重新登錄後再操作");
-                return;
-            }
-            
             if (allGameRecords.length === 0) {
                 showResult('export-result', '❌ 沒有可用的遊戲紀錄數據', false);
                 return;
             }
 
-            // 获取筛选条件 (下拉選單值)
+            // 获取筛选条件
             const usernameFilter = document.getElementById('filter-username').value.trim().toLowerCase();
             const gamenameFilter = document.getElementById('filter-gamename').value.trim().toLowerCase();
             const scoreMin = parseInt(document.getElementById('filter-score-min').value) || 0;
@@ -1329,17 +1101,17 @@
             // 应用筛选
             let filteredRecords = [...allGameRecords];
             
-            // 用户名筛选 (下拉選單)
+            // 用户名筛选
             if (usernameFilter) {
                 filteredRecords = filteredRecords.filter(record => 
-                    (record.users?.username || '').toLowerCase() === usernameFilter
+                    (record.users?.username || '').toLowerCase().includes(usernameFilter)
                 );
             }
 
-            // 游戏名筛选 (下拉選單)
+            // 游戏名筛选
             if (gamenameFilter) {
                 filteredRecords = filteredRecords.filter(record => 
-                    (record.games?.game_name || '').toLowerCase() === gamenameFilter
+                    (record.games?.game_name || '').toLowerCase().includes(gamenameFilter)
                 );
             }
 
@@ -1381,11 +1153,6 @@
 
         // 重置筛选条件
         function resetFilter() {
-            if (!isAdminAuthenticated) {
-                alert("❌ 請重新登錄後再操作");
-                return;
-            }
-            
             document.getElementById('filter-username').value = '';
             document.getElementById('filter-gamename').value = '';
             document.getElementById('filter-score-min').value = '';
@@ -1413,11 +1180,6 @@
 
         // 導出用戶總分統計CSV
         async function exportUserTotalScores() {
-            if (!isAdminAuthenticated) {
-                alert("❌ 請重新登錄後再操作");
-                return;
-            }
-            
             try {
                 const initOk = await window.dbManager.init();
                 if (!initOk) {
@@ -1487,11 +1249,6 @@
 
         // 導出遊戲管理CSV
         async function exportGames() {
-            if (!isAdminAuthenticated) {
-                alert("❌ 請重新登錄後再操作");
-                return;
-            }
-            
             try {
                 const initOk = await window.dbManager.init();
                 if (!initOk) {
@@ -1530,11 +1287,6 @@
 
         // 導出用戶管理CSV
         async function exportUsers() {
-            if (!isAdminAuthenticated) {
-                alert("❌ 請重新登錄後再操作");
-                return;
-            }
-            
             try {
                 const initOk = await window.dbManager.init();
                 if (!initOk) {
@@ -1573,11 +1325,6 @@
 
         // 導出遊戲紀錄CSV
         async function exportGameRecords() {
-            if (!isAdminAuthenticated) {
-                alert("❌ 請重新登錄後再操作");
-                return;
-            }
-            
             try {
                 const initOk = await window.dbManager.init();
                 if (!initOk) {
