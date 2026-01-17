@@ -62,13 +62,14 @@
             <button class="btn-logout" onclick="adminLogout()">登出</button>
         </div>
 
+        <!-- 調整標籤排序：數據管理移至最後 -->
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('user-scores')">用戶總分統計</button>
             <button class="tab-btn" onclick="switchTab('games')">遊戲管理</button>
             <button class="tab-btn" onclick="switchTab('users')">用戶管理</button>
             <button class="tab-btn" onclick="switchTab('records')">遊戲紀錄</button>
-            <button class="tab-btn" onclick="switchTab('data-management')">數據管理</button>
             <button class="tab-btn" onclick="switchTab('data-export')">數據導出</button>
+            <button class="tab-btn" onclick="switchTab('data-management')">數據管理</button>
         </div>
 
         <!-- 用戶總分統計標籤 -->
@@ -180,21 +181,27 @@
             <div id="users-list" class="loading">加載用戶列表中...</div>
         </div>
 
-        <!-- 遊戲紀錄標籤 (新增篩選功能) -->
+        <!-- 遊戲紀錄標籤 (優化：下拉選單篩選) -->
         <div id="records" class="tab-content">
             <h2>遊戲紀錄管理</h2>
             
-            <!-- 篩選表單 -->
+            <!-- 篩選表單 (用戶名/遊戲名改為下拉選單) -->
             <div class="filter-form">
                 <h3 style="margin-bottom: 15px;">篩選與排序</h3>
                 <div class="form-row">
                     <div class="form-group">
                         <label>用戶名篩選</label>
-                        <input type="text" id="filter-username" placeholder="輸入用戶名關鍵字">
+                        <select id="filter-username" class="form-control">
+                            <option value="">-- 所有用戶 --</option>
+                            <!-- 動態加載用戶列表 -->
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>遊戲名篩選</label>
-                        <input type="text" id="filter-gamename" placeholder="輸入遊戲名關鍵字">
+                        <select id="filter-gamename" class="form-control">
+                            <option value="">-- 所有遊戲 --</option>
+                            <!-- 動態加載遊戲列表 -->
+                        </select>
                     </div>
                 </div>
                 <div class="form-row">
@@ -227,19 +234,7 @@
             <div id="records-list" class="loading">加載遊戲紀錄中...</div>
         </div>
 
-        <!-- 數據管理標籤 (修改為刪除所有紀錄) -->
-        <div id="data-management" class="tab-content">
-            <h2>系統數據管理</h2>
-            <div class="warning-box">
-                <strong>⚠️ 警告：</strong> 以下操作將刪除系統內所有遊戲紀錄，請謹慎操作！刪除後將確保管理員帳號存在。
-            </div>
-            
-            <button class="btn-danger" onclick="confirmDeleteAllRecords()">刪除所有遊戲紀錄</button>
-            <div id="data-msg" class="msg-box"></div>
-            <div id="data-status" class="loading">數據狀態：正常</div>
-        </div>
-
-        <!-- 數據導出標籤 (新增) -->
+        <!-- 數據導出標籤 -->
         <div id="data-export" class="tab-content">
             <h2>數據導出 (CSV)</h2>
             <div class="export-form">
@@ -266,6 +261,18 @@
                 <div id="export-result" class="export-result"></div>
             </div>
         </div>
+
+        <!-- 數據管理標籤 (移至最後，增強刪除功能) -->
+        <div id="data-management" class="tab-content">
+            <h2>系統數據管理</h2>
+            <div class="warning-box">
+                <strong>⚠️ 警告：</strong> 以下操作將刪除系統內<strong>所有數據</strong>（用戶/遊戲/紀錄），僅保留管理員帳號！此操作不可撤銷！
+            </div>
+            
+            <button class="btn-danger" onclick="confirmDeleteAllData()">刪除所有系統數據</button>
+            <div id="data-msg" class="msg-box"></div>
+            <div id="data-status" class="loading">數據狀態：正常</div>
+        </div>
     </div>
 
     <!-- JS加載 -->
@@ -273,8 +280,10 @@
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
     <script>
-        // 全局變量：存儲原始遊戲紀錄數據
+        // 全局變量
         let allGameRecords = [];
+        let allUsers = [];       // 存儲所有用戶列表
+        let allGames = [];       // 存儲所有遊戲列表
         
         // 頁面加載時檢查管理員權限
         window.onload = async function() {
@@ -305,14 +314,79 @@
             if (tabId === 'users' && document.getElementById('users-list').classList.contains('loading')) {
                 loadUsersList();
             }
-            if (tabId === 'records' && document.getElementById('records-list').classList.contains('loading')) {
-                loadRecordsList();
+            if (tabId === 'records') {
+                // 加載遊戲紀錄的同時加載用戶/遊戲下拉列表
+                await loadUsersForFilter();
+                await loadGamesForFilter();
+                if (document.getElementById('records-list').classList.contains('loading')) {
+                    loadRecordsList();
+                }
             }
             if (tabId === 'user-scores' && document.getElementById('user-scores-list').classList.contains('loading')) {
                 loadUserTotalScoresList();
             }
             if (tabId === 'data-management') {
                 updateDataStatus();
+            }
+        }
+
+        // 加載用戶列表到下拉選單
+        async function loadUsersForFilter() {
+            try {
+                const initOk = await window.dbManager.init();
+                if (!initOk) return;
+
+                const { data: users } = await window.dbManager.client
+                    .from('users')
+                    .select('id, username')
+                    .order('username');
+                
+                allUsers = users || [];
+                const selectElement = document.getElementById('filter-username');
+                
+                // 清空並重新加載
+                selectElement.innerHTML = '<option value="">-- 所有用戶 --</option>';
+                
+                if (users && users.length > 0) {
+                    users.forEach(user => {
+                        const option = document.createElement('option');
+                        option.value = user.username;
+                        option.textContent = user.username;
+                        selectElement.appendChild(option);
+                    });
+                }
+            } catch (err) {
+                console.error("Load Users For Filter Error:", err);
+            }
+        }
+
+        // 加載遊戲列表到下拉選單
+        async function loadGamesForFilter() {
+            try {
+                const initOk = await window.dbManager.init();
+                if (!initOk) return;
+
+                const { data: games } = await window.dbManager.client
+                    .from('games')
+                    .select('id, game_name')
+                    .order('game_name');
+                
+                allGames = games || [];
+                const selectElement = document.getElementById('filter-gamename');
+                
+                // 清空並重新加載
+                selectElement.innerHTML = '<option value="">-- 所有遊戲 --</option>';
+                
+                if (games && games.length > 0) {
+                    games.forEach(game => {
+                        const option = document.createElement('option');
+                        option.value = game.game_name;
+                        option.textContent = game.game_name;
+                        selectElement.appendChild(option);
+                    });
+                }
+            } catch (err) {
+                console.error("Load Games For Filter Error:", err);
             }
         }
 
@@ -432,9 +506,9 @@
             }
         }
 
-        // 確認刪除所有遊戲紀錄 (修改：只刪除紀錄，保留用戶/遊戲)
-        async function confirmDeleteAllRecords() {
-            if (!confirm('⚠️ 確定要刪除所有遊戲紀錄嗎？此操作不可撤銷！')) {
+        // 確認刪除所有系統數據 (增強版：刪除所有數據，僅保留管理員)
+        async function confirmDeleteAllData() {
+            if (!confirm('⚠️ 確定要刪除所有系統數據嗎？此操作將刪除所有用戶、遊戲、紀錄，僅保留管理員帳號！此操作不可撤銷！')) {
                 return;
             }
 
@@ -448,44 +522,39 @@
                     return;
                 }
 
-                dataStatus.innerHTML = '<div class="loading">正在刪除所有遊戲紀錄...</div>';
+                dataStatus.innerHTML = '<div class="loading">正在刪除所有系統數據...</div>';
                 
-                // 只刪除所有遊戲紀錄
-                const deleteResult = await window.dbManager.client
-                    .from('game_records')
-                    .delete()
-                    .not('id', 'eq', 0);
+                // 1. 刪除所有遊戲紀錄
+                await window.dbManager.client.from('game_records').delete().not('id', 'eq', 0);
                 
-                if (deleteResult.error) {
-                    console.warn("刪除遊戲紀錄警告：", deleteResult.error.message);
-                }
+                // 2. 刪除所有遊戲
+                await window.dbManager.client.from('games').delete().not('id', 'eq', 0);
+                
+                // 3. 刪除所有普通用戶
+                await window.dbManager.client.from('users').delete().not('id', 'eq', 0);
+                
+                // 4. 確保管理員帳號存在 (刪除舊的再重建)
+                await window.dbManager.client.from('admins').delete().eq('username', 'admin');
+                await window.dbManager.client.from('admins').insert([{ 
+                    username: 'admin', 
+                    password: 'admin123'  // 默認管理員密碼
+                }]);
 
-                // 檢查管理員帳號是否存在，不存在則創建
-                const adminCheck = await window.dbManager.client
-                    .from('admins')
-                    .select('id')
-                    .eq('username', 'admin')
-                    .single();
+                showMessage('data-msg', '✅ 所有系統數據已成功刪除，管理員帳號已重建！', true);
                 
-                if (adminCheck.error && adminCheck.error.code === 'PGRST116') {
-                    // 管理員帳號不存在，創建默認管理員
-                    await window.dbManager.client
-                        .from('admins')
-                        .insert([{ username: 'admin', password: 'admin123' }]);
-                    showMessage('data-msg', '✅ 所有遊戲紀錄已刪除，並創建默認管理員帳號！', true);
-                } else {
-                    showMessage('data-msg', '✅ 所有遊戲紀錄已成功刪除！', true);
-                }
-                
-                // 更新所有列表
+                // 更新所有列表和狀態
                 updateDataStatus();
                 loadDashboardStats();
                 loadUserTotalScoresList();
+                loadGamesList();
+                loadUsersList();
                 loadRecordsList();
+                loadUsersForFilter();
+                loadGamesForFilter();
 
             } catch (err) {
                 showMessage('data-msg', `❌ 操作失敗：${err.message}`, false);
-                console.error("Delete All Records Error:", err);
+                console.error("Delete All Data Error:", err);
                 updateDataStatus();
             }
         }
@@ -665,6 +734,7 @@
                 loadGamesList();
                 loadDashboardStats();
                 loadUserTotalScoresList();
+                loadGamesForFilter(); // 更新遊戲下拉列表
 
             } catch (err) {
                 showMessage('game-msg', `❌ 新增失敗：${err.message}`, false);
@@ -758,6 +828,7 @@
                 // 更新列表
                 loadGamesList();
                 loadDashboardStats();
+                loadGamesForFilter(); // 更新遊戲下拉列表
 
             } catch (err) {
                 showResult('game-batch-result', `❌ 導入失敗：${err.message}`, false);
@@ -794,6 +865,7 @@
                 loadUsersList();
                 loadDashboardStats();
                 loadUserTotalScoresList();
+                loadUsersForFilter(); // 更新用戶下拉列表
 
             } catch (err) {
                 showMessage('user-msg', `❌ 新增失敗：${err.message}`, false);
@@ -877,7 +949,7 @@
                 // 更新列表
                 loadUsersList();
                 loadDashboardStats();
-                loadUserTotalScoresList();
+                loadUsersForFilter(); // 更新用戶下拉列表
 
             } catch (err) {
                 showResult('user-batch-result', `❌ 導入失敗：${err.message}`, false);
@@ -1003,7 +1075,7 @@
             }
         }
 
-        // 加載遊戲紀錄 (新增：存儲原始數據)
+        // 加載遊戲紀錄
         async function loadRecordsList() {
             const recordsList = document.getElementById('records-list');
             
@@ -1084,14 +1156,14 @@
             recordsList.innerHTML = tableHTML;
         }
 
-        // 篩選遊戲紀錄
+        // 篩選遊戲紀錄 (適配下拉選單)
         function filterRecords() {
             if (allGameRecords.length === 0) {
                 showResult('export-result', '❌ 沒有可用的遊戲紀錄數據', false);
                 return;
             }
 
-            // 获取筛选条件
+            // 获取筛选条件 (下拉選單值)
             const usernameFilter = document.getElementById('filter-username').value.trim().toLowerCase();
             const gamenameFilter = document.getElementById('filter-gamename').value.trim().toLowerCase();
             const scoreMin = parseInt(document.getElementById('filter-score-min').value) || 0;
@@ -1101,17 +1173,17 @@
             // 应用筛选
             let filteredRecords = [...allGameRecords];
             
-            // 用户名筛选
+            // 用户名筛选 (下拉選單)
             if (usernameFilter) {
                 filteredRecords = filteredRecords.filter(record => 
-                    (record.users?.username || '').toLowerCase().includes(usernameFilter)
+                    (record.users?.username || '').toLowerCase() === usernameFilter
                 );
             }
 
-            // 游戏名筛选
+            // 游戏名筛选 (下拉選單)
             if (gamenameFilter) {
                 filteredRecords = filteredRecords.filter(record => 
-                    (record.games?.game_name || '').toLowerCase().includes(gamenameFilter)
+                    (record.games?.game_name || '').toLowerCase() === gamenameFilter
                 );
             }
 
