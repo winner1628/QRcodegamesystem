@@ -125,6 +125,10 @@
             cursor: pointer;
             margin-bottom: 10px;
         }
+        .control-btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
         .msg-box {
             padding: 10px;
             border-radius: 8px;
@@ -139,6 +143,11 @@
             background: #f0fdf4;
             color: #16a34a;
         }
+        .loading-box {
+            padding: 10px;
+            color: #64748b;
+            display: none;
+        }
         .footer {
             margin-top: 20px;
             color: #64748b;
@@ -151,6 +160,7 @@
         <div class="logo">QR碼遊戲系統</div>
         
         <div id="login-msg" class="msg-box"></div>
+        <div id="loading-lib" class="loading-box">正在加載掃描庫，請稍候...</div>
 
         <!-- 登入方式切換標籤 -->
         <div class="login-tabs">
@@ -177,8 +187,8 @@
                 </div>
                 <video id="login-qr-video"></video>
             </div>
-            <button class="control-btn" onclick="startLoginScanner()">啟動掃描</button>
-            <button class="control-btn" onclick="stopLoginScanner()" style="display: none;">停止掃描</button>
+            <button id="start-scan-btn" class="control-btn" onclick="startLoginScanner()" disabled>啟動掃描</button>
+            <button id="stop-scan-btn" class="control-btn" onclick="stopLoginScanner()" style="display: none;">停止掃描</button>
         </div>
         
         <div class="footer">
@@ -186,27 +196,62 @@
         </div>
     </div>
 
-    <!-- QR Code Scanner 庫 -->
-    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0"></script>
-    <!-- Supabase 庫 -->
+    <!-- 先加載Supabase，再加載ZXing (確保加載順序) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- 配置文件 -->
     <script src="js/config.js"></script>
+    
+    <!-- 延遲加載ZXing庫，避免阻塞頁面 -->
     <script>
+        // 全局變量
         let loginScanner = null;
         let isLoginScanning = false;
+        let ZXing = null; // 存儲ZXing庫實例
         
-        // 頁面加載時檢查是否已登錄
+        // 頁面加載完成後加載ZXing庫
         window.onload = async function() {
-            await window.dbManager.init();
-            
-            // 檢查本地存儲中的用戶信息
-            const savedUser = localStorage.getItem('qrGameUser');
-            if (savedUser) {
-                window.currentUser = JSON.parse(savedUser);
-                window.location.href = "scan.html";
+            try {
+                // 初始化資料庫
+                await window.dbManager.init();
+                
+                // 檢查本地存儲中的用戶信息
+                const savedUser = localStorage.getItem('qrGameUser');
+                if (savedUser) {
+                    window.currentUser = JSON.parse(savedUser);
+                    window.location.href = "scan.html";
+                    return;
+                }
+
+                // 加載ZXing庫
+                loadZXingLibrary();
+
+            } catch (err) {
+                showMessage('login-msg', `❌ 初始化失敗：${err.message}`, false);
+                console.error("Page Load Error:", err);
             }
         };
+
+        // 加載ZXing掃描庫
+        function loadZXingLibrary() {
+            const loadingBox = document.getElementById('loading-lib');
+            loadingBox.style.display = 'block';
+            
+            // 動態創建script標籤加載ZXing
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0';
+            script.onload = function() {
+                ZXing = window['ZXing']; // 獲取全局ZXing對象
+                loadingBox.style.display = 'none';
+                // 啟用掃描按鈕
+                document.getElementById('start-scan-btn').disabled = false;
+                showMessage('login-msg', '✅ 掃描庫加載完成', true);
+            };
+            script.onerror = function() {
+                loadingBox.style.display = 'none';
+                showMessage('login-msg', '❌ 掃描庫加載失敗，請刷新頁面', false);
+                console.error("ZXing Library Load Error");
+            };
+            document.head.appendChild(script);
+        }
 
         // 切換登入方式標籤
         function switchLoginTab(tabId) {
@@ -237,19 +282,38 @@
 
         // 啟動登入用QR Code掃描器
         async function startLoginScanner() {
+            // 檢查ZXing是否加載完成
+            if (!ZXing) {
+                showMessage('login-msg', '❌ 掃描庫尚未加載完成，請稍候', false);
+                return;
+            }
+            
             if (isLoginScanning) return;
             
             try {
-                // 檢查相機權限
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'environment' } 
-                });
+                // 檢查相機權限 (處理移動端兼容)
+                let stream;
+                try {
+                    // 優先使用後置相機
+                    stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            facingMode: { ideal: 'environment' },
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        } 
+                    });
+                } catch (e) {
+                    // 兼容不支援後置相機的設備
+                    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                }
                 
                 // 初始化掃描器
                 const codeReader = new ZXing.BrowserQRCodeReader();
                 
                 // 顯示視頻，隱藏佔位符
-                document.getElementById('login-qr-video').style.display = 'block';
+                const videoElement = document.getElementById('login-qr-video');
+                videoElement.srcObject = stream;
+                videoElement.style.display = 'block';
                 document.getElementById('login-scanner-placeholder').style.display = 'none';
                 
                 // 開始掃描 (QR Code內容為用戶名)
@@ -269,7 +333,10 @@
                         }
                         if (err && !err.message.includes('No QR code found')) {
                             console.error("Login QR Scan Error:", err);
-                            showMessage('login-msg', `❌ 掃描錯誤：${err.message}`, false);
+                            // 只顯示嚴重錯誤，忽略「未找到QR Code」的提示
+                            if (!err.message.includes('No QR code')) {
+                                showMessage('login-msg', `❌ 掃描錯誤：${err.message}`, false);
+                            }
                         }
                     }
                 );
@@ -278,14 +345,23 @@
                 isLoginScanning = true;
                 
                 // 更新按鈕狀態
-                document.querySelector('.control-btn[onclick="startLoginScanner()"]').style.display = 'none';
-                document.querySelector('.control-btn[onclick="stopLoginScanner()"]').style.display = 'block';
+                document.getElementById('start-scan-btn').style.display = 'none';
+                document.getElementById('stop-scan-btn').style.display = 'block';
                 
                 showMessage('login-msg', '✅ 掃描器已啟動，請掃描用戶QR Code', true);
                 
             } catch (err) {
                 console.error("Start Login Scanner Error:", err);
-                showMessage('login-msg', `❌ 無法啟動相機：${err.message}`, false);
+                // 詳細的錯誤提示，幫助排查問題
+                let errorMsg = '❌ 無法啟動相機：';
+                if (err.message.includes('permission denied')) {
+                    errorMsg += '請授予相機使用權限';
+                } else if (err.message.includes('NotFoundError')) {
+                    errorMsg += '設備未檢測到相機';
+                } else {
+                    errorMsg += err.message;
+                }
+                showMessage('login-msg', errorMsg, false);
             }
         }
 
@@ -293,32 +369,44 @@
         function stopLoginScanner() {
             if (!isLoginScanning || !loginScanner) return;
             
-            // 停止掃描
-            loginScanner.stopContinuousDecode();
-            loginScanner = null;
-            isLoginScanning = false;
-            
-            // 停止相機流
-            const video = document.getElementById('login-qr-video');
-            const stream = video.srcObject;
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
+            try {
+                // 停止掃描
+                loginScanner.stopContinuousDecode();
+                loginScanner = null;
+                isLoginScanning = false;
+                
+                // 停止相機流
+                const videoElement = document.getElementById('login-qr-video');
+                const stream = videoElement.srcObject;
+                if (stream) {
+                    stream.getTracks().forEach(track => {
+                        track.stop();
+                    });
+                }
+                
+                // 恢復UI
+                videoElement.style.display = 'none';
+                videoElement.srcObject = null;
+                document.getElementById('login-scanner-placeholder').style.display = 'block';
+                
+                // 更新按鈕狀態
+                document.getElementById('start-scan-btn').style.display = 'block';
+                document.getElementById('stop-scan-btn').style.display = 'none';
+                
+                showMessage('login-msg', '🛑 掃描器已停止', true);
+                
+            } catch (err) {
+                console.error("Stop Login Scanner Error:", err);
+                showMessage('login-msg', `❌ 停止掃描失敗：${err.message}`, false);
             }
-            
-            // 恢復UI
-            video.style.display = 'none';
-            document.getElementById('login-scanner-placeholder').style.display = 'block';
-            
-            // 更新按鈕狀態
-            document.querySelector('.control-btn[onclick="startLoginScanner()"]').style.display = 'block';
-            document.querySelector('.control-btn[onclick="stopLoginScanner()"]').style.display = 'none';
-            
-            showMessage('login-msg', '🛑 掃描器已停止', true);
         }
 
         // 處理登入邏輯 (共用函數)
         async function processLogin(username) {
             try {
+                // 顯示加載提示
+                showMessage('login-msg', `🔄 正在登錄 ${username}...`, true);
+                
                 // 檢查用戶是否存在
                 const { data, error } = await window.dbManager.client
                     .from('users')
@@ -328,6 +416,7 @@
 
                 if (error) {
                     // 用戶不存在，創建新用戶
+                    showMessage('login-msg', `🔄 創建新用戶 ${username}...`, true);
                     const { data: newUser, error: createError } = await window.dbManager.client
                         .from('users')
                         .insert([{ username: username }])
@@ -366,12 +455,11 @@
             msgBox.className = `msg-box ${isSuccess ? 'success-msg' : 'error-msg'}`;
             msgBox.style.display = 'block';
             
-            // 3秒後隱藏錯誤消息
-            if (!isSuccess) {
-                setTimeout(() => {
-                    msgBox.style.display = 'none';
-                }, 3000);
-            }
+            // 3秒後隱藏錯誤消息，5秒後隱藏成功消息
+            const hideTime = isSuccess ? 5000 : 3000;
+            setTimeout(() => {
+                msgBox.style.display = 'none';
+            }, hideTime);
         }
 
         // 支持按Enter鍵登錄
