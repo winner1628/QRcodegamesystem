@@ -5,9 +5,23 @@
 
 
 client:
-https://winner1628.github.io/QRcodegamesystem/user-login.html:
-admin
+https://winner1628.github.io/QRcodegamesystem/user-login.html
+
+admin:
 https://winner1628.github.io/QRcodegamesystem/admin-login.html
+
+QR code generator:
+https://winner1628.github.io/QRcodegamesystem/qr-generator.html
+
+所有用戶名和遊戲代碼，自動生成對應的 QR Code，每個 QR Code 下方顯示對應的名稱 / 代碼，並提供下載和列印功能。
+這個頁面會包含以下核心功能：
+自動連接 Supabase 資料庫
+讀取所有用戶名並生成 QR Code（用於用戶登入）
+讀取所有遊戲代碼並生成 QR Code（用於掃描遊戲）
+每個 QR Code 下方顯示對應文字，方便識別
+提供單個 QR Code 下載按鈕
+提供批量列印所有 QR Code 的功能
+
 
 ## 📋 系統概述
 本系統是一個基於Web的QR碼遊戲分數記錄系統，用戶可透過手動輸入用戶名或掃描QR碼登入，並掃描遊戲QR碼自動記錄遊戲分數，同時提供遊戲紀錄查詢與分數統計功能。
