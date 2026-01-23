@@ -1,264 +1,208 @@
-# QR碼遊戲系統
+# QR碼遊戲系統 - 使用說明文件
+**版本**：1.0  
+**語言**：繁體中文  
+**技術棧**：HTML/CSS/JavaScript + Supabase (PostgreSQL)  
 
-## 項目簡介
 
-QR碼遊戲系統是一個基於Web的遊戲管理平台，透過QR碼技術實現玩家遊戲記錄、分數統計和排行榜功能。系統支持管理員後台管理和普通用戶前台使用，適用於各種娛樂場所、學校活動或企業團建等場景。
+client:
+https://winner1628.github.io/QRcodegamesystem/user-login.html:
+admin
+https://winner1628.github.io/QRcodegamesystem/admin-login.html
 
-### 核心功能
+## 📋 系統概述
+本系統是一個基於Web的QR碼遊戲分數記錄系統，用戶可透過手動輸入用戶名或掃描QR碼登入，並掃描遊戲QR碼自動記錄遊戲分數，同時提供遊戲紀錄查詢與分數統計功能。
 
-- **用戶管理**：支持管理員和普通用戶角色
-- **遊戲管理**：可自定義多種遊戲類型和評分標準
-- **QR碼生成**：為每個遊戲記錄生成唯一的QR碼
-- **分數統計**：自動計算和統計玩家得分
-- **排行榜**：實時更新的遊戲成績排行榜
-- **數據管理**：支持數據庫初始化、備份和重置功能
+## 🛠️ 環境準備
+### 1. 前置條件
+- 具備基礎的Web伺服器環境（如XAMPP、Nginx或GitHub Pages）
+- Supabase帳號（免費層級即可滿足需求）
+- 支援HTTPS的環境（相機/掃描功能需HTTPS協議）
+- 現代瀏覽器（Chrome、Edge、Safari等）
 
-### 技術架構
-
-- **前端**：HTML5, CSS3, JavaScript, Tailwind CSS
-- **數據庫**：Supabase PostgreSQL
-- **部署**：GitHub + Vercel
-
-## 數據庫表結構
-
-系統使用以下5個主要數據表：
-
-1. **admins** - 管理員用戶表
-2. **users** - 普通用戶表
-3. **games** - 遊戲表
-4. **game_records** - 遊戲記錄表
-5. **game_statistics** - 遊戲統計表
-
-詳細的表結構請參考 [數據庫表結構](database-structure.html) 頁面。
-
-## HTML文件說明
-
-### 主要頁面
-
-#### 1. index.html
-- **用途**：系統首頁，提供用戶登錄入口和功能導航
-- **功能**：
-  - 管理員和普通用戶登錄表單
-  - 系統功能介紹
-  - 快速訪問各個設置頁面的鏈接
-
-#### 2. admin-login.html
-- **用途**：管理員專用登錄頁面
-- **功能**：
-  - 管理員賬號密碼驗證
-  - 登錄狀態管理
-  - 錯誤信息提示
-
-#### 3. user-login.html
-- **用途**：普通用戶登錄頁面
-- **功能**：
-  - 用戶註冊和登錄
-  - 密碼重置功能
-  - 用戶權限控制
-
-#### 4. admin-main.html
-- **用途**：管理員後台主頁
-- **功能**：
-  - 系統概覽數據展示
-  - 快速訪問各個管理模塊
-  - 最新活動記錄查看
-
-#### 5. admin-games.html
-- **用途**：遊戲管理頁面
-- **功能**：
-  - 創建新遊戲
-  - 編輯和刪除現有遊戲
-  - 設置遊戲參數和評分標準
-  - 查看遊戲統計數據
-
-#### 6. admin-users.html
-- **用途**：用戶管理頁面
-- **功能**：
-  - 查看所有用戶列表
-  - 管理用戶權限
-  - 禁用/啟用用戶賬號
-  - 重置用戶密碼
-
-#### 7. admin-stats.html
-- **用途**：數據統計和分析頁面
-- **功能**：
-  - 系統整體數據統計
-  - 遊戲參與度分析
-  - 玩家成績分布圖表
-  - 數據導出功能
-
-#### 8. user-dashboard.html
-- **用途**：普通用戶個人中心
-- **功能**：
-  - 個人資料管理
-  - 歷史遊戲記錄查詢
-  - 個人成績統計
-  - 參與的遊戲列表
-
-### 設置和工具頁面
-
-#### 9. setup-database.html
-- **用途**：高級數據庫管理工具
-- **功能**：
-  - 數據庫初始化（自動創建表和插入示例數據）
-  - 數據庫重置（清空所有數據）
-  - 數據備份和還原
-  - 連接狀態測試
-- **自動化功能**：
-  - 檢測表是否存在，不存在時自動創建
-  - 插入默認管理員賬號和示例遊戲數據
-
-#### 10. simple-setup.html
-- **用途**：簡化版數據庫設置工具
-- **功能**：
-  - 快速創建必要的數據表
-  - 插入默認數據
-  - 數據庫連接測試
-- **自動化功能**：
-  - 一鍵完成所有表的創建和數據初始化
-  - 智能檢測已存在的表，避免重複創建
-
-#### 11. database-structure.html
-- **用途**：數據庫表結構參考文檔
-- **功能**：
-  - 展示所有表的字段結構
-  - 數據類型和約束條件說明
-  - SQL創建語句示例
-
-#### 12. verify-fix.html
-- **用途**：系統修復和驗證工具
-- **功能**：
-  - Supabase客戶端初始化檢查
-  - 數據庫連接測試
-  - 管理員登錄功能驗證
-  - 自動化診斷和修復建議
-
-#### 13. test-supabase.html
-- **用途**：Supabase連接測試工具
-- **功能**：
-  - 測試Supabase客戶端加載狀態
-  - 數據庫連接測試
-  - API響應時間檢測
-  - 錯誤信息詳細展示
-
-## 自動化數據庫設置
-
-### 自動表創建功能
-
-系統提供了強大的自動化數據庫設置功能，主要通過以下兩個頁面實現：
-
-#### 1. setup-database.html 的自動化功能
-
-- **智能表檢測**：自動檢查必要的表是否存在
-- **自動表創建**：如果表不存在，會自動創建所需的表結構
-- **示例數據插入**：
-  - 默認管理員賬號：`admin/admin123`
-  - 5個示例遊戲數據
-  - 初始系統配置
-
-#### 2. simple-setup.html 的自動化功能
-
-- **一鍵設置**：單擊按鈕完成所有數據庫設置
-- **智能處理**：
-  - 通過嘗試插入數據的方式自動創建表
-  - 避免重複插入相同的數據
-  - 提供詳細的操作日誌
-
-### 示例數據內容
-
-#### 默認管理員賬號
+### 2. 檔案結構
 ```
-用戶名：admin
-密碼：admin123
+qr-game-system/
+├── index.html          # 首頁（可自行實作）
+├── user-login.html     # 用戶登入頁（手動/QR登入）
+├── scan.html           # QR掃描與分數記錄頁
+├── js/
+│   ├── config.js       # Supabase配置文件
+│   └── auth.js         # 登入/登出核心邏輯
+└── README.md           # 使用說明文件
 ```
 
-#### 示例遊戲數據
-1. **投籃挑戰** - 三分線外投籃，投中得分
-2. **套圈圈** - 用圈圈套中目標物
-3. **射擊遊戲** - 氣槍射擊目標
-4. **闖關挑戰** - 完成障礙闖關
-5. **益智謎題** - 解開謎題獲得分數
+## 🗄️ 資料庫設定 (Supabase)
+### 1. 建立Supabase專案
+1. 前往 [Supabase官網](https://supabase.com/) 註冊並建立新專案
+2. 進入專案後，複製「Project URL」與「anon public key」（稍後用於配置文件）
 
-## 快速開始
+### 2. 建立資料表
+在Supabase的SQL編輯器中執行以下SQL語句，建立所需資料表：
 
-### 1. 環境準備
+```sql
+-- 用戶表
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  username VARCHAR(50) UNIQUE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
-1. 確保已安裝現代瀏覽器（Chrome, Firefox, Edge等）
-2. 註冊Supabase賬號並創建數據庫
-3. 配置環境變量：
-   - SUPABASE_URL
-   - SUPABASE_KEY
+-- 遊戲表
+CREATE TABLE games (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  game_code VARCHAR(20) UNIQUE NOT NULL,  -- 例如：GAME001
+  game_name VARCHAR(100) NOT NULL,        -- 遊戲名稱
+  max_score INTEGER DEFAULT 1000,         -- 遊戲最高分數
+  default_score INTEGER DEFAULT 500,      -- 預設分數
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
-### 2. 數據庫設置
+-- 遊戲紀錄表
+CREATE TABLE game_records (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  game_id UUID REFERENCES games(id) ON DELETE CASCADE,
+  score INTEGER NOT NULL,                 -- 獲得分數
+  scanned_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
-1. 打開 [簡單設置](simple-setup.html) 頁面
-2. 點擊"創建表"按鈕
-3. 等待設置完成，確認所有表創建成功
+-- 建立索引優化查詢
+CREATE INDEX idx_game_records_user_id ON game_records(user_id);
+CREATE INDEX idx_game_records_scanned_at ON game_records(scanned_at);
+```
 
-### 3. 系統登錄
+### 3. 插入範例遊戲數據
+```sql
+-- 插入範例遊戲
+INSERT INTO games (game_code, game_name, max_score, default_score) VALUES
+('GAME001', '闖關遊戲1', 1000, 500),
+('GAME002', '闖關遊戲2', 800, 400),
+('GAME003', '闖關遊戲3', 1200, 600);
+```
 
-1. 打開 [系統首頁](index.html)
-2. 使用默認管理員賬號登錄：
-   - 用戶名：admin
-   - 密碼：admin123
-3. 進入管理員後台進行進一步設置
+### 4. 設定Row Level Security (RLS)
+為確保資料安全，建議開啟RLS並設定適當權限：
+```sql
+-- 啟用RLS
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE games ENABLE ROW LEVEL SECURITY;
+ALTER TABLE game_records ENABLE ROW LEVEL SECURITY;
 
-### 4. 用戶使用
+-- 允許所有使用者讀取遊戲資料
+CREATE POLICY "Allow read access to games" ON games
+  FOR SELECT USING (true);
 
-1. 普通用戶可以在首頁註冊新賬號
-2. 登錄後可以參與各種遊戲
-3. 通過掃描QR碼記錄遊戲成績
+-- 僅允許使用者讀取自己的紀錄
+CREATE POLICY "Allow read own game records" ON game_records
+  FOR SELECT USING (auth.uid() = user_id);
 
-## 故障排除
+-- 允許使用者插入自己的紀錄
+CREATE POLICY "Allow insert own game records" ON game_records
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+```
 
-### 常見問題
+## ⚙️ 系統配置
+### 1. 配置Supabase連接 (js/config.js)
+建立 `js/config.js` 文件，填入你的Supabase專案資訊：
+```javascript
+// Supabase配置
+window.dbManager = {
+  client: null,
+  
+  // 初始化資料庫連接
+  async init() {
+    try {
+      // 替換為你的Supabase專案URL和公鑰
+      const supabaseUrl = "你的Supabase Project URL";
+      const supabaseKey = "你的Supabase anon public key";
+      
+      this.client = supabase.createClient(supabaseUrl, supabaseKey);
+      return true;
+    } catch (error) {
+      console.error("資料庫初始化失敗：", error);
+      return false;
+    }
+  }
+};
+```
 
-#### 1. 數據庫連接失敗
-- **解決方法**：
-  - 檢查Supabase URL和API Key是否正確
-  - 確認網絡連接正常
-  - 使用 [連接測試](test-supabase.html) 頁面診斷問題
 
-#### 2. 登錄失敗
-- **解決方法**：
-  - 確認使用正確的用戶名和密碼
-  - 檢查用戶權限設置
-  - 使用 [修復驗證](verify-fix.html) 工具檢查系統狀態
+## 🚀 使用方法
+### 1. 用戶登入
+#### 方式1：手動輸入用戶名登入
+1. 打開 `user-login.html` 頁面
+2. 在「用戶名」輸入框填入自定義用戶名
+3. 點擊「手動登入」按鈕，系統會自動建立新用戶（若不存在）
+4. 登入成功後自動跳轉到掃描頁
 
-#### 3. 表創建失敗
-- **解決方法**：
-  - 檢查Supabase權限設置
-  - 確認數據庫用戶有創建表的權限
-  - 查看瀏覽器控制台的錯誤信息
+#### 方式2：掃描QR碼登入
+1. 打開 `user-login.html` 頁面
+2. 點擊「開啟QR掃描器」按鈕（需授予相機權限）
+3. 掃描僅包含用戶名的QR碼（如：`user001`）
+4. 系統自動填入用戶名並完成登入
 
-### 日志查看
+### 2. 掃描遊戲QR碼
+1. 登入後進入 `scan.html` 頁面
+2. 點擊「開啟掃描器」按鈕啟動相機（需授予相機權限）
+3. 掃描遊戲QR碼，支援兩種格式：
+   - 基礎格式：`GAME001`（使用遊戲預設分數）
+   - 自定分數：`GAME001:800`（自定義分數800）
+4. 掃描成功後自動保存紀錄，並更新遊戲統計
+5. 可隨時點擊「關閉掃描器」停止掃描
 
-所有操作日誌都會顯示在相應頁面的日誌區域，同時也可以在瀏覽器控制台中查看詳細的錯誤信息。
+### 3. 查看遊戲紀錄
+1. 在 `scan.html` 頁面右側可查看：
+   - 總分數統計
+   - 所有遊戲紀錄（包含遊戲名稱、分數、掃描時間）
+   - 紀錄按時間倒序排列（最新的在前）
 
-## 維護和更新
+### 4. 登出系統
+1. 在 `scan.html` 頁面點擊右上角「登出」按鈕
+2. 系統清除本地用戶資訊，並跳轉到登入頁
 
-### 定期維護
+## 📱 QR碼格式說明
+### 1. 登入用QR碼
+- 內容：僅包含用戶名（如：`user001`、`player123`）
+- 格式要求：僅允許字母、數字、底線（`^[a-zA-Z0-9_]+$`）
 
-- **數據備份**：定期使用setup-database.html中的備份功能
-- **系統更新**：從GitHub拉取最新代碼更新
-- **性能優化**：定期清理不必要的數據記錄
+### 2. 遊戲用QR碼
+| 格式類型 | 範例 | 說明 |
+|----------|------|------|
+| 基礎格式 | `GAME001` | 使用遊戲預設分數 |
+| 自定分數 | `GAME001:800` | 自定義分數800 |
 
-### 更新日志
+## ❗ 常見問題
+### 1. 相機無法開啟
+- 確認使用HTTPS協議（本機開發可使用 `localhost`）
+- 確認已授予瀏覽器相機權限
+- 確認設備有可用的相機設備
 
-#### 版本 1.0.0
-- 初始版本發布
-- 實現基本的用戶管理和遊戲功能
-- 支持QR碼生成和分數統計
-- 提供完整的數據庫管理工具
+### 2. 資料庫連接失敗
+- 檢查 `config.js` 中的Supabase URL和公鑰是否正確
+- 確認Supabase專案處於啟用狀態
+- 檢查網路連接
 
-## 許可協議
+### 3. QR碼掃描無回應
+- 確認QR碼內容符合格式要求
+- 確認QR碼清晰，無模糊或反光
+- 確認相機對焦正常
 
-MIT License
+### 4. 無法保存遊戲紀錄
+- 確認遊戲代碼存在於 `games` 資料表中
+- 檢查Supabase RLS政策是否配置正確
+- 檢查控制台錯誤資訊
 
-## 聯繫方式
+## 📌 注意事項
+1. 本系統需在支援WebRTC的瀏覽器中執行（現代瀏覽器均支援）
+2. 相機功能需HTTPS協議（本機開發的 `localhost` 除外）
+3. 建議在行動裝置上使用（便於掃描QR碼）
+4. Supabase免費層級有請求次數限制，大量使用需升級方案
+5. 定期備份Supabase資料庫，避免資料遺失
 
-如有任何問題或建議，請聯繫系統管理員。
-
----
-
-**QR碼遊戲系統** - 讓遊戲管理更簡單高效
+## 🎯 功能擴充建議
+1. 新增管理後台，用於新增/編輯遊戲資訊
+2. 新增分數排行榜功能
+3. 支援多語言切換
+4. 新增用戶頭像與個人資料設定
+5. 匯出遊戲紀錄為Excel/PDF
+6. 新增掃描歷史記錄篩選功能
