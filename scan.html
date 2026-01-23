@@ -216,6 +216,7 @@
         <div class="logo">QR碼遊戲系統</div>
         <div class="user-info">
             <div id="current-username" class="user-name">加載中...</div>
+            <!-- 移除確認彈窗，點擊直接登出 -->
             <button class="logout-btn" onclick="userLogout()">登出</button>
         </div>
     </div>
@@ -277,16 +278,16 @@
             loadGameHistory();
         };
 
-        // 用戶登出 (直接登出，無彈窗確認)
+        // 用戶登出 (移除確認彈窗，直接執行)
         function userLogout() {
-            // 清除本地存儲
-            localStorage.removeItem('qrGameUser');
-            window.currentUser = null;
-            
             // 停止掃描（如果正在掃描）
             if (isScanning) {
                 stopScanner();
             }
+            
+            // 清除本地存儲
+            localStorage.removeItem('qrGameUser');
+            window.currentUser = null;
             
             // 跳轉到登錄頁
             window.location.href = "user-login.html";
