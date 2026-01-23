@@ -20,7 +20,7 @@
             padding: 40px;
             border-radius: 12px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            max-width: 400px;
+            max-width: 500px;
             width: 100%;
             text-align: center;
         }
@@ -29,6 +29,29 @@
             font-weight: bold;
             color: #dc2626;
             margin-bottom: 30px;
+        }
+        .login-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .login-tab {
+            flex: 1;
+            padding: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #64748b;
+            border-bottom: 2px solid transparent;
+        }
+        .login-tab.active {
+            color: #dc2626;
+            border-bottom: 2px solid #dc2626;
+        }
+        .login-panel {
+            display: none;
+        }
+        .login-panel.active {
+            display: block;
         }
         .login-form {
             display: flex;
@@ -56,6 +79,28 @@
             outline: none;
             border-color: #dc2626;
         }
+        .qrcode-scanner {
+            width: 100%;
+            height: 250px;
+            border: 2px dashed #e2e8f0;
+            border-radius: 8px;
+            margin: 0 auto 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .scanner-placeholder {
+            color: #64748b;
+            font-size: 16px;
+        }
+        #login-qr-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
         .login-btn {
             background: #dc2626;
             color: white;
@@ -69,6 +114,16 @@
         }
         .login-btn:hover {
             background: #b91c1c;
+        }
+        .control-btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 10px;
         }
         .msg-box {
             padding: 10px;
@@ -96,13 +151,34 @@
         <div class="logo">QR碼遊戲系統</div>
         
         <div id="login-msg" class="msg-box"></div>
-        
-        <div class="login-form">
-            <div class="form-group">
-                <label for="username">用戶名</label>
-                <input type="text" id="username" placeholder="請輸入您的用戶名" autocomplete="off">
+
+        <!-- 登入方式切換標籤 -->
+        <div class="login-tabs">
+            <div class="login-tab active" onclick="switchLoginTab('username-tab')">用戶名登入</div>
+            <div class="login-tab" onclick="switchLoginTab('qrcode-tab')">QR Code登入</div>
+        </div>
+
+        <!-- 用戶名登入面板 -->
+        <div id="username-panel" class="login-panel active">
+            <div class="login-form">
+                <div class="form-group">
+                    <label for="username">用戶名</label>
+                    <input type="text" id="username" placeholder="請輸入您的用戶名" autocomplete="off">
+                </div>
+                <button class="login-btn" onclick="userLoginByUsername()">登錄</button>
             </div>
-            <button class="login-btn" onclick="userLogin()">登錄</button>
+        </div>
+
+        <!-- QR Code登入面板 -->
+        <div id="qrcode-panel" class="login-panel">
+            <div class="qrcode-scanner">
+                <div id="login-scanner-placeholder" class="scanner-placeholder">
+                    點擊「啟動掃描」按鈕
+                </div>
+                <video id="login-qr-video"></video>
+            </div>
+            <button class="control-btn" onclick="startLoginScanner()">啟動掃描</button>
+            <button class="control-btn" onclick="stopLoginScanner()" style="display: none;">停止掃描</button>
         </div>
         
         <div class="footer">
@@ -110,10 +186,16 @@
         </div>
     </div>
 
-    <!-- JS加載 -->
+    <!-- QR Code Scanner 庫 -->
+    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0"></script>
+    <!-- Supabase 庫 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- 配置文件 -->
     <script src="js/config.js"></script>
     <script>
+        let loginScanner = null;
+        let isLoginScanning = false;
+        
         // 頁面加載時檢查是否已登錄
         window.onload = async function() {
             await window.dbManager.init();
@@ -122,13 +204,27 @@
             const savedUser = localStorage.getItem('qrGameUser');
             if (savedUser) {
                 window.currentUser = JSON.parse(savedUser);
-                // 直接跳轉到掃描頁面
                 window.location.href = "scan.html";
             }
         };
 
-        // 用戶登錄函數
-        async function userLogin() {
+        // 切換登入方式標籤
+        function switchLoginTab(tabId) {
+            // 停止正在運行的掃描器
+            if (isLoginScanning) {
+                stopLoginScanner();
+            }
+            
+            // 更新標籤狀態
+            document.querySelectorAll('.login-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.login-panel').forEach(panel => panel.classList.remove('active'));
+            
+            document.querySelector(`.login-tab[onclick="switchLoginTab('${tabId}')"]`).classList.add('active');
+            document.getElementById(`${tabId.replace('-tab', '')}-panel`).classList.add('active');
+        }
+
+        // 用戶名登入
+        async function userLoginByUsername() {
             const username = document.getElementById('username').value.trim();
             
             if (!username) {
@@ -136,6 +232,92 @@
                 return;
             }
 
+            await processLogin(username);
+        }
+
+        // 啟動登入用QR Code掃描器
+        async function startLoginScanner() {
+            if (isLoginScanning) return;
+            
+            try {
+                // 檢查相機權限
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                
+                // 初始化掃描器
+                const codeReader = new ZXing.BrowserQRCodeReader();
+                
+                // 顯示視頻，隱藏佔位符
+                document.getElementById('login-qr-video').style.display = 'block';
+                document.getElementById('login-scanner-placeholder').style.display = 'none';
+                
+                // 開始掃描 (QR Code內容為用戶名)
+                codeReader.decodeFromVideoDevice(
+                    null, 
+                    'login-qr-video', 
+                    async (result, err) => {
+                        if (result) {
+                            // 掃描到用戶名，停止掃描並執行登入
+                            stopLoginScanner();
+                            const username = result.text.trim();
+                            if (username) {
+                                await processLogin(username);
+                            } else {
+                                showMessage('login-msg', '❌ QR Code內容無效！', false);
+                            }
+                        }
+                        if (err && !err.message.includes('No QR code found')) {
+                            console.error("Login QR Scan Error:", err);
+                            showMessage('login-msg', `❌ 掃描錯誤：${err.message}`, false);
+                        }
+                    }
+                );
+                
+                loginScanner = codeReader;
+                isLoginScanning = true;
+                
+                // 更新按鈕狀態
+                document.querySelector('.control-btn[onclick="startLoginScanner()"]').style.display = 'none';
+                document.querySelector('.control-btn[onclick="stopLoginScanner()"]').style.display = 'block';
+                
+                showMessage('login-msg', '✅ 掃描器已啟動，請掃描用戶QR Code', true);
+                
+            } catch (err) {
+                console.error("Start Login Scanner Error:", err);
+                showMessage('login-msg', `❌ 無法啟動相機：${err.message}`, false);
+            }
+        }
+
+        // 停止登入用QR Code掃描器
+        function stopLoginScanner() {
+            if (!isLoginScanning || !loginScanner) return;
+            
+            // 停止掃描
+            loginScanner.stopContinuousDecode();
+            loginScanner = null;
+            isLoginScanning = false;
+            
+            // 停止相機流
+            const video = document.getElementById('login-qr-video');
+            const stream = video.srcObject;
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            
+            // 恢復UI
+            video.style.display = 'none';
+            document.getElementById('login-scanner-placeholder').style.display = 'block';
+            
+            // 更新按鈕狀態
+            document.querySelector('.control-btn[onclick="startLoginScanner()"]').style.display = 'block';
+            document.querySelector('.control-btn[onclick="stopLoginScanner()"]').style.display = 'none';
+            
+            showMessage('login-msg', '🛑 掃描器已停止', true);
+        }
+
+        // 處理登入邏輯 (共用函數)
+        async function processLogin(username) {
             try {
                 // 檢查用戶是否存在
                 const { data, error } = await window.dbManager.client
@@ -164,7 +346,7 @@
                 // 保存用戶信息到本地存儲
                 localStorage.setItem('qrGameUser', JSON.stringify(window.currentUser));
                 
-                showMessage('login-msg', '✅ 登錄成功！正在跳轉...', true);
+                showMessage('login-msg', `✅ 歡迎回來，${username}！正在跳轉...`, true);
                 
                 // 跳轉到掃描頁面
                 setTimeout(() => {
@@ -195,7 +377,7 @@
         // 支持按Enter鍵登錄
         document.getElementById('username').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                userLogin();
+                userLoginByUsername();
             }
         });
     </script>
