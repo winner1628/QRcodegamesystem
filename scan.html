@@ -6,321 +6,558 @@
     <title>QR碼掃描 - QR碼遊戲系統</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Microsoft JhengHei', sans-serif; background: #f8fafc; color: #334155; }
-        .container { max-width: 700px; margin: 0 auto; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #e2e8f0; margin-bottom: 30px; }
-        .back-home { color: #2563eb; text-decoration: none; font-size: 16px; }
-        .back-home:hover { text-decoration: underline; }
-        .btn-logout { padding: 6px 12px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
-        .main-content { display: grid; grid-template-columns: 1fr; gap: 30px; }
-        @media (min-width: 768px) {
-            .main-content { grid-template-columns: 2fr 1fr; }
+        body { 
+            font-family: 'Microsoft JhengHei', sans-serif; 
+            background: #f8fafc;
+            color: #334155;
+            min-height: 100vh;
         }
-        .scan-box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; }
-        .scan-box h2 { margin-bottom: 20px; color: #1e293b; }
-        #camera { width: 100%; max-height: 400px; border-radius: 8px; margin: 20px 0; }
-        .btn-toggle-scan { padding: 12px 24px; background: #16a34a; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; margin-bottom: 15px; }
-        .btn-toggle-scan:hover { background: #15803d; }
-        .btn-toggle-scan:disabled { background: #94a3b8; cursor: not-allowed; }
-        #scan-status { 
-            padding: 10px; 
-            border-radius: 4px;
-            min-height: 30px;
-            margin-top: 15px;
+        .header {
+            background: #dc2626;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .user-name {
+            font-weight: 600;
+        }
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px 20px;
             text-align: center;
         }
-        .info { color: #2563eb; background: #eff6ff; }
-        .success { color: #16a34a; background: #f0fdf4; }
-        .error { color: #dc2626; background: #fef2f2; }
-        
-        /* Stats Section */
-        .stats-box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .stats-box h3 { color: #1e293b; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; }
-        .total-score { font-size: 24px; font-weight: bold; color: #2563eb; margin-bottom: 20px; }
-        .records-list { max-height: 400px; overflow-y: auto; }
-        .record-item { padding: 10px; border-bottom: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 5px; }
-        .record-item:last-child { border-bottom: none; }
-        .record-game { font-weight: 600; color: #1e293b; }
-        .record-score { color: #16a34a; }
-        .record-time { font-size: 12px; color: #64748b; }
-        .no-records { text-align: center; color: #64748b; padding: 20px 0; }
+        .scan-area {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        .qrcode-scanner {
+            width: 100%;
+            max-width: 600px;
+            height: 400px;
+            border: 2px dashed #e2e8f0;
+            border-radius: 8px;
+            margin: 0 auto 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .scanner-placeholder {
+            color: #64748b;
+            font-size: 16px;
+        }
+        #qr-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+        .control-btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: background 0.3s;
+        }
+        .control-btn:hover {
+            background: #1d4ed8;
+        }
+        .stop-btn {
+            background: #dc2626;
+        }
+        .stop-btn:hover {
+            background: #b91c1c;
+        }
+        .result-area {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+        .success-result {
+            background: #f0fdf4;
+            border: 1px solid #16a34a;
+            color: #16a34a;
+        }
+        .error-result {
+            background: #fef2f2;
+            border: 1px solid #dc2626;
+            color: #dc2626;
+        }
+        .result-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .result-content {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        .stats-area {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .stats-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #dc2626;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .stat-card {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 5px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #334155;
+        }
+        .msg-box {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .loading {
+            color: #64748b;
+            padding: 20px;
+        }
+        .history-area {
+            margin-top: 30px;
+            text-align: left;
+        }
+        .history-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+        .history-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+        }
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        .history-item:nth-child(even) {
+            background: #f8fafc;
+        }
+        .history-game {
+            font-weight: 600;
+        }
+        .history-score {
+            color: #dc2626;
+            font-weight: 600;
+        }
+        .history-time {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
+    <div class="header">
+        <div class="logo">QR碼遊戲系統</div>
+        <div class="user-info">
+            <div id="current-username" class="user-name">加載中...</div>
+            <button class="logout-btn" onclick="userLogout()">登出</button>
+        </div>
+    </div>
+
     <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <a href="index.html" class="back-home">← 返回首頁</a>
-            <button class="btn-logout" onclick="logout()">登出</button>
+        <div class="scan-area">
+            <h2>QR碼掃描區域</h2>
+            <div class="qrcode-scanner">
+                <div id="scanner-placeholder" class="scanner-placeholder">
+                    點擊「開始掃描」按鈕啟動相機
+                </div>
+                <video id="qr-video"></video>
+            </div>
+            <button class="control-btn" onclick="startScanner()">開始掃描</button>
+            <button class="control-btn stop-btn" onclick="stopScanner()" style="display: none;">停止掃描</button>
+            
+            <div id="scan-result" class="result-area"></div>
         </div>
 
-        <!-- Main Content (Scan + Stats) -->
-        <div class="main-content">
-            <!-- Scan Area -->
-            <div class="scan-box">
-                <h2>掃描遊戲QR碼</h2>
-                <p>請掃描格式為「GAME001」或「GAME001:800」的QR碼</p>
-                
-                <button id="scanBtn" class="btn-toggle-scan" onclick="toggleScanner()">開啟掃描器</button>
-                <video id="camera" autoplay playsinline style="display: none;"></video>
-                <div id="scan-status" class="info">請點擊按鈕開啟掃描器</div>
-            </div>
-
-            <!-- Stats Area -->
-            <div class="stats-box">
-                <h3>我的遊戲紀錄</h3>
-                <div class="total-score" id="totalScore">總分：0</div>
-                <div class="records-list" id="recordsList">
-                    <div class="no-records">加載中...</div>
-                </div>
+        <div class="stats-area">
+            <div class="stats-title">我的遊戲統計</div>
+            <div id="user-stats" class="loading">加載統計數據中...</div>
+            
+            <div class="history-area">
+                <div class="history-title">最近遊戲紀錄</div>
+                <div id="game-history" class="history-list loading">加載遊戲紀錄中...</div>
             </div>
         </div>
     </div>
 
-    <!-- Load JS -->
+    <!-- QR Code Scanner 庫 -->
+    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0"></script>
+    <!-- Supabase 庫 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <!-- 配置文件 -->
     <script src="js/config.js"></script>
-    <script src="js/auth.js"></script>
+    
     <script>
-        let scannerActive = false;
-        let scanInterval = null;
-        let isScanningProcessing = false; // 防止重複處理標誌
-        const camera = document.getElementById('camera');
-        const scanStatus = document.getElementById('scan-status');
-        const scanBtn = document.getElementById('scanBtn');
-        const totalScoreEl = document.getElementById('totalScore');
-        const recordsListEl = document.getElementById('recordsList');
-
-        // Page Load
+        let scanner = null;
+        let isScanning = false;
+        
+        // 頁面加載時檢查用戶登錄狀態
         window.onload = async function() {
-            if (!checkLogin()) return;
-            await loadUserStats();
+            await window.dbManager.init();
+            
+            // 檢查用戶是否已登錄
+            const savedUser = localStorage.getItem('qrGameUser');
+            if (!savedUser) {
+                // 未登錄，跳轉到登錄頁
+                window.location.href = "user-login.html";
+                return;
+            }
+            
+            window.currentUser = JSON.parse(savedUser);
+            document.getElementById('current-username').textContent = window.currentUser.username;
+            
+            // 加載用戶統計和遊戲紀錄
+            loadUserStats();
+            loadGameHistory();
         };
 
-        // Update Scan Status
-        function updateStatus(text, type = "info") {
-            scanStatus.textContent = text;
-            scanStatus.className = type;
-        }
-
-        // Toggle Scanner
-        async function toggleScanner() {
-            if (scannerActive) {
-                stopScanner();
-                updateStatus("掃描器已關閉", "info");
-                scanBtn.disabled = false;
-                scanBtn.textContent = "開啟掃描器";
-                return;
-            }
-
-            // 手動初始化資料庫
-            const initOk = await window.dbManager.init();
-            if (!initOk) {
-                updateStatus("❌ 資料庫連接失敗，無法掃描", "error");
-                return;
-            }
-
-            scanBtn.disabled = true;
-            scanBtn.textContent = "關閉掃描器";
-
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: "environment",
-                        width: { ideal: 600 },
-                        height: { ideal: 400 }
-                    }
-                });
-
-                camera.srcObject = stream;
-                camera.style.display = 'block';
-                scannerActive = true;
-                isScanningProcessing = false; // 重置處理標誌
-                updateStatus("相機已開啟，請將QR碼對準鏡頭", "info");
-                
-                scanInterval = setInterval(scanGameQR, 100);
-
-            } catch (e) {
-                let errorMsg = "無法開啟相機：";
-                if (e.name === "NotAllowedError") errorMsg += "請授予相機使用權限";
-                else if (e.name === "NotFoundError") errorMsg += "未檢測到相機設備";
-                else if (e.message.includes("HTTPS")) errorMsg += "請使用HTTPS協議打開頁面";
-                else errorMsg += e.message;
-                
-                updateStatus(errorMsg, "error");
-                scanBtn.disabled = false;
-                scanBtn.textContent = "開啟掃描器";
-                console.error("相機錯誤：", e);
-            }
-        }
-
-        // Stop Scanner
-        function stopScanner() {
-            scannerActive = false;
-            isScanningProcessing = false; // 重置處理標誌
-            if (camera.srcObject) {
-                camera.srcObject.getTracks().forEach(track => track.stop());
-            }
-            camera.style.display = 'none';
-            clearInterval(scanInterval);
-            scanInterval = null;
-        }
-
-        // Scan Game QR Code (防止重複掃描)
-        async function scanGameQR() {
-            // 1. 如果不在掃描狀態，直接返回
-            if (!scannerActive) return;
+        // 用戶登出 (直接登出，無彈窗確認)
+        function userLogout() {
+            // 清除本地存儲
+            localStorage.removeItem('qrGameUser');
+            window.currentUser = null;
             
-            // 2. 如果正在處理掃描結果，跳過本次檢測
-            if (isScanningProcessing) return;
+            // 停止掃描（如果正在掃描）
+            if (isScanning) {
+                stopScanner();
+            }
+            
+            // 跳轉到登錄頁
+            window.location.href = "user-login.html";
+        }
 
+        // 啟動QR碼掃描器
+        async function startScanner() {
+            if (isScanning) return;
+            
             try {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
+                // 檢查相機權限
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
                 
-                canvas.width = camera.videoWidth || camera.clientWidth;
-                canvas.height = camera.videoHeight || camera.clientHeight;
+                // 初始化掃描器
+                const codeReader = new ZXing.BrowserQRCodeReader();
                 
-                ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const code = jsQR(imageData.data, canvas.width, canvas.height);
-
-                // 檢測到QR碼
-                if (code) {
-                    // 設置處理中標誌，防止重複處理
-                    isScanningProcessing = true;
-                    
-                    const qrContent = code.data.trim();
-                    updateStatus(`掃描到內容：${qrContent}`, "success");
-                    
-                    // Parse QR Code
-                    let gameCode, score;
-                    if (qrContent.includes(':')) {
-                        const parts = qrContent.split(':');
-                        gameCode = parts[0].trim();
-                        score = parseInt(parts[1]) || 0;
-                    } else {
-                        gameCode = qrContent.trim();
-                        // Get default score from database
-                        const gameData = await getGameDefaultScore(gameCode);
-                        score = gameData?.default_score || gameData?.max_score || 0;
+                // 顯示視頻，隱藏佔位符
+                document.getElementById('qr-video').style.display = 'block';
+                document.getElementById('scanner-placeholder').style.display = 'none';
+                
+                // 開始掃描
+                codeReader.decodeFromVideoDevice(
+                    null, 
+                    'qr-video', 
+                    (result, err) => {
+                        if (result) {
+                            // 掃描到QR碼
+                            handleQrCodeResult(result.text);
+                        }
+                        if (err && !err.message.includes('No QR code found')) {
+                            console.error("QR Code Scan Error:", err);
+                            showResult('scan-result', `掃描錯誤：${err.message}`, false);
+                        }
                     }
+                );
+                
+                scanner = codeReader;
+                isScanning = true;
+                
+                // 更新按鈕狀態
+                document.querySelector('.control-btn:not(.stop-btn)').style.display = 'none';
+                document.querySelector('.stop-btn').style.display = 'inline-block';
+                
+                showResult('scan-result', '✅ 掃描器已啟動，請將QR碼對準鏡頭', true);
+                
+            } catch (err) {
+                console.error("Start Scanner Error:", err);
+                showResult('scan-result', `❌ 無法啟動相機：${err.message}`, false);
+            }
+        }
 
-                    // Validate game code
-                    if (!gameCode.startsWith('GAME')) {
-                        updateStatus(`QR碼格式錯誤：${qrContent}\n正確格式：GAME001 或 GAME001:800`, "error");
-                        isScanningProcessing = false; // 重置標誌
-                        return;
-                    }
+        // 停止QR碼掃描器
+        function stopScanner() {
+            if (!isScanning || !scanner) return;
+            
+            // 停止掃描
+            scanner.stopContinuousDecode();
+            scanner = null;
+            isScanning = false;
+            
+            // 停止相機流
+            const video = document.getElementById('qr-video');
+            const stream = video.srcObject;
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            
+            // 恢復UI
+            video.style.display = 'none';
+            document.getElementById('scanner-placeholder').style.display = 'block';
+            
+            // 更新按鈕狀態
+            document.querySelector('.control-btn:not(.stop-btn)').style.display = 'inline-block';
+            document.querySelector('.stop-btn').style.display = 'none';
+            
+            showResult('scan-result', '🛑 掃描器已停止', true);
+        }
 
-                    updateStatus(`識別到遊戲：${gameCode}，分數：${score}，正在保存...`, "success");
-                    
-                    // Save record
-                    await saveGameRecord(gameCode, score);
-                    
-                    // 停止掃描器（只掃一次）
-                    stopScanner();
-                    scanBtn.disabled = false;
-                    scanBtn.textContent = "開啟掃描器";
-                    
-                    updateStatus(`✅ 掃描完成！遊戲：${gameCode}，分數：${score}`, "success");
-                    
-                    // Refresh stats
-                    await loadUserStats();
-
+        // 處理QR碼掃描結果
+        async function handleQrCodeResult(qrText) {
+            try {
+                // 停止掃描
+                stopScanner();
+                
+                // 解析QR碼內容 (預期格式：GAME001)
+                const gameCode = qrText.trim();
+                
+                // 查詢遊戲信息
+                const { data: game, error } = await window.dbManager.client
+                    .from('games')
+                    .select('*')
+                    .eq('game_code', gameCode)
+                    .single();
+                
+                if (error) {
+                    throw new Error(`找不到對應的遊戲 (${gameCode})`);
                 }
-            } catch (err) {
-                updateStatus(`掃描出錯：${err.message}`, "error");
-                scanBtn.disabled = false;
-                scanBtn.textContent = "開啟掃描器";
-                isScanningProcessing = false; // 重置標誌
-                console.error("掃描錯誤：", err);
-            }
-        }
-
-        // Get Game Default Score
-        async function getGameDefaultScore(gameCode) {
-            try {
-                const { data, error } = await window.dbManager.client
-                    .from('games')
-                    .select('id, game_name, max_score, default_score')
-                    .eq('game_code', gameCode)
-                    .single();
-
-                if (error) throw new Error(`遊戲 ${gameCode} 不存在`);
-                return data;
-            } catch (err) {
-                console.error("獲取遊戲分數失敗：", err);
-                return null;
-            }
-        }
-
-        // Save Game Record
-        async function saveGameRecord(gameCode, score) {
-            try {
-                // Get game ID
-                const { data: gameData, error: gameError } = await window.dbManager.client
-                    .from('games')
-                    .select('id')
-                    .eq('game_code', gameCode)
-                    .single();
-
-                if (gameError) throw new Error(`遊戲不存在：${gameCode}`);
-
-                // Insert record
+                
+                // 隨機生成分數（在默認分數和最高分數之間）
+                const score = Math.floor(
+                    Math.random() * (game.max_score - game.default_score + 1) + game.default_score
+                );
+                
+                // 記錄遊戲結果
                 const { error: recordError } = await window.dbManager.client
                     .from('game_records')
                     .insert([{
                         user_id: window.currentUser.id,
-                        game_id: gameData.id,
-                        score: score
+                        game_id: game.id,
+                        score: score,
+                        scanned_at: new Date().toISOString()
                     }]);
-
-                if (recordError) throw new Error(`保存紀錄失敗：${recordError.message}`);
-
+                
+                if (recordError) {
+                    throw new Error('無法記錄遊戲結果：' + recordError.message);
+                }
+                
+                // 顯示成功結果
+                showResult('scan-result', 
+                    `<div class="result-title">🎉 掃描成功！</div>
+                     <div class="result-content">
+                        <div>遊戲名稱：${game.game_name}</div>
+                        <div>遊戲代碼：${game.game_code}</div>
+                        <div>獲得分數：${score} 分</div>
+                        <div>最高分數：${game.max_score} 分</div>
+                     </div>`, 
+                    true
+                );
+                
+                // 重新加載統計和歷史記錄
+                loadUserStats();
+                loadGameHistory();
+                
             } catch (err) {
-                updateStatus(`❌ 保存失敗：${err.message}`, "error");
-                console.error("保存錯誤：", err);
+                console.error("Handle QR Code Error:", err);
+                showResult('scan-result', 
+                    `<div class="result-title">❌ 掃描失敗</div>
+                     <div class="result-content">${err.message}</div>`, 
+                    false
+                );
             }
         }
 
-        // Load User Stats
+        // 顯示掃描結果
+        function showResult(elementId, htmlContent, isSuccess = true) {
+            const resultBox = document.getElementById(elementId);
+            resultBox.innerHTML = htmlContent;
+            resultBox.className = `result-area ${isSuccess ? 'success-result' : 'error-result'}`;
+            resultBox.style.display = 'block';
+            
+            // 5秒後自動隱藏錯誤提示
+            if (!isSuccess) {
+                setTimeout(() => {
+                    resultBox.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // 加載用戶遊戲統計
         async function loadUserStats() {
+            const statsContainer = document.getElementById('user-stats');
+            
             try {
-                const records = await getUserGameRecords();
-                const totalScore = calculateTotalScore(records);
-
-                // Update total score
-                totalScoreEl.textContent = `總分：${totalScore}`;
-
-                // Update records list
-                if (records.length === 0) {
-                    recordsListEl.innerHTML = '<div class="no-records">暫無遊戲紀錄</div>';
-                    return;
-                }
-
-                recordsListEl.innerHTML = '';
-                records.forEach(record => {
-                    const scanTime = new Date(record.scanned_at).toLocaleString('zh-TW');
-                    const recordHTML = `
-                        <div class="record-item">
-                            <div class="record-game">${record.games?.game_name || record.games?.game_code}</div>
-                            <div class="record-score">分數：${record.score}</div>
-                            <div class="record-time">掃描時間：${scanTime}</div>
+                // 查詢用戶所有遊戲紀錄
+                const { data: records, error } = await window.dbManager.client
+                    .from('game_records')
+                    .select('score, games(game_name)')
+                    .eq('user_id', window.currentUser.id);
+                
+                if (error) throw new Error(error.message);
+                
+                if (!records || records.length === 0) {
+                    statsContainer.innerHTML = `
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-label">總分數</div>
+                                <div class="stat-value">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">參與遊戲次數</div>
+                                <div class="stat-value">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">最高分數</div>
+                                <div class="stat-value">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">玩過的遊戲數</div>
+                                <div class="stat-value">0</div>
+                            </div>
                         </div>
                     `;
-                    recordsListEl.innerHTML += recordHTML;
-                });
-
+                    return;
+                }
+                
+                // 計算統計數據
+                const totalScore = records.reduce((sum, record) => sum + record.score, 0);
+                const gameCount = records.length;
+                const maxScore = Math.max(...records.map(record => record.score), 0);
+                const uniqueGames = new Set(records.map(record => record.games?.game_name || '未知遊戲')).size;
+                
+                statsContainer.innerHTML = `
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">總分數</div>
+                            <div class="stat-value">${totalScore}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">參與遊戲次數</div>
+                            <div class="stat-value">${gameCount}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">最高分數</div>
+                            <div class="stat-value">${maxScore}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">玩過的遊戲數</div>
+                            <div class="stat-value">${uniqueGames}</div>
+                        </div>
+                    </div>
+                `;
+                
             } catch (err) {
-                recordsListEl.innerHTML = `<div class="no-records">加載紀錄失敗</div>`;
-                console.error("加載統計數據失敗：", err);
+                statsContainer.innerHTML = `<div class="error-msg" style="padding:10px;border-radius:8px">❌ 加載統計失敗：${err.message}</div>`;
+                console.error("Load User Stats Error:", err);
             }
         }
 
-        // Stop scanner when page closes
-        window.addEventListener('beforeunload', stopScanner);
+        // 加載用戶遊戲歷史
+        async function loadGameHistory() {
+            const historyContainer = document.getElementById('game-history');
+            
+            try {
+                // 查詢最近10條遊戲紀錄
+                const { data: records, error } = await window.dbManager.client
+                    .from('game_records')
+                    .select('score, scanned_at, games(game_name, game_code)')
+                    .eq('user_id', window.currentUser.id)
+                    .order('scanned_at', { ascending: false })
+                    .limit(10);
+                
+                if (error) throw new Error(error.message);
+                
+                if (!records || records.length === 0) {
+                    historyContainer.innerHTML = '<div style="padding:15px;text-align:center;color:#64748b">暫無遊戲紀錄</div>';
+                    return;
+                }
+                
+                let historyHTML = '';
+                records.forEach(record => {
+                    const time = new Date(record.scanned_at).toLocaleString('zh-TW');
+                    historyHTML += `
+                        <div class="history-item">
+                            <div>
+                                <div class="history-game">${record.games?.game_name || '未知遊戲'} (${record.games?.game_code || '未知'})</div>
+                                <div class="history-time">${time}</div>
+                            </div>
+                            <div class="history-score">${record.score} 分</div>
+                        </div>
+                    `;
+                });
+                
+                historyContainer.innerHTML = historyHTML;
+                
+            } catch (err) {
+                historyContainer.innerHTML = `<div style="padding:15px;color:#dc2626">❌ 加載紀錄失敗：${err.message}</div>`;
+                console.error("Load Game History Error:", err);
+            }
+        }
     </script>
 </body>
 </html>
