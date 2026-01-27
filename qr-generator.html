@@ -147,8 +147,11 @@
     <!-- Supabase配置 -->
     <script>
         // 1. 配置Supabase (替換為你的數據！)
-        const SUPABASE_URL = "你的Supabase Project URL";
-        const SUPABASE_KEY = "你的Supabase anon public key";
+        const SUPABASE_URL = "https://vphihqysgdhdnuszybib.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_yQ8Br7S-Zk2YdmhtD2dAyg_8Gho4wDS";
+        // 第一步：從 Supabase 控制台複製你的 URL 和 Anon Key
+//const supabaseUrl = "https://vphihqysgdhdnuszybib.supabase.co"; // 例如：https://xxxx.supabase.co
+//const supabaseKey = "sb_publishable_yQ8Br7S-Zk2YdmhtD2dAyg_8Gho4wDS";   // 例如：eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         
         // 2. 初始化Supabase
         const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -330,3 +333,4 @@
     </script>
 </body>
 </html>
+
