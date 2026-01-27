@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code 生成器 - QR碼遊戲系統</title>
+    <title>QR Code 生成器 - 簡易版</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -12,10 +12,7 @@
             color: #334155;
             padding: 20px;
         }
-        .container { 
-            max-width: 1200px; 
-            margin: 0 auto; 
-        }
+        .container { max-width: 1200px; margin: 0 auto; }
         .header {
             text-align: center;
             margin-bottom: 30px;
@@ -38,14 +35,10 @@
             border-radius: 6px;
             font-size: 16px;
             cursor: pointer;
-            transition: all 0.3s;
         }
         .tab-btn.active {
             background: #dc2626;
             color: white;
-        }
-        .tab-btn:hover:not(.active) {
-            background: #cbd5e1;
         }
         
         .qr-grid {
@@ -61,10 +54,11 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             text-align: center;
         }
-        .qr-code {
-            margin: 0 auto 15px;
+        .qr-img {
             width: 150px;
             height: 150px;
+            margin: 0 auto 15px;
+            display: block;
         }
         .qr-label {
             font-weight: 600;
@@ -79,10 +73,6 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 14px;
-            transition: background 0.3s;
-        }
-        .download-btn:hover {
-            background: #1d4ed8;
         }
         
         .actions {
@@ -96,302 +86,247 @@
             border-radius: 6px;
             font-size: 16px;
             cursor: pointer;
-            transition: all 0.3s;
-        }
-        .print-btn {
-            background: #16a34a;
             color: white;
         }
-        .print-btn:hover {
-            background: #15803d;
-        }
-        .refresh-btn {
-            background: #f59e0b;
-            color: white;
-        }
-        .refresh-btn:hover {
-            background: #d97706;
-        }
+        .print-btn { background: #16a34a; }
+        .refresh-btn { background: #f59e0b; }
         
-        .loading {
-            text-align: center;
-            padding: 50px;
-            color: #64748b;
-            font-size: 18px;
-        }
-        .empty {
+        .status {
             text-align: center;
             padding: 50px;
             color: #64748b;
             font-size: 18px;
         }
         
-        /* 列印樣式 */
         @media print {
             body { background: white; }
-            .header, .tabs, .actions { display: none; }
-            .qr-grid { 
-                grid-template-columns: repeat(3, 1fr);
-                gap: 10px;
-            }
-            .qr-card {
-                box-shadow: none;
-                border: 1px solid #e2e8f0;
-                page-break-inside: avoid;
-            }
-            .download-btn { display: none; }
+            .header, .tabs, .actions, .download-btn { display: none; }
+            .qr-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+            .qr-card { box-shadow: none; border: 1px solid #e2e8f0; }
         }
     </style>
-    <!-- 優先加載QR Code庫 (更穩定的CDN地址) -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-    <!-- Supabase 庫 -->
+    <!-- 改用更穩定的QRCode库 (QRCode.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/build/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container">
-        <!-- 頁頭 -->
         <div class="header">
             <h1>QR Code 生成器</h1>
-            <p class="subtitle">生成用戶登入和遊戲掃描的QR Code，支援下載和列印</p>
+            <p class="subtitle">生成用戶登入和遊戲掃描的QR Code（支援下載/列印）</p>
         </div>
 
-        <!-- 切換標籤 -->
         <div class="tabs">
-            <button class="tab-btn active" onclick="showTab('users')">用戶QR Code</button>
-            <button class="tab-btn" onclick="showTab('games')">遊戲QR Code</button>
+            <button class="tab-btn active" onclick="switchTab('users')">用戶QR Code</button>
+            <button class="tab-btn" onclick="switchTab('games')">遊戲QR Code</button>
         </div>
 
-        <!-- 用戶QR Code區域 -->
+        <!-- 用戶QR Code -->
         <div id="users-tab" class="tab-content">
             <div class="actions">
-                <button class="print-btn" onclick="window.print()">列印所有用戶QR Code</button>
-                <button class="refresh-btn" onclick="loadUserData()">刷新數據</button>
+                <button class="print-btn" onclick="window.print()">列印所有</button>
+                <button class="refresh-btn" onclick="loadUsers()">刷新數據</button>
             </div>
-            <div id="users-grid" class="qr-grid">
-                <div class="loading">加載用戶數據中...</div>
+            <div id="users-grid" class="qr-grid status">
+                加載用戶數據中...
             </div>
         </div>
 
-        <!-- 遊戲QR Code區域 -->
+        <!-- 遊戲QR Code -->
         <div id="games-tab" class="tab-content" style="display: none;">
             <div class="actions">
-                <button class="print-btn" onclick="window.print()">列印所有遊戲QR Code</button>
-                <button class="refresh-btn" onclick="loadGameData()">刷新數據</button>
+                <button class="print-btn" onclick="window.print()">列印所有</button>
+                <button class="refresh-btn" onclick="loadGames()">刷新數據</button>
             </div>
-            <div id="games-grid" class="qr-grid">
-                <div class="loading">加載遊戲數據中...</div>
+            <div id="games-grid" class="qr-grid status">
+                加載遊戲數據中...
             </div>
         </div>
     </div>
 
-    <!-- 配置文件 -->
-    <script src="js/config.js"></script>
-
+    <!-- Supabase配置 -->
     <script>
-        // 等待所有庫加載完成後再執行
-        document.addEventListener('DOMContentLoaded', async function() {
-            // 確認QRCode庫已加載
-            if (typeof QRCode === 'undefined') {
-                showEmptyState(document.getElementById('users-grid'), "❌ QR Code生成庫加載失敗");
-                showEmptyState(document.getElementById('games-grid'), "❌ QR Code生成庫加載失敗");
-                console.error("QRCode library not loaded!");
+        // 1. 配置Supabase (替換為你的數據！)
+        const SUPABASE_URL = "你的Supabase Project URL";
+        const SUPABASE_KEY = "你的Supabase anon public key";
+        
+        // 2. 初始化Supabase
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // 3. 全局變量
+        const usersGrid = document.getElementById('users-grid');
+        const gamesGrid = document.getElementById('games-grid');
+
+        // 頁面加載後執行
+        window.onload = async function() {
+            // 檢查Supabase配置
+            if (!SUPABASE_URL || !SUPABASE_KEY) {
+                showError(usersGrid, "❌ 請先配置Supabase URL和Key");
+                showError(gamesGrid, "❌ 請先配置Supabase URL和Key");
                 return;
             }
 
-            // DOM 元素
-            const usersGrid = document.getElementById('users-grid');
-            const gamesGrid = document.getElementById('games-grid');
-            
-            // 初始化資料庫連接
-            const initOk = await window.dbManager.init();
-            if (!initOk) {
-                showEmptyState(usersGrid, "❌ 資料庫連接失敗，請檢查配置");
-                showEmptyState(gamesGrid, "❌ 資料庫連接失敗，請檢查配置");
-                return;
-            }
-            
             // 加載用戶數據
-            loadUserData();
+            await loadUsers();
+        };
 
-            // 切換標籤函數
-            window.showTab = function(tabName) {
-                // 切換按鈕狀態
-                document.querySelectorAll('.tab-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                document.querySelector(`.tab-btn[onclick="showTab('${tabName}')"]`).classList.add('active');
-                
-                // 切換內容顯示
-                document.getElementById('users-tab').style.display = tabName === 'users' ? 'block' : 'none';
-                document.getElementById('games-tab').style.display = tabName === 'games' ? 'block' : 'none';
-                
-                // 如果是遊戲標籤且未加載數據，則加載
-                if (tabName === 'games' && gamesGrid.innerHTML.includes('加載中')) {
-                    loadGameData();
-                }
+        // 切換標籤
+        function switchTab(tabName) {
+            // 切換按鈕
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.tab-btn[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            
+            // 切換內容
+            document.getElementById('users-tab').style.display = tabName === 'users' ? 'block' : 'none';
+            document.getElementById('games-tab').style.display = tabName === 'games' ? 'block' : 'none';
+            
+            // 加載遊戲數據（如果未加載）
+            if (tabName === 'games' && gamesGrid.innerHTML.includes('加載中')) {
+                loadGames();
             }
+        }
 
-            // 加載用戶數據並生成QR Code
-            window.loadUserData = async function() {
-                try {
-                    // 清空並顯示加載狀態
-                    usersGrid.innerHTML = '<div class="loading">加載用戶數據中...</div>';
-                    
-                    // 從資料庫獲取所有用戶
-                    const { data: users, error } = await window.dbManager.client
-                        .from('users')
-                        .select('id, username')
-                        .order('username');
+        // 加載用戶數據並生成QR Code
+        async function loadUsers() {
+            try {
+                usersGrid.innerHTML = "加載用戶數據中...";
+                
+                // 從Supabase獲取用戶
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('id, username')
+                    .order('username');
 
-                    if (error) throw error;
-                    
-                    // 沒有數據的情況
-                    if (!users || users.length === 0) {
-                        showEmptyState(usersGrid, "暫無用戶數據");
-                        return;
-                    }
-                    
+                if (error) throw error;
+                if (!data || data.length === 0) {
+                    usersGrid.innerHTML = "❌ 暫無用戶數據";
+                    return;
+                }
+
+                // 生成用戶QR Code
+                usersGrid.innerHTML = '';
+                data.forEach(user => {
+                    const card = createQrCard(
+                        `qr-user-${user.id}`,
+                        user.username,
+                        user.username,
+                        `user-${user.username}`
+                    );
+                    usersGrid.appendChild(card);
                     // 生成QR Code
-                    usersGrid.innerHTML = '';
-                    for (const user of users) {
-                        await createUserQrCard(user);
-                    }
-                    
-                } catch (err) {
-                    console.error("加載用戶數據失敗：", err);
-                    showEmptyState(usersGrid, `❌ 加載失敗：${err.message}`);
-                }
+                    new QRCode(document.getElementById(`qr-user-${user.id}`), {
+                        text: user.username,
+                        width: 150,
+                        height: 150,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                });
+
+            } catch (err) {
+                showError(usersGrid, `❌ 加載失敗：${err.message}`);
+                console.error("用戶數據加載錯誤：", err);
             }
+        }
 
-            // 加載遊戲數據並生成QR Code
-            window.loadGameData = async function() {
-                try {
-                    // 清空並顯示加載狀態
-                    gamesGrid.innerHTML = '<div class="loading">加載遊戲數據中...</div>';
-                    
-                    // 從資料庫獲取所有遊戲
-                    const { data: games, error } = await window.dbManager.client
-                        .from('games')
-                        .select('id, game_code, game_name')
-                        .order('game_code');
+        // 加載遊戲數據並生成QR Code
+        async function loadGames() {
+            try {
+                gamesGrid.innerHTML = "加載遊戲數據中...";
+                
+                // 從Supabase獲取遊戲
+                const { data, error } = await supabase
+                    .from('games')
+                    .select('id, game_code, game_name')
+                    .order('game_code');
 
-                    if (error) throw error;
-                    
-                    // 沒有數據的情況
-                    if (!games || games.length === 0) {
-                        showEmptyState(gamesGrid, "暫無遊戲數據");
-                        return;
-                    }
-                    
+                if (error) throw error;
+                if (!data || data.length === 0) {
+                    gamesGrid.innerHTML = "❌ 暫無遊戲數據";
+                    return;
+                }
+
+                // 生成遊戲QR Code
+                gamesGrid.innerHTML = '';
+                data.forEach(game => {
+                    const card = createQrCard(
+                        `qr-game-${game.id}`,
+                        `${game.game_code} (${game.game_name})`,
+                        game.game_code,
+                        `game-${game.game_code}`
+                    );
+                    gamesGrid.appendChild(card);
                     // 生成QR Code
-                    gamesGrid.innerHTML = '';
-                    for (const game of games) {
-                        await createGameQrCard(game);
-                    }
-                    
-                } catch (err) {
-                    console.error("加載遊戲數據失敗：", err);
-                    showEmptyState(gamesGrid, `❌ 加載失敗：${err.message}`);
-                }
-            }
-
-            // 創建用戶QR Code卡片
-            async function createUserQrCard(user) {
-                const card = document.createElement('div');
-                card.className = 'qr-card';
-                
-                // QR Code 容器
-                const qrContainer = document.createElement('div');
-                qrContainer.className = 'qr-code';
-                qrContainer.id = `qr-user-${user.id}`;
-                
-                // 標籤
-                const label = document.createElement('div');
-                label.className = 'qr-label';
-                label.textContent = user.username;
-                
-                // 下載按鈕
-                const downloadBtn = document.createElement('button');
-                downloadBtn.className = 'download-btn';
-                downloadBtn.textContent = '下載QR Code';
-                downloadBtn.onclick = () => downloadQrCode(user.username, `qr-user-${user.id}`);
-                
-                // 組裝卡片
-                card.appendChild(qrContainer);
-                card.appendChild(label);
-                card.appendChild(downloadBtn);
-                
-                // 添加到網格
-                usersGrid.appendChild(card);
-                
-                // 生成QR Code
-                await QRCode.toCanvas(document.getElementById(`qr-user-${user.id}`), user.username, {
-                    width: 150,
-                    margin: 1,
-                    color: {
-                        dark: '#000000',
-                        light: '#ffffff'
-                    }
+                    new QRCode(document.getElementById(`qr-game-${game.id}`), {
+                        text: game.game_code,
+                        width: 150,
+                        height: 150,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
                 });
-            }
 
-            // 創建遊戲QR Code卡片
-            async function createGameQrCard(game) {
-                const card = document.createElement('div');
-                card.className = 'qr-card';
-                
-                // QR Code 容器
-                const qrContainer = document.createElement('div');
-                qrContainer.className = 'qr-code';
-                qrContainer.id = `qr-game-${game.id}`;
-                
-                // 標籤
-                const label = document.createElement('div');
-                label.className = 'qr-label';
-                label.textContent = `${game.game_code} (${game.game_name})`;
-                
-                // 下載按鈕
-                const downloadBtn = document.createElement('button');
-                downloadBtn.className = 'download-btn';
-                downloadBtn.textContent = '下載QR Code';
-                downloadBtn.onclick = () => downloadQrCode(game.game_code, `qr-game-${game.id}`);
-                
-                // 組裝卡片
-                card.appendChild(qrContainer);
-                card.appendChild(label);
-                card.appendChild(downloadBtn);
-                
-                // 添加到網格
-                gamesGrid.appendChild(card);
-                
-                // 生成QR Code
-                await QRCode.toCanvas(document.getElementById(`qr-game-${game.id}`), game.game_code, {
-                    width: 150,
-                    margin: 1,
-                    color: {
-                        dark: '#000000',
-                        light: '#ffffff'
-                    }
-                });
+            } catch (err) {
+                showError(gamesGrid, `❌ 加載失敗：${err.message}`);
+                console.error("遊戲數據加載錯誤：", err);
             }
+        }
 
-            // 下載QR Code
-            function downloadQrCode(filename, qrId) {
-                const canvas = document.querySelector(`#${qrId} canvas`);
-                if (!canvas) return;
-                
-                // 創建下載鏈接
+        // 創建QR Code卡片
+        function createQrCard(qrId, labelText, qrText, downloadName) {
+            const card = document.createElement('div');
+            card.className = 'qr-card';
+            
+            // QR Code容器
+            const qrDiv = document.createElement('div');
+            qrDiv.id = qrId;
+            qrDiv.className = 'qr-img';
+            
+            // 標籤
+            const label = document.createElement('div');
+            label.className = 'qr-label';
+            label.textContent = labelText;
+            
+            // 下載按鈕
+            const btn = document.createElement('button');
+            btn.className = 'download-btn';
+            btn.textContent = '下載QR Code';
+            btn.onclick = () => downloadQrCode(qrId, downloadName);
+            
+            // 組裝
+            card.appendChild(qrDiv);
+            card.appendChild(label);
+            card.appendChild(btn);
+            
+            return card;
+        }
+
+        // 下載QR Code為圖片
+        function downloadQrCode(qrId, fileName) {
+            const qrDiv = document.getElementById(qrId);
+            const canvas = qrDiv.querySelector('canvas') || qrDiv.querySelector('img');
+            
+            if (canvas.tagName === 'CANVAS') {
+                //  Canvas 轉圖片
                 const link = document.createElement('a');
-                link.download = `${filename}-QRCode.png`;
+                link.download = `${fileName}-QRCode.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
+            } else if (canvas.tagName === 'IMG') {
+                // IMG 標籤轉圖片
+                const link = document.createElement('a');
+                link.download = `${fileName}-QRCode.png`;
+                link.href = canvas.src;
+                link.click();
             }
+        }
 
-            // 顯示空狀態
-            function showEmptyState(container, message) {
-                container.innerHTML = `<div class="empty">${message}</div>`;
-            }
-        });
+        // 顯示錯誤信息
+        function showError(container, message) {
+            container.innerHTML = `<div class="status" style="color: #dc2626;">${message}</div>`;
+        }
     </script>
 </body>
 </html>
