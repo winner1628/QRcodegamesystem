@@ -1,8 +1,8 @@
 // js/qrcode.js - Supabase Configuration
 // Replace these values with your actual Supabase credentials!
 window.qrCodeConfig = {
-    supabaseUrl: "https://your-project-id.supabase.co", // ← Replace this
-    supabaseKey: "your-anon-public-key-here"            // ← Replace this
+    supabaseUrl: "https://vphihqysgdhdnuszybib.supabase.co", // ← Replace this
+    supabaseKey: "sb_publishable_yQ8Br7S-Zk2YdmhtD2dAyg_8Gho4wDS"            // ← Replace this
 };
 
 // QR Code Default Settings
