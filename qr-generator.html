@@ -21,23 +21,69 @@
         .btn-print { background: #16a34a; }
         .btn-refresh { background: #f59e0b; }
         .btn-test { background: #6366f1; }
-        .qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 18px; }
-        .qr-card { text-align: center; padding: 15px; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
-        .qr-container { width: 180px; height: 180px; margin: 0 auto 10px; background: #fff; border: 1px solid #eee; position: relative; }
-        .qr-img { width: 100%; height: 100%; }
-        .qr-label { font-size: 16px; color: #333; font-weight: 600; margin-bottom: 10px; word-break: break-all; }
-        .download-btn { padding: 6px 15px; background: #2563eb; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+        /* 二维码网格样式优化 */
+        .qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+        /* 二维码卡片样式（重点：增加内边距，优化文本和按钮排版） */
+        .qr-card { 
+            text-align: center; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1); 
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+        /* 二维码容器 */
+        .qr-container { 
+            width: 180px; 
+            height: 180px; 
+            margin: 0 auto; 
+            background: #fff; 
+            border: 1px solid #eee; 
+            position: relative; 
+        }
+        /* 二维码文本标注（重点：加粗、换行适配、居中） */
+        .qr-text-label { 
+            font-size: var(--text-size); 
+            color: var(--text-color); 
+            font-weight: 600; 
+            margin: 5px 0;
+            word-break: break-all;
+            padding: 0 10px;
+            line-height: 1.4;
+            text-align: center;
+        }
+        /* 独立下载按钮样式（每个二维码专属） */
+        .qr-download-btn { 
+            padding: 8px 20px; 
+            background: #2563eb; 
+            color: #fff; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .qr-download-btn:hover {
+            background: #1d4ed8; /*  hover变色，提升交互体验 */
+        }
         .status { text-align: center; padding: 40px 0; color: #64748b; font-size: 16px; }
+        /* 打印适配 */
         @media print { 
-            .alert, .tabs, .actions, .download-btn { display: none; } 
+            .alert, .tabs, .actions, .qr-download-btn { display: none; } 
             .qr-grid { grid-template-columns: repeat(3, 1fr); gap: 15px; } 
             .qr-container { width: 140px !important; height: 140px !important; }
+            .qr-card { box-shadow: none; border: 1px solid #eee; }
         }
+        /* 移动端适配 */
         @media (max-width: 768px) {
-            .qr-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+            .qr-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
             .qr-container { width: 150px !important; height: 150px !important; }
             .action-btn { padding: 6px 12px; margin: 0 2px 6px; }
             .tab-btn { padding: 6px 15px; }
+            .qr-download-btn { padding: 6px 16px; font-size: 13px; }
         }
     </style>
 </head>
@@ -47,7 +93,7 @@
         <div id="loadingAlert" class="alert loading">⌛ 加载中...</div>
 
         <h1>QR Code 生成器</h1>
-        <p class="subtitle">用户/游戏二维码生成（支持下载/打印）</p>
+        <p class="subtitle">用户/游戏二维码生成（支持单码下载/文本标注/打印）</p>
 
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('user')">用户 QR Code</button>
@@ -63,7 +109,6 @@
         <div id="gameGrid" class="qr-grid status" style="display: none;">切换后加载游戏数据</div>
     </div>
 
-    <!-- 保留稳定的旧版QRCode.js CDN -->
     <script src="https://cdn.bootcdn.net/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
     <script src="js/qrcode.js"></script>
@@ -80,7 +125,7 @@
         function showError(txt) { show('errorAlert'); document.getElementById('errorAlert').innerText = `❌ ${txt}`; }
         function showLoading(txt) { show('loadingAlert'); document.getElementById('loadingAlert').innerText = `⌛ ${txt || '加载中...'}`; }
 
-        // 校验QRCode库（适配旧版）
+        // 校验QRCode库
         function checkQRCodeLib() {
             if (typeof QRCode === 'undefined' || !QRCode.prototype) {
                 showError('二维码生成库加载失败，请刷新页面');
@@ -89,69 +134,69 @@
             return true;
         }
 
-        // 核心修复：适配旧版QRCode.js API（不用toCanvas，改用new QRCode()）
+        // 生成二维码（核心逻辑不变）
         function createQRCode(container, text) {
-            // 先校验库
             if (!checkQRCodeLib()) return;
-            
-            // 清空容器（避免重复生成）
             container.innerHTML = '';
-            
-            // 旧版API：直接在容器中生成二维码（兼容所有扫码工具）
             new QRCode(container, {
-                text: text,        // 二维码内容
-                width: qrSize,     // 尺寸
-                colorDark: qrColor,// 前景色
-                colorLight: qrBg,  // 背景色
-                correctLevel: QRCode.CorrectLevel.H // 高容错级别，提升识别率
+                text: text,
+                width: qrSize,
+                colorDark: qrColor,
+                colorLight: qrBg,
+                correctLevel: QRCode.CorrectLevel.H
             });
         }
 
-        // 生成二维码卡片（适配旧版API，改用div容器而非canvas）
-        function createQrCard(id, label, content, downName) {
+        // ========== 核心新增：生成带文本标注+独立下载按钮的二维码卡片 ==========
+        function createQrCard(id, qrText, displayLabel, downloadName) {
+            // 1. 创建卡片容器
             const card = document.createElement('div');
             card.className = 'qr-card';
-
-            // 二维码容器（改用div，适配旧版API）
-            const qrBox = document.createElement('div');
-            qrBox.id = id; // 给容器加唯一ID，用于生成二维码
-            qrBox.className = 'qr-container';
             
-            // 生成二维码（传入div容器，而非canvas）
-            createQRCode(qrBox, content);
+            // 2. 创建二维码容器
+            const qrBox = document.createElement('div');
+            qrBox.id = id;
+            qrBox.className = 'qr-container';
+            createQRCode(qrBox, qrText); // 生成二维码
 
-            // 二维码下方名称
-            const qrLabel = document.createElement('div');
-            qrLabel.className = 'qr-label';
-            qrLabel.innerText = label;
-            qrLabel.style.fontSize = `${textSize}px`;
-            qrLabel.style.color = textColor;
+            // 3. 创建二维码文本标注（显示二维码内容，可自定义样式）
+            const textLabel = document.createElement('div');
+            textLabel.className = 'qr-text-label';
+            // 设置文本样式变量（从配置文件读取）
+            textLabel.style.setProperty('--text-size', `${textSize}px`);
+            textLabel.style.setProperty('--text-color', textColor);
+            textLabel.innerText = displayLabel; // 显示的文本（可换行）
 
-            // 下载按钮（兼容旧版生成的img标签）
-            const downBtn = document.createElement('button');
-            downBtn.className = 'download-btn';
-            downBtn.innerText = '下载QR Code';
-            downBtn.onclick = () => {
+            // 4. 创建独立下载按钮（每个二维码专属）
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'qr-download-btn';
+            downloadBtn.innerText = '下载此二维码';
+            // 下载按钮点击事件（高清PNG下载）
+            downloadBtn.onclick = () => {
                 try {
-                    // 旧版生成的是img标签，找到并下载
                     const qrImg = qrBox.querySelector('img');
                     if (!qrImg) {
-                        alert('❌ 二维码图片未生成');
+                        alert('❌ 二维码图片未生成，请重试');
                         return;
                     }
+                    // 创建下载链接，文件名包含二维码文本，便于识别
                     const a = document.createElement('a');
-                    a.download = `${downName}-QRCode.png`;
+                    a.download = `${downloadName}_QRCode_${qrText}.png`;
                     a.href = qrImg.src;
+                    // 触发下载
                     a.click();
+                    // 清理临时元素
+                    a.remove();
                 } catch (e) {
-                    alert('❌ 下载失败，请检查浏览器权限');
+                    alert(`❌ 下载失败：${e.message.slice(0, 30)}`);
                 }
             };
 
-            // 组装卡片
+            // 5. 组装卡片（二维码 → 文本标注 → 下载按钮）
             card.appendChild(qrBox);
-            card.appendChild(qrLabel);
-            card.appendChild(downBtn);
+            card.appendChild(textLabel);
+            card.appendChild(downloadBtn);
+
             return card;
         }
 
@@ -194,7 +239,7 @@
             }
         }
 
-        // 加载用户数据（适配旧版二维码生成）
+        // 加载用户数据（适配新卡片：显示用户名+下载文件名包含用户名）
         async function loadUsers() {
             hideAllAlerts();
             showLoading('加载用户二维码...');
@@ -214,9 +259,15 @@
                 const userGrid = document.getElementById('userGrid');
                 userGrid.innerHTML = '';
                 data.forEach((u, index) => {
-                    // 用index+id确保ID唯一，避免冲突
                     const uniqueId = `qr-u-${u.id}-${index}`;
-                    userGrid.appendChild(createQrCard(uniqueId, u.username, u.username, `user-${u.username}`));
+                    // 卡片参数：唯一ID、二维码文本、显示的标签、下载文件名前缀
+                    const card = createQrCard(
+                        uniqueId, 
+                        u.username, // 二维码的实际文本
+                        `用户名：${u.username}`, // 下方显示的标注文本（清晰易懂）
+                        `用户` // 下载文件名前缀
+                    );
+                    userGrid.appendChild(card);
                 });
                 hideAllAlerts();
             } catch (e) {
@@ -224,7 +275,7 @@
             }
         }
 
-        // 加载游戏数据（核心修复：适配旧版API，解决加载失败）
+        // 加载游戏数据（适配新卡片：显示游戏码+游戏名+下载文件名包含游戏码）
         async function loadGames() {
             hideAllAlerts();
             showLoading('加载游戏二维码...');
@@ -244,19 +295,21 @@
                 const gameGrid = document.getElementById('gameGrid');
                 gameGrid.innerHTML = '';
                 data.forEach((g, index) => {
-                    const label = `${g.game_code}\n(${g.game_name})`;
-                    // 唯一ID避免冲突
                     const uniqueId = `qr-g-${g.id}-${index}`;
-                    gameGrid.appendChild(createQrCard(uniqueId, label, g.game_code, `game-${g.game_code}`));
+                    // 卡片参数：唯一ID、二维码文本（游戏码）、显示的标签（游戏码+游戏名）、下载文件名前缀
+                    const card = createQrCard(
+                        uniqueId, 
+                        g.game_code, // 二维码的实际文本（游戏码）
+                        `游戏码：${g.game_code}\n游戏名：${g.game_name}`, // 下方显示的标注文本（换行显示，更清晰）
+                        `游戏` // 下载文件名前缀
+                    );
+                    gameGrid.appendChild(card);
                 });
                 hideAllAlerts();
             } catch (e) {
-                // 精准提示错误原因
-                const errMsg = e.message.includes('toCanvas') 
-                    ? '二维码API版本不兼容（已修复）' 
-                    : e.message.includes('games') 
-                        ? 'games表不存在或字段错误' 
-                        : e.message.slice(0, 30);
+                const errMsg = e.message.includes('games') 
+                    ? 'games表不存在或字段错误（检查game_code/game_name字段）' 
+                    : e.message.slice(0, 30);
                 showError('加载游戏失败：' + errMsg);
             }
         }
