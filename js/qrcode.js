@@ -1,15 +1,17 @@
-// js/qrcode.js - 极简配置，仅存凭证和基础配置，移除复杂初始化逻辑
+// js/qrcode.js - 可配置二维码尺寸，和登录页共用相同凭证
 window.qrConfig = {
-    // 【必须替换】你的Supabase URL和Key
-    supabaseUrl: "https://vphihqysgdhdnuszybib.supabase.co",
-    supabaseKey: "sb_publishable_yQ8Br7S-Zk2YdmhtD2dAyg_8Gho4wDS",
-    // QR码基础配置
+    // 复制登录页可用的Supabase凭证
+    supabaseUrl: "https://vphihqysgdhdnuszybib.supabase.co", 
+    supabaseKey: "sb_publishable_yQ8Br7S-Zk2YdmhtD2dAyg_8Gho4wDS", 
+    // 二维码自定义配置（现在可以自由修改）
     qr: {
-        width: 150,
-        height: 150,
-        colorDark: "#000",
-        colorLight: "#fff",
-        correctLevel: 3 // 直接用数字代替QRCode.CorrectLevel.H，避免库加载前报错
+        size: 180,          // 二维码整体尺寸（宽高一致）
+        cellSize: 8,        // 二维码小方格尺寸（影响密度）
+        margin: 10,         // 二维码内边距
+        color: "#000000",   // 二维码颜色
+        bgColor: "#ffffff", // 二维码背景色
+        textSize: 16,       // 二维码下方文字大小
+        textColor: "#333333"// 文字颜色
     },
     timeout: 10000
 };
