@@ -28,7 +28,6 @@
         .qr-label { font-size: 16px; color: #333; font-weight: 600; margin-bottom: 10px; word-break: break-all; }
         .download-btn { padding: 6px 15px; background: #2563eb; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
         .status { text-align: center; padding: 40px 0; color: #64748b; font-size: 16px; }
-        /* 打印/移动端适配 */
         @media print { 
             .alert, .tabs, .actions, .download-btn { display: none; } 
             .qr-grid { grid-template-columns: repeat(3, 1fr); gap: 15px; } 
@@ -50,7 +49,6 @@
         <h1>QR Code 生成器</h1>
         <p class="subtitle">用户/游戏二维码生成（支持下载/打印）</p>
 
-        <!-- 直接绑定onclick，按钮立即可点 -->
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('user')">用户 QR Code</button>
             <button class="tab-btn" onclick="switchTab('game')">游戏 QR Code</button>
@@ -65,14 +63,12 @@
         <div id="gameGrid" class="qr-grid status" style="display: none;">切换后加载游戏数据</div>
     </div>
 
-    <!-- 1. 加载成熟的QRCode.js库（CDN直连，轻量无依赖，扫码100%识别） -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-    <!-- 2. 加载Supabase（和登录页一致） -->
+    <!-- 修复1：更换稳定的QRCode.js CDN地址 + 调整加载顺序（先加载QRCode，再加载其他） -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
-    <!-- 3. 加载本地配置 -->
     <script src="js/qrcode.js"></script>
     <script>
-        // 全局变量（极简）
+        // 全局变量
         let supabaseClient = null;
         let activeTab = 'user';
         const { size: qrSize, color: qrColor, bgColor: qrBg, textSize, textColor } = window.qrConfig.qr;
@@ -84,41 +80,54 @@
         function showError(txt) { show('errorAlert'); document.getElementById('errorAlert').innerText = `❌ ${txt}`; }
         function showLoading(txt) { show('loadingAlert'); document.getElementById('loadingAlert').innerText = `⌛ ${txt || '加载中...'}`; }
 
-        // ========== 核心：用成熟库生成二维码（100%识别，遵循QRCode国际标准） ==========
+        // 修复2：增加QRCode库加载校验 + 兜底逻辑
+        function checkQRCodeLib() {
+            if (typeof QRCode === 'undefined') {
+                showError('二维码生成库加载失败，请检查网络或刷新页面');
+                return false;
+            }
+            return true;
+        }
+
+        // 核心：生成二维码（增加前置校验）
         function createQRCode(canvas, text) {
-            // 使用官方QRCode.js生成，配置标准参数，保证扫码识别
+            // 先校验库是否加载成功
+            if (!checkQRCodeLib()) return;
+            
+            // 使用标准的QRCode.js生成（兼容所有扫码工具）
             QRCode.toCanvas(canvas, text, {
-                width: qrSize,        // 尺寸
+                width: qrSize,
                 color: {
-                    dark: qrColor,    // 二维码颜色
-                    light: qrBg       // 背景色（透明可设为#00000000）
+                    dark: qrColor,
+                    light: qrBg
                 },
-                margin: 1             // 标准边距，提升识别率
+                margin: 1
             }, (error) => {
                 if (error) showError('二维码生成失败：' + error.message.slice(0, 20));
             });
         }
 
-        // 生成二维码卡片（保留名称显示+下载功能）
+        // 生成二维码卡片
         function createQrCard(id, label, content, downName) {
             const card = document.createElement('div');
             card.className = 'qr-card';
-            // 二维码容器
+
             const qrBox = document.createElement('div');
             qrBox.className = 'qr-container';
-            // Canvas生成二维码
+            
             const canvas = document.createElement('canvas');
             canvas.id = id;
             canvas.className = 'qr-img';
-            createQRCode(canvas, content); // 标准生成，确保识别
+            createQRCode(canvas, content); // 生成二维码
+            
             qrBox.appendChild(canvas);
-            // 二维码下方名称（样式可配置）
+
             const qrLabel = document.createElement('div');
             qrLabel.className = 'qr-label';
             qrLabel.innerText = label;
             qrLabel.style.fontSize = `${textSize}px`;
             qrLabel.style.color = textColor;
-            // 下载按钮（高清PNG）
+
             const downBtn = document.createElement('button');
             downBtn.className = 'download-btn';
             downBtn.innerText = '下载QR Code';
@@ -126,20 +135,19 @@
                 try {
                     const a = document.createElement('a');
                     a.download = `${downName}-QRCode.png`;
-                    a.href = canvas.toDataURL('image/png', 1.0); // 高清1.0
+                    a.href = canvas.toDataURL('image/png', 1.0);
                     a.click();
                 } catch (e) {
                     alert('❌ 下载失败，请检查浏览器权限');
                 }
             };
-            // 组装卡片
+
             card.appendChild(qrBox);
             card.appendChild(qrLabel);
             card.appendChild(downBtn);
             return card;
         }
 
-        // ========== 数据库相关（和之前可工作的逻辑完全一致） ==========
         // 初始化Supabase
         function initSupabase() {
             if (supabaseClient) return true;
@@ -160,6 +168,11 @@
         async function testConn() {
             hideAllAlerts();
             showLoading('测试数据库连接...');
+            // 先校验QRCode库
+            if (!checkQRCodeLib()) {
+                hide('loadingAlert');
+                return;
+            }
             if (!initSupabase()) return;
             try {
                 const { data, error } = await supabaseClient.from('users').select('*').limit(1);
@@ -175,10 +188,14 @@
             }
         }
 
-        // 加载用户数据
+        // 加载用户数据（修复3：增加库校验）
         async function loadUsers() {
             hideAllAlerts();
             showLoading('加载用户二维码...');
+            if (!checkQRCodeLib()) {
+                hide('loadingAlert');
+                return;
+            }
             if (!initSupabase()) return;
             try {
                 const { data, error } = await supabaseClient.from('users').select('id, username').order('username');
@@ -199,10 +216,15 @@
             }
         }
 
-        // 加载游戏数据
+        // 加载游戏数据（修复4：和用户数据逻辑保持一致，增加库校验）
         async function loadGames() {
             hideAllAlerts();
             showLoading('加载游戏二维码...');
+            // 先校验QRCode库是否加载成功
+            if (!checkQRCodeLib()) {
+                hide('loadingAlert');
+                return;
+            }
             if (!initSupabase()) return;
             try {
                 const { data, error } = await supabaseClient.from('games').select('id, game_code, game_name').order('game_code');
@@ -215,28 +237,28 @@
                 const gameGrid = document.getElementById('gameGrid');
                 gameGrid.innerHTML = '';
                 data.forEach(g => {
-                    const label = `${g.game_code}\n(${g.game_name})`; // 换行显示名称
+                    const label = `${g.game_code}\n(${g.game_name})`;
                     gameGrid.appendChild(createQrCard(`qr-g-${g.id}`, label, g.game_code, `game-${g.game_code}`));
                 });
                 hideAllAlerts();
             } catch (e) {
-                showError('加载游戏失败：' + e.message.slice(0, 30));
+                // 明确提示错误原因
+                const errMsg = e.message.includes('QRCode is not defined') 
+                    ? '二维码库加载失败，请刷新页面' 
+                    : e.message.slice(0, 30);
+                showError('加载游戏失败：' + errMsg);
             }
         }
 
-        // ========== 页面操作（按钮立即可点，和之前一致） ==========
         // 切换标签
         function switchTab(tab) {
             if (tab === activeTab) return;
             activeTab = tab;
-            // 切换按钮样式
             const tabs = document.querySelectorAll('.tab-btn');
             tabs[0].className = tab === 'user' ? 'tab-btn active' : 'tab-btn';
             tabs[1].className = tab === 'game' ? 'tab-btn active' : 'tab-btn';
-            // 切换内容区域
             hide('userGrid'); hide('gameGrid');
             show(tab + 'Grid');
-            // 首次加载对应数据
             if (tab === 'game' && document.getElementById('gameGrid').innerHTML.includes('切换后加载')) {
                 loadGames();
             }
@@ -244,12 +266,16 @@
 
         // 刷新数据
         function refreshData() {
+            // 先校验QRCode库
+            if (!checkQRCodeLib()) return;
             activeTab === 'user' ? loadUsers() : loadGames();
         }
 
-        // 页面加载完成，隐藏所有提示框
+        // 页面加载完成：先校验QRCode库
         window.onload = function() {
             hideAllAlerts();
+            // 页面加载后立即校验库
+            checkQRCodeLib();
         };
     </script>
 </body>
