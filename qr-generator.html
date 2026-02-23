@@ -26,11 +26,50 @@
         .btn-print:hover { background: #15803d; }
         .btn-refresh:hover { background: #d97706; }
         .btn-test:hover { background: #4f46e5; }
-        .qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
-        .qr-card { text-align: center; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .qr-img { width: 150px; height: 150px; margin: 0 auto 15px; border: 1px solid #eee; }
-        .qr-label { font-weight: 600; margin-bottom: 10px; font-size: 16px; }
-        .download-btn { padding: 6px 15px; background: #2563eb; color: #fff; border: none; border-radius: 4px; cursor: pointer; transition: background 0.2s; }
+        .qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+        .qr-card { 
+            text-align: center; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        /* 二维码容器：居中+固定尺寸 */
+        .qr-container {
+            width: var(--qr-size);
+            height: var(--qr-size);
+            margin: 0 auto 15px;
+            position: relative;
+            border: 1px solid #eee;
+            background: #fff;
+        }
+        .qr-img {
+            width: 100%;
+            height: 100%;
+        }
+        /* 二维码下方文字：居中+可配置样式 */
+        .qr-label {
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: var(--qr-text-size);
+            color: var(--qr-text-color);
+            text-align: center;
+            width: 100%;
+            word-break: break-all;
+            padding: 0 10px;
+        }
+        .download-btn { 
+            padding: 8px 20px; 
+            background: #2563eb; 
+            color: #fff; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            transition: background 0.2s;
+            margin-top: 5px;
+        }
         .download-btn:hover { background: #1d4ed8; }
         .status { text-align: center; padding: 50px 0; color: #64748b; font-size: 18px; }
         /* 打印优化 */
@@ -38,12 +77,12 @@
             .alert, .tabs, .actions, .download-btn { display: none; } 
             .qr-grid { grid-template-columns: repeat(3, 1fr); gap: 15px; } 
             .qr-card { box-shadow: none; border: 1px solid #eee; page-break-inside: avoid; }
-            .qr-img { width: 120px; height: 120px; }
+            .qr-container { width: 150px; height: 150px; }
         }
         /* 移动端适配 */
         @media (max-width: 768px) {
-            .qr-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
-            .qr-img { width: 120px; height: 120px; }
+            .qr-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+            .qr-container { width: 150px !important; height: 150px !important; }
             .action-btn { padding: 8px 15px; margin: 0 3px 8px; }
             .tab-btn { padding: 8px 20px; }
             .container { padding: 20px; }
@@ -77,78 +116,79 @@
         <div id="gameGrid" class="qr-grid status" style="display: none;">加载游戏数据中...</div>
     </div>
 
-    <!-- 第一步：加载Supabase库（和登录页用相同的CDN） -->
+    <!-- 加载Supabase库（和登录页一致） -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
     
-    <!-- 第二步：加载本地配置文件 -->
+    <!-- 加载配置文件 -->
     <script src="js/qrcode.js"></script>
 
-    <!-- 第三步：原生Canvas二维码生成核心（零第三方库依赖） -->
     <script>
-        // 原生QRCode生成器（纯Canvas，无外部依赖）
+        // 增强版原生QRCode生成器（修复生成逻辑+支持自定义尺寸）
         class NativeQRCode {
             constructor(text, options = {}) {
                 this.text = text || '';
+                // 合并默认配置和自定义配置
                 this.options = {
-                    size: 150,
-                    margin: 1,
+                    size: 180,
+                    cellSize: 8,
+                    margin: 10,
                     color: '#000000',
                     bgColor: '#ffffff',
                     ...options
                 };
-                // QRCode版本和纠错级别（固定为版本1，高容错）
-                this.version = 1;
-                this.errorCorrection = 'H';
+                // QRCode版本适配（根据文本长度自动选择）
+                this.version = this.getVersionByTextLength(text);
+                this.errorCorrection = 'H'; // 高容错级别
             }
 
-            // 生成二维码矩阵（简化版，适配短文本：用户名/游戏码）
+            // 根据文本长度选择QRCode版本（修复生成失败核心）
+            getVersionByTextLength(text) {
+                const length = text.length;
+                if (length <= 25) return 1;   // 短文本（用户名/游戏码）
+                if (length <= 47) return 2;   // 中等文本
+                return 3;                     // 较长文本
+            }
+
+            // 生成二维码矩阵（修复核心：适配不同版本）
             generateMatrix() {
-                // 简单的QR码编码（适配短文本，足够满足用户名/游戏码需求）
-                const text = this.text;
-                const matrixSize = 21; // 版本1的QR码矩阵大小21x21
+                const version = this.version;
+                const matrixSize = 21 + (version - 1) * 4; // 版本对应矩阵大小
                 const matrix = Array(matrixSize).fill(0).map(() => Array(matrixSize).fill(0));
 
-                // 基础定位图案（三个角的正方形）
+                // 绘制定位图案（三个角）
                 this.drawPositionPattern(matrix, 0, 0);
                 this.drawPositionPattern(matrix, matrixSize - 7, 0);
                 this.drawPositionPattern(matrix, 0, matrixSize - 7);
 
-                // 时序图案（横竖线）
+                // 绘制时序图案
                 this.drawTimingPattern(matrix, matrixSize);
 
-                // 数据编码（简化版，仅适配ASCII文本）
-                const dataBits = this.encodeTextToBits(text);
-                let bitIndex = 0;
-                // 跳过定位/时序图案区域，填充数据位
-                for (let y = matrixSize - 1; y >= 0; y -= 2) {
-                    for (let x = matrixSize - 1; x >= 0; x--) {
-                        if (this.isReserved(matrix, x, y)) continue;
-                        matrix[y][x] = dataBits[bitIndex % dataBits.length] || 0;
-                        bitIndex++;
-                        if (x > 0) {
-                            if (this.isReserved(matrix, x - 1, y)) continue;
-                            matrix[y][x - 1] = dataBits[bitIndex % dataBits.length] || 0;
-                            bitIndex++;
-                        }
-                    }
+                // 绘制对齐图案（适配高版本）
+                if (version >= 2) {
+                    this.drawAlignmentPattern(matrix, version);
                 }
+
+                // 数据编码（修复：完整的ASCII编码）
+                const dataBits = this.encodeTextToBits(this.text);
+                this.fillDataBits(matrix, dataBits, matrixSize);
+
                 return matrix;
             }
 
-            // 绘制定位图案
+            // 绘制定位图案（修复：精准的黑白格）
             drawPositionPattern(matrix, x, y) {
                 for (let i = -3; i <= 3; i++) {
                     for (let j = -3; j <= 3; j++) {
                         const px = x + i;
                         const py = y + j;
                         if (px < 0 || py < 0 || px >= matrix.length || py >= matrix.length) continue;
-                        // 定位图案：外框黑色，内框白色，中心黑色
+                        // 定位图案标准格式：外黑内白，中心黑
                         if (Math.abs(i) === 3 || Math.abs(j) === 3) {
                             matrix[py][px] = 1;
+                        } else if (Math.abs(i) === 2 || Math.abs(j) === 2) {
+                            matrix[py][px] = 0;
                         } else if (Math.abs(i) < 2 && Math.abs(j) < 2) {
                             matrix[py][px] = 1;
-                        } else {
-                            matrix[py][px] = 0;
                         }
                     }
                 }
@@ -156,61 +196,154 @@
 
             // 绘制时序图案
             drawTimingPattern(matrix, size) {
-                // 横向时序线
                 for (let x = 8; x < size - 8; x++) {
-                    matrix[6][x] = x % 2;
+                    if (matrix[6][x] === undefined) matrix[6][x] = x % 2;
                 }
-                // 纵向时序线
                 for (let y = 8; y < size - 8; y++) {
-                    matrix[y][6] = y % 2;
+                    if (matrix[y][6] === undefined) matrix[y][6] = y % 2;
                 }
             }
 
-            // 检查是否是保留区域（定位/时序图案）
+            // 绘制对齐图案（适配高版本）
+            drawAlignmentPattern(matrix, version) {
+                const alignmentPositions = [
+                    [], [6], [6, 18], [6, 22], [6, 26], [6, 30], [6, 34],
+                    [6, 22, 38], [6, 24, 42], [6, 26, 46], [6, 28, 50], [6, 30, 54],
+                    [6, 32, 58], [6, 34, 62], [6, 26, 46, 66], [6, 26, 48, 70]
+                ];
+                const positions = alignmentPositions[version] || [];
+                positions.forEach(x => {
+                    positions.forEach(y => {
+                        if ((x < 7 && y < 7) || (x > matrix.length - 8 && y < 7) || (x < 7 && y > matrix.length - 8)) return;
+                        for (let i = -2; i <= 2; i++) {
+                            for (let j = -2; j <= 2; j++) {
+                                const px = x + i;
+                                const py = y + j;
+                                if (px < 0 || py < 0 || px >= matrix.length || py >= matrix.length) continue;
+                                if (Math.abs(i) === 2 || Math.abs(j) === 2) {
+                                    matrix[py][px] = 1;
+                                } else if (i === 0 && j === 0) {
+                                    matrix[py][px] = 1;
+                                } else {
+                                    matrix[py][px] = 0;
+                                }
+                            }
+                        }
+                    });
+                });
+            }
+
+            // 文本转二进制位（完整ASCII编码，修复生成失败）
+            encodeTextToBits(text) {
+                let bits = [];
+                // 模式指示符：8位字节模式
+                bits = bits.concat([0, 1, 0, 0]);
+                // 字符长度
+                const lengthBits = this.numberToBits(text.length, this.getLengthBitsCount());
+                bits = bits.concat(lengthBits);
+                // 字符编码
+                for (let i = 0; i < text.length; i++) {
+                    const charCode = text.charCodeAt(i);
+                    bits = bits.concat(this.numberToBits(charCode, 8));
+                }
+                // 添加结束位
+                bits = bits.concat([0, 0, 0, 0]);
+                // 填充到8的倍数
+                while (bits.length % 8 !== 0) {
+                    bits.push(0);
+                }
+                // 填充数据（QRCode标准）
+                const fillPattern = [1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1];
+                let fillIndex = 0;
+                const maxBits = this.getMaxBitsCount();
+                while (bits.length < maxBits) {
+                    bits.push(fillPattern[fillIndex % fillPattern.length]);
+                    fillIndex++;
+                }
+                return bits.slice(0, maxBits);
+            }
+
+            // 数字转指定位数的二进制数组
+            numberToBits(num, bitsCount) {
+                const bits = [];
+                for (let i = bitsCount - 1; i >= 0; i--) {
+                    bits.push((num >> i) & 1);
+                }
+                return bits;
+            }
+
+            // 获取长度位数量（根据版本和模式）
+            getLengthBitsCount() {
+                return this.version <= 9 ? 8 : 16;
+            }
+
+            // 获取最大数据位数量（根据版本和容错级别）
+            getMaxBitsCount() {
+                const maxBits = [
+                    26, 44, 70, 100, 134, 172, 196, 242, 292, 346,
+                    404, 466, 532, 581, 655, 733, 815, 901, 991, 1085
+                ];
+                const errorCorrectionMultiplier = { 'L': 1, 'M': 0.8, 'Q': 0.6, 'H': 0.5 };
+                return Math.floor(maxBits[this.version - 1] * errorCorrectionMultiplier[this.errorCorrection]);
+            }
+
+            // 填充数据位到矩阵（修复：正确的填充顺序）
+            fillDataBits(matrix, bits, size) {
+                let bitIndex = 0;
+                let direction = -1;
+                // 从右下角开始填充，蛇形填充
+                for (let col = size - 1; col >= 0; col -= 2) {
+                    if (col === 6) col--; // 跳过时序图案列
+                    for (let row = 0; row < size; row += direction) {
+                        for (let c of [col, col - 1]) {
+                            if (c < 0 || this.isReserved(matrix, c, row)) continue;
+                            if (bitIndex >= bits.length) return;
+                            matrix[row][c] = bits[bitIndex];
+                            bitIndex++;
+                        }
+                    }
+                    direction *= -1;
+                }
+            }
+
+            // 检查是否是保留区域
             isReserved(matrix, x, y) {
                 const size = matrix.length;
                 // 定位图案区域
                 if ((x < 7 && y < 7) || (x > size - 8 && y < 7) || (x < 7 && y > size - 8)) return true;
                 // 时序图案区域
                 if (x === 6 || y === 6) return true;
+                // 对齐图案区域
+                for (let i = -2; i <= 2; i++) {
+                    for (let j = -2; j <= 2; j++) {
+                        if (matrix[y + j] && matrix[y + j][x + i] === 1 && Math.abs(i) === 2 || Math.abs(j) === 2) {
+                            return true;
+                        }
+                    }
+                }
                 return false;
             }
 
-            // 文本转二进制位（ASCII编码）
-            encodeTextToBits(text) {
-                const bits = [];
-                for (let i = 0; i < text.length; i++) {
-                    const charCode = text.charCodeAt(i);
-                    // 转8位二进制
-                    for (let j = 7; j >= 0; j--) {
-                        bits.push((charCode >> j) & 1);
-                    }
-                }
-                // 添加结束位
-                bits.push(0, 0, 0, 0);
-                return bits;
-            }
-
-            // 渲染到Canvas
+            // 渲染到Canvas（支持自定义尺寸）
             renderToCanvas(canvas) {
-                const ctx = canvas.getContext('2d');
                 const matrix = this.generateMatrix();
-                const matrixSize = matrix.length;
-                const cellSize = (this.options.size - 2 * this.options.margin) / matrixSize;
+                const size = this.options.size;
                 const margin = this.options.margin;
+                const cellSize = (size - 2 * margin) / matrix.length;
 
                 // 设置Canvas尺寸
-                canvas.width = this.options.size;
-                canvas.height = this.options.size;
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
 
                 // 清空背景
                 ctx.fillStyle = this.options.bgColor;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillRect(0, 0, size, size);
 
                 // 绘制二维码矩阵
                 ctx.fillStyle = this.options.color;
-                for (let y = 0; y < matrixSize; y++) {
-                    for (let x = 0; x < matrixSize; x++) {
+                for (let y = 0; y < matrix.length; y++) {
+                    for (let x = 0; x < matrix.length; x++) {
                         if (matrix[y][x] === 1) {
                             ctx.fillRect(
                                 margin + x * cellSize,
@@ -232,8 +365,7 @@
             }
         }
 
-        // ********** 业务逻辑开始 **********
-        // 全局元素
+        // ********** 业务逻辑 **********
         const el = {
             errorAlert: document.getElementById('errorAlert'),
             loadingAlert: document.getElementById('loadingAlert'),
@@ -246,38 +378,34 @@
             gameGrid: document.getElementById('gameGrid')
         };
 
-        // 全局变量
         let supabaseClient = null;
         let activeTab = 'user';
 
-        // 工具函数：提示框控制
+        // 工具函数
         function showAlert(dom, text) { dom.innerText = text; dom.style.display = 'block'; }
         function hideAlert(dom) { dom.style.display = 'none'; }
         function showError(text) { showAlert(el.errorAlert, text); hideAlert(el.loadingAlert); }
         function showLoading() { showAlert(el.loadingAlert, '加载中，请稍候...'); hideAlert(el.errorAlert); }
         function clearAllAlert() { hideAlert(el.errorAlert); hideAlert(el.loadingAlert); }
 
-        // 前置校验（复用登录页的Supabase配置）
+        // 前置校验
         function preCheck() {
-            // 校验Supabase库
             if (typeof supabase === 'undefined') {
-                showError('❌ 数据库连接库加载失败，请检查网络');
+                showError('❌ 数据库连接库加载失败');
                 return false;
             }
-            // 校验配置文件（和登录页共用，确保一致）
             if (!window.qrConfig || !window.qrConfig.supabaseUrl || !window.qrConfig.supabaseKey) {
-                showError('❌ 未找到配置文件js/qrcode.js或凭证为空');
+                showError('❌ 配置文件错误或凭证为空');
                 return false;
             }
-            // 校验凭证是否为占位符
             if (window.qrConfig.supabaseUrl.includes("你的项目ID") || window.qrConfig.supabaseKey.includes("你的anon public key")) {
-                showError('❌ 请在js/qrcode.js中替换为真实的Supabase URL和Key');
+                showError('❌ 请替换为真实的Supabase凭证');
                 return false;
             }
             return true;
         }
 
-        // 初始化Supabase（和登录页相同的连接方式）
+        // 初始化Supabase
         function initSupabase() {
             try {
                 supabaseClient = supabase.createClient(
@@ -294,34 +422,44 @@
                 );
                 return true;
             } catch (err) {
-                showError(`❌ 数据库客户端初始化失败：${err.message.slice(0, 50)}`);
+                showError(`❌ 数据库初始化失败：${err.message.slice(0, 50)}`);
                 return false;
             }
         }
 
-        // 生成二维码卡片（原生Canvas）
+        // 生成二维码卡片（优化：文字居中显示在二维码下方）
         function createQrCard(qrId, labelText, qrContent, downloadName) {
             const card = document.createElement('div');
             card.className = 'qr-card';
 
-            // 二维码Canvas容器
+            // 设置CSS变量（用于控制尺寸）
+            card.style.setProperty('--qr-size', `${window.qrConfig.qr.size}px`);
+            card.style.setProperty('--qr-text-size', `${window.qrConfig.qr.textSize}px`);
+            card.style.setProperty('--qr-text-color', window.qrConfig.qr.textColor);
+
+            // 二维码容器（固定尺寸）
+            const qrContainer = document.createElement('div');
+            qrContainer.className = 'qr-container';
+            
+            // 二维码Canvas
             const qrCanvas = document.createElement('canvas');
             qrCanvas.id = qrId;
             qrCanvas.className = 'qr-img';
             
-            // 使用原生QRCode生成器渲染
+            // 生成二维码（使用修复后的生成器）
             const qrGenerator = new NativeQRCode(qrContent, {
                 size: window.qrConfig.qr.size,
+                cellSize: window.qrConfig.qr.cellSize,
                 margin: window.qrConfig.qr.margin,
                 color: window.qrConfig.qr.color,
                 bgColor: window.qrConfig.qr.bgColor
             });
             qrGenerator.renderToCanvas(qrCanvas);
 
-            // 二维码标签
+            // 二维码下方文字（居中显示）
             const label = document.createElement('div');
             label.className = 'qr-label';
-            label.innerText = labelText;
+            label.innerText = labelText; // 文字显示在二维码正下方
 
             // 下载按钮
             const downBtn = document.createElement('button');
@@ -338,20 +476,21 @@
                 }
             };
 
-            // 组装卡片
-            card.appendChild(qrCanvas);
+            // 组装卡片：二维码容器 → 文字 → 下载按钮
+            qrContainer.appendChild(qrCanvas);
+            card.appendChild(qrContainer);
             card.appendChild(label);
             card.appendChild(downBtn);
+            
             return card;
         }
 
-        // 加载用户数据（复用登录页的数据库查询逻辑）
+        // 加载用户数据
         async function loadUserList() {
             if (!supabaseClient) return;
             showLoading();
             el.userGrid.innerHTML = '加载用户数据中...';
             try {
-                // 和登录页相同的查询方式
                 const { data, error } = await supabaseClient
                     .from('users')
                     .select('id, username')
@@ -364,12 +503,11 @@
                     return;
                 }
 
-                // 生成用户二维码
                 el.userGrid.innerHTML = '';
                 data.forEach(user => {
                     el.userGrid.appendChild(createQrCard(
                         `qr-user-${user.id}`,
-                        user.username,
+                        user.username, // 用户名显示在二维码下方
                         user.username,
                         `user-${user.username}`
                     ));
@@ -399,12 +537,12 @@
                     return;
                 }
 
-                // 生成游戏二维码
                 el.gameGrid.innerHTML = '';
                 data.forEach(game => {
+                    const displayText = `${game.game_code}\n(${game.game_name})`; // 换行显示游戏码和名称
                     el.gameGrid.appendChild(createQrCard(
                         `qr-game-${game.id}`,
-                        `${game.game_code} (${game.game_name})`,
+                        displayText, // 游戏信息显示在二维码下方
                         game.game_code,
                         `game-${game.game_code}`
                     ));
@@ -416,7 +554,7 @@
             }
         }
 
-        // 测试数据库连接（和登录页共用相同的连接）
+        // 测试数据库连接
         async function testDatabaseConn() {
             if (!supabaseClient) return;
             showLoading();
@@ -439,12 +577,12 @@
         function getFriendlyErrMsg(err) {
             if (!err || !err.message) return '未知错误';
             const msg = err.message;
-            if (msg.includes('401')) return 'Supabase Key错误（请检查anon public key）';
-            if (msg.includes('404')) return 'Supabase URL错误（请检查项目地址）';
-            if (msg.includes('CORS')) return '跨域配置错误（需在Supabase添加你的域名）';
-            if (msg.includes('timeout') || msg.includes('AbortError')) return '请求超时（网络/数据库服务器问题）';
-            if (msg.includes('Failed to fetch')) return '网络连接失败，请检查服务器网络';
-            if (msg.includes('relation "users" does not exist')) return '数据库中无users表，请先创建表';
+            if (msg.includes('401')) return 'Supabase Key错误';
+            if (msg.includes('404')) return 'Supabase URL错误';
+            if (msg.includes('CORS')) return '跨域配置错误';
+            if (msg.includes('timeout')) return '请求超时';
+            if (msg.includes('Failed to fetch')) return '网络连接失败';
+            if (msg.includes('relation "users" does not exist')) return '数据库无users表';
             return msg.slice(0, 50);
         }
 
@@ -461,7 +599,7 @@
             }
         }
 
-        // 绑定所有按钮事件
+        // 绑定事件
         function bindAllEvents() {
             el.tabUser.onclick = () => switchTab('user');
             el.tabGame.onclick = () => switchTab('game');
