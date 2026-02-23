@@ -6,36 +6,110 @@
     <title>QR Code 生成器</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .alert { padding: 12px; border-radius: 4px; margin-bottom: 15px; text-align: center; font-weight: 600; display: none; }
-        .error { background: #fef2f2; color: #dc2626; border: 1px solid #fecdd3; }
-        .loading { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
-        h1 { text-align: center; color: #dc2626; margin-bottom: 8px; font-size: 22px; }
-        .subtitle { text-align: center; color: #64748b; margin-bottom: 20px; font-size: 15px; }
-        .tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
-        .tab-btn { padding: 8px 20px; border: none; border-radius: 4px; background: #e2e8f0; cursor: pointer; font-size: 15px; }
-        .tab-btn.active { background: #dc2626; color: #fff; }
-        .actions { text-align: center; margin-bottom: 20px; }
-        .action-btn { padding: 8px 16px; border: none; border-radius: 4px; color: #fff; cursor: pointer; font-size: 14px; margin: 0 4px; }
+        body { 
+            font-family: Arial, sans-serif; 
+            background: #f5f5f5; 
+            padding: 20px; 
+            /* 避免页面内容过宽 */
+            max-width: 100vw;
+            overflow-x: hidden;
+        }
+        .container { 
+            max-width: 100%; /* 改为100%宽度，适配所有屏幕 */
+            margin: 0 auto; 
+            background: #fff; 
+            padding: 20px 15px; /* 减少左右内边距，增加空间 */
+            border-radius: 8px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+        }
+        .alert { 
+            padding: 12px; 
+            border-radius: 4px; 
+            margin-bottom: 15px; 
+            text-align: center; 
+            font-weight: 600; 
+            display: none; 
+        }
+        .error { 
+            background: #fef2f2; 
+            color: #dc2626; 
+            border: 1px solid #fecdd3; 
+        }
+        .loading { 
+            background: #eff6ff; 
+            color: #2563eb; 
+            border: 1px solid #bfdbfe; 
+        }
+        h1 { 
+            text-align: center; 
+            color: #dc2626; 
+            margin-bottom: 8px; 
+            font-size: 20px; /* 调小标题字号，节省空间 */
+        }
+        .subtitle { 
+            text-align: center; 
+            color: #64748b; 
+            margin-bottom: 18px; 
+            font-size: 14px; 
+        }
+        .tabs { 
+            display: flex; 
+            justify-content: center; 
+            gap: 8px; 
+            margin-bottom: 15px; 
+            flex-wrap: wrap; 
+        }
+        .tab-btn { 
+            padding: 8px 18px; 
+            border: none; 
+            border-radius: 4px; 
+            background: #e2e8f0; 
+            cursor: pointer; 
+            font-size: 14px; 
+        }
+        .tab-btn.active { 
+            background: #dc2626; 
+            color: #fff; 
+        }
+        .actions { 
+            text-align: center; 
+            margin-bottom: 20px; 
+        }
+        .action-btn { 
+            padding: 8px 15px; 
+            border: none; 
+            border-radius: 4px; 
+            color: #fff; 
+            cursor: pointer; 
+            font-size: 14px; 
+            margin: 0 4px 8px; /* 增加底部外边距，避免挤压 */
+        }
         .btn-print { background: #16a34a; }
         .btn-refresh { background: #f59e0b; }
         .btn-test { background: #6366f1; }
-        /* 二维码网格样式优化 */
-        .qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
-        /* 二维码卡片样式（重点：增加内边距，优化文本和按钮排版） */
+        
+        /* ========== 核心优化：二维码网格+卡片布局 ========== */
+        .qr-grid { 
+            display: grid; 
+            /* 减少列宽，增加列间距，确保每个卡片有足够空间 */
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
+            gap: 25px; /* 大幅增加卡片间距，避免重叠 */
+            padding: 0 5px; /* 左右留白，避免贴边 */
+        }
+        /* 二维码卡片：大幅增加内边距和行间距 */
         .qr-card { 
             text-align: center; 
-            padding: 20px; 
+            padding: 25px 15px; /* 上下内边距增加，左右适当 */
             border-radius: 8px; 
             box-shadow: 0 2px 6px rgba(0,0,0,0.1); 
             background: #fff;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 12px;
+            gap: 15px; /* 卡片内元素间距从12px→15px，大幅增加 */
+            min-height: 320px; /* 固定最小高度，确保元素都能显示 */
         }
-        /* 二维码容器 */
+        /* 二维码容器：尺寸不变，居中显示 */
         .qr-container { 
             width: 180px; 
             height: 180px; 
@@ -43,21 +117,23 @@
             background: #fff; 
             border: 1px solid #eee; 
             position: relative; 
+            flex-shrink: 0; /* 防止容器被压缩 */
         }
-        /* 二维码文本标注（重点：加粗、换行适配、居中） */
+        /* 二维码文本标注：核心优化行间距 */
         .qr-text-label { 
             font-size: var(--text-size); 
             color: var(--text-color); 
             font-weight: 600; 
-            margin: 5px 0;
+            line-height: 1.6; /* 行间距从1.4→1.6，大幅增加 */
             word-break: break-all;
             padding: 0 10px;
-            line-height: 1.4;
             text-align: center;
+            max-width: 200px; /* 限制文本宽度，避免溢出 */
+            flex-shrink: 0; /* 防止文本被压缩 */
         }
-        /* 独立下载按钮样式（每个二维码专属） */
+        /* 下载按钮：独立一行，足够空间 */
         .qr-download-btn { 
-            padding: 8px 20px; 
+            padding: 10px 25px; /* 加大按钮尺寸，更易点击 */
             background: #2563eb; 
             color: #fff; 
             border: none; 
@@ -65,25 +141,46 @@
             cursor: pointer;
             font-size: 14px;
             transition: background 0.2s;
+            flex-shrink: 0; /* 防止按钮被压缩 */
+            width: 80%; /* 按钮宽度80%，居中显示 */
+            margin-top: 5px; /* 顶部增加间距，远离文本 */
         }
         .qr-download-btn:hover {
-            background: #1d4ed8; /*  hover变色，提升交互体验 */
+            background: #1d4ed8;
         }
-        .status { text-align: center; padding: 40px 0; color: #64748b; font-size: 16px; }
+        .status { 
+            text-align: center; 
+            padding: 40px 0; 
+            color: #64748b; 
+            font-size: 16px; 
+        }
+        
         /* 打印适配 */
         @media print { 
             .alert, .tabs, .actions, .qr-download-btn { display: none; } 
-            .qr-grid { grid-template-columns: repeat(3, 1fr); gap: 15px; } 
+            .qr-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; } 
             .qr-container { width: 140px !important; height: 140px !important; }
-            .qr-card { box-shadow: none; border: 1px solid #eee; }
+            .qr-card { box-shadow: none; border: 1px solid #eee; min-height: auto; }
         }
-        /* 移动端适配 */
+        /* 移动端适配：进一步优化 */
         @media (max-width: 768px) {
-            .qr-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+            .qr-grid { 
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
+                gap: 20px; 
+            }
+            .qr-card { 
+                min-height: 300px; /* 移动端适当减小最小高度 */
+                padding: 20px 10px; 
+            }
+            .qr-container { width: 160px !important; height: 160px !important; }
+            .qr-text-label { font-size: 13px; line-height: 1.5; }
+            .qr-download-btn { padding: 8px 20px; font-size: 13px; width: 90%; }
+        }
+        /* 小屏手机（400px以下） */
+        @media (max-width: 400px) {
+            .qr-grid { grid-template-columns: 1fr; } /* 单列显示，完全不挤压 */
+            .qr-card { min-height: 280px; }
             .qr-container { width: 150px !important; height: 150px !important; }
-            .action-btn { padding: 6px 12px; margin: 0 2px 6px; }
-            .tab-btn { padding: 6px 15px; }
-            .qr-download-btn { padding: 6px 16px; font-size: 13px; }
         }
     </style>
 </head>
@@ -134,7 +231,7 @@
             return true;
         }
 
-        // 生成二维码（核心逻辑不变）
+        // 生成二维码
         function createQRCode(container, text) {
             if (!checkQRCodeLib()) return;
             container.innerHTML = '';
@@ -147,31 +244,29 @@
             });
         }
 
-        // ========== 核心新增：生成带文本标注+独立下载按钮的二维码卡片 ==========
+        // 生成带文本+下载按钮的二维码卡片
         function createQrCard(id, qrText, displayLabel, downloadName) {
-            // 1. 创建卡片容器
             const card = document.createElement('div');
             card.className = 'qr-card';
             
-            // 2. 创建二维码容器
+            // 二维码容器
             const qrBox = document.createElement('div');
             qrBox.id = id;
             qrBox.className = 'qr-container';
-            createQRCode(qrBox, qrText); // 生成二维码
+            createQRCode(qrBox, qrText);
 
-            // 3. 创建二维码文本标注（显示二维码内容，可自定义样式）
+            // 二维码文本标注（增加换行处理，避免超长）
             const textLabel = document.createElement('div');
             textLabel.className = 'qr-text-label';
-            // 设置文本样式变量（从配置文件读取）
             textLabel.style.setProperty('--text-size', `${textSize}px`);
             textLabel.style.setProperty('--text-color', textColor);
-            textLabel.innerText = displayLabel; // 显示的文本（可换行）
+            // 优化文本显示：超长文本自动截断（可选，如需取消可删除下面一行）
+            textLabel.innerText = displayLabel.length > 30 ? displayLabel.slice(0, 27) + '...' : displayLabel;
 
-            // 4. 创建独立下载按钮（每个二维码专属）
+            // 独立下载按钮
             const downloadBtn = document.createElement('button');
             downloadBtn.className = 'qr-download-btn';
             downloadBtn.innerText = '下载此二维码';
-            // 下载按钮点击事件（高清PNG下载）
             downloadBtn.onclick = () => {
                 try {
                     const qrImg = qrBox.querySelector('img');
@@ -179,20 +274,19 @@
                         alert('❌ 二维码图片未生成，请重试');
                         return;
                     }
-                    // 创建下载链接，文件名包含二维码文本，便于识别
                     const a = document.createElement('a');
-                    a.download = `${downloadName}_QRCode_${qrText}.png`;
+                    // 简化下载文件名，避免超长
+                    const safeFileName = `${downloadName}_${qrText.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                    a.download = `${safeFileName}_QRCode.png`;
                     a.href = qrImg.src;
-                    // 触发下载
                     a.click();
-                    // 清理临时元素
                     a.remove();
                 } catch (e) {
                     alert(`❌ 下载失败：${e.message.slice(0, 30)}`);
                 }
             };
 
-            // 5. 组装卡片（二维码 → 文本标注 → 下载按钮）
+            // 组装卡片
             card.appendChild(qrBox);
             card.appendChild(textLabel);
             card.appendChild(downloadBtn);
@@ -239,7 +333,7 @@
             }
         }
 
-        // 加载用户数据（适配新卡片：显示用户名+下载文件名包含用户名）
+        // 加载用户数据
         async function loadUsers() {
             hideAllAlerts();
             showLoading('加载用户二维码...');
@@ -260,12 +354,11 @@
                 userGrid.innerHTML = '';
                 data.forEach((u, index) => {
                     const uniqueId = `qr-u-${u.id}-${index}`;
-                    // 卡片参数：唯一ID、二维码文本、显示的标签、下载文件名前缀
                     const card = createQrCard(
                         uniqueId, 
-                        u.username, // 二维码的实际文本
-                        `用户名：${u.username}`, // 下方显示的标注文本（清晰易懂）
-                        `用户` // 下载文件名前缀
+                        u.username, 
+                        `用户名：${u.username}`, 
+                        `用户`
                     );
                     userGrid.appendChild(card);
                 });
@@ -275,7 +368,7 @@
             }
         }
 
-        // 加载游戏数据（适配新卡片：显示游戏码+游戏名+下载文件名包含游戏码）
+        // 加载游戏数据
         async function loadGames() {
             hideAllAlerts();
             showLoading('加载游戏二维码...');
@@ -296,12 +389,13 @@
                 gameGrid.innerHTML = '';
                 data.forEach((g, index) => {
                     const uniqueId = `qr-g-${g.id}-${index}`;
-                    // 卡片参数：唯一ID、二维码文本（游戏码）、显示的标签（游戏码+游戏名）、下载文件名前缀
+                    // 优化游戏文本显示：缩短换行符，避免占太多行
+                    const displayLabel = `游戏码：${g.game_code}\n游戏名：${g.game_name.length > 10 ? g.game_name.slice(0, 7) + '...' : g.game_name}`;
                     const card = createQrCard(
                         uniqueId, 
-                        g.game_code, // 二维码的实际文本（游戏码）
-                        `游戏码：${g.game_code}\n游戏名：${g.game_name}`, // 下方显示的标注文本（换行显示，更清晰）
-                        `游戏` // 下载文件名前缀
+                        g.game_code, 
+                        displayLabel, 
+                        `游戏`
                     );
                     gameGrid.appendChild(card);
                 });
