@@ -453,8 +453,8 @@
                 // 只刪除所有遊戲紀錄
                 const deleteResult = await window.dbManager.client
                     .from('game_records')
-                    .delete()
-                    .not('id', 'eq', 0);
+					.delete() // 无需where条件，直接删除所有记录
+					.throwOnError(); // 显式抛出错误，便于捕获
                 
                 if (deleteResult.error) {
                     console.warn("刪除遊戲紀錄警告：", deleteResult.error.message);
