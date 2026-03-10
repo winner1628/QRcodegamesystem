@@ -432,63 +432,60 @@
             }
         }
 
-        // 確認刪除所有遊戲紀錄 (修改：只刪除紀錄，保留用戶/遊戲)
-        async function confirmDeleteAllRecords() {
-            if (!confirm('⚠️ 確定要刪除所有遊戲紀錄嗎？此操作不可撤銷！')) {
-                return;
-            }
+		// 確認刪除所有遊戲紀錄 (最終修復版)
+		async function confirmDeleteAllRecords() {
+			if (!confirm('⚠️ 確定要刪除所有遊戲紀錄嗎？此操作不可撤銷！')) {
+				return;
+			}
 
-            const dataMsg = document.getElementById('data-msg');
-            const dataStatus = document.getElementById('data-status');
-            
-            try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) {
-                    showMessage('data-msg', '❌ 資料庫連接失敗，無法執行刪除操作', false);
-                    return;
-                }
+			const dataMsg = document.getElementById('data-msg');
+			const dataStatus = document.getElementById('data-status');
+    
+			try {
+				const initOk = await window.dbManager.init();
+				if (!initOk) {
+					showMessage('data-msg', '❌ 資料庫連接失敗，無法執行刪除操作', false);
+					return;
+				}
 
-                dataStatus.innerHTML = '<div class="loading">正在刪除所有遊戲紀錄...</div>';
-                
-                // 只刪除所有遊戲紀錄
-                const deleteResult = await window.dbManager.client
-                    .from('game_records')
-					.delete() // 无需where条件，直接删除所有记录
-					.throwOnError(); // 显式抛出错误，便于捕获
-                
-                if (deleteResult.error) {
-                    console.warn("刪除遊戲紀錄警告：", deleteResult.error.message);
-                }
+				dataStatus.innerHTML = '<div class="loading">正在刪除所有遊戲紀錄...</div>';
+        
+				// ✅ 修復：满足 WHERE 条件，同时兼容 UUID 类型
+				const deleteResult = await window.dbManager.client
+					.from('game_records')
+					.delete()
+					.filter('id', 'neq', '00000000-0000-0000-0000-000000000000') // 使用空UUID，合法且一定成立
+					.throwOnError();
+        
+				// 檢查管理員帳號是否存在，不存在則創建
+				const adminCheck = await window.dbManager.client
+					.from('admins')
+					.select('id')
+					.eq('username', 'admin')
+					.single();
+        
+				if (adminCheck.error && adminCheck.error.code === 'PGRST116') {
+					// 管理員帳號不存在，創建默認管理員
+					await window.dbManager.client
+						.from('admins')
+						.insert([{ username: 'admin', password: 'admin123' }]);
+					showMessage('data-msg', '✅ 所有遊戲紀錄已刪除，並創建默認管理員帳號！', true);
+				} else {
+					showMessage('data-msg', '✅ 所有遊戲紀錄已成功刪除！', true);
+				}
+        
+				// 更新所有列表
+				updateDataStatus();
+				loadDashboardStats();
+				loadUserTotalScoresList();
+				loadRecordsList();
 
-                // 檢查管理員帳號是否存在，不存在則創建
-                const adminCheck = await window.dbManager.client
-                    .from('admins')
-                    .select('id')
-                    .eq('username', 'admin')
-                    .single();
-                
-                if (adminCheck.error && adminCheck.error.code === 'PGRST116') {
-                    // 管理員帳號不存在，創建默認管理員
-                    await window.dbManager.client
-                        .from('admins')
-                        .insert([{ username: 'admin', password: 'admin123' }]);
-                    showMessage('data-msg', '✅ 所有遊戲紀錄已刪除，並創建默認管理員帳號！', true);
-                } else {
-                    showMessage('data-msg', '✅ 所有遊戲紀錄已成功刪除！', true);
-                }
-                
-                // 更新所有列表
-                updateDataStatus();
-                loadDashboardStats();
-                loadUserTotalScoresList();
-                loadRecordsList();
-
-            } catch (err) {
-                showMessage('data-msg', `❌ 操作失敗：${err.message}`, false);
-                console.error("Delete All Records Error:", err);
-                updateDataStatus();
-            }
-        }
+			} catch (err) {
+				showMessage('data-msg', `❌ 操作失敗：${err.message}`, false);
+				console.error("Delete All Records Error:", err);
+				updateDataStatus();
+			}
+		}
 
         // 加載儀表板統計
         async function loadDashboardStats() {
