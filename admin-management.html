@@ -38,349 +38,299 @@
         .data-table th::after { content: " ↕"; font-size: 12px; opacity: 0.5; }
         .data-table tr:hover { background: #f8fafc; }
         .msg-box { padding: 10px; border-radius: 4px; margin-bottom: 20px; display: none; }
-        .success-msg { background: #f0fdf4; color: #16a34a; }
-        .error-msg { background: #fef2f2; color: #dc2626; }
-        .loading { text-align: center; padding: 20px; color: #64748b; }
-        .stats-card { background: #f1f5f9; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 20px; flex-wrap: wrap; }
-        .stat-item { flex: 1; min-width: 200px; background: white; padding: 15px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .stat-item h3 { font-size: 16px; color: #64748b; margin-bottom: 10px; }
-        .stat-item .value { font-size: 24px; font-weight: bold; color: #dc2626; }
-        .warning-box { background: #fffbeb; border: 1px solid #fbbf24; padding: 15px; border-radius: 6px; margin-bottom: 20px; color: #92400e; }
-        .csv-template { margin-top: 10px; font-size: 14px; color: #64748b; }
-        .csv-template a { color: #2563eb; text-decoration: none; }
-        .batch-result, .export-result { margin-top: 15px; padding: 10px; border-radius: 4px; display: none; }
-        .success-result { background: #f0fdf4; color: #16a34a; }
-        .error-result { background: #fef2f2; color: #dc2626; }
-        .export-item { margin: 10px 0; padding: 10px; border: 1px solid #e2e8f0; border-radius: 4px; }
-        .export-btn { margin-top: 5px; padding: 8px 16px; font-size: 14px; }
+        .success-msg { background: #f0fdf4; color: #16a34a; display: block; }
+        .error-msg { background: #fef2f2; color: #dc2626; display: block; }
+        .loading { color: #2563eb; font-style: italic; }
+        .result-box { margin: 15px 0; padding: 10px; border-radius: 4px; }
     </style>
+    <!-- Supabase SDK (Single Instance) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">管理員後台</div>
-            <button class="btn-logout" onclick="adminLogout()">登出</button>
+            <div class="logo">🎮 QR碼遊戲管理系統</div>
+            <button class="btn-logout" onclick="logout()">🔒 登出</button>
         </div>
 
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('user-scores')">用戶總分統計</button>
-            <button class="tab-btn" onclick="switchTab('games')">遊戲管理</button>
-            <button class="tab-btn" onclick="switchTab('users')">用戶管理</button>
-            <button class="tab-btn" onclick="switchTab('records')">遊戲紀錄</button>
-            <button class="tab-btn" onclick="switchTab('data-management')">數據管理</button>
-            <button class="tab-btn" onclick="switchTab('data-export')">數據導出</button>
+            <button class="tab-btn active" onclick="switchTab('dashboard')">📊 儀表板</button>
+            <button class="tab-btn" onclick="switchTab('game-management')">🎲 遊戲管理</button>
+            <button class="tab-btn" onclick="switchTab('user-management')">👥 用戶管理</button>
+            <button class="tab-btn" onclick="switchTab('record-management')">📜 紀錄管理</button>
+            <button class="tab-btn" onclick="switchTab('data-management')">🗂️ 數據管理</button>
         </div>
 
-        <!-- 用戶總分統計標籤 -->
-        <div id="user-scores" class="tab-content active">
-            <h2>用戶總分統計</h2>
-            <div class="stats-card">
-                <div class="stat-item">
-                    <h3>總註冊用戶數</h3>
-                    <div id="total-users" class="value">0</div>
+        <!-- 儀表板 -->
+        <div id="dashboard" class="tab-content active">
+            <h2>📊 系統儀表板</h2>
+            <div id="data-status" class="msg-box"></div>
+            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 30px 0;">
+                <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 36px; font-weight: bold; color: #dc2626;">
+                        <span id="total-users">0</span>
+                    </div>
+                    <div style="margin-top: 10px; color: #64748b;">總用戶數</div>
                 </div>
-                <div class="stat-item">
-                    <h3>總遊戲數</h3>
-                    <div id="total-games" class="value">0</div>
+                <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 36px; font-weight: bold; color: #2563eb;">
+                        <span id="total-games">0</span>
+                    </div>
+                    <div style="margin-top: 10px; color: #64748b;">總遊戲數</div>
                 </div>
-                <div class="stat-item">
-                    <h3>總遊戲紀錄數</h3>
-                    <div id="total-records" class="value">0</div>
+                <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 36px; font-weight: bold; color: #16a34a;">
+                        <span id="total-records">0</span>
+                    </div>
+                    <div style="margin-top: 10px; color: #64748b;">總遊戲紀錄</div>
                 </div>
-                <div class="stat-item">
-                    <h3>全站總分最高</h3>
-                    <div id="highest-total-score" class="value">0</div>
+                <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 36px; font-weight: bold; color: #ca8a04;">
+                        <span id="highest-total-score">0</span>
+                    </div>
+                    <div style="margin-top: 10px; color: #64748b;">最高總分</div>
                 </div>
             </div>
 
-            <div id="score-msg" class="msg-box"></div>
-            <div id="user-scores-list" class="loading">加載用戶總分數據中...</div>
+            <h3>🏆 用戶積分排名</h3>
+            <div id="user-scores-list" class="data-container"></div>
         </div>
 
-        <!-- 遊戲管理標籤 -->
-        <div id="games" class="tab-content">
-            <h2>遊戲管理</h2>
+        <!-- 遊戲管理 -->
+        <div id="game-management" class="tab-content">
+            <h2>🎲 遊戲管理</h2>
+            <div id="game-msg" class="msg-box"></div>
             
-            <!-- 單個新增遊戲 -->
-            <h3 style="margin-bottom: 15px;">新增單個遊戲</h3>
             <div class="add-form">
+                <h3>新增單個遊戲</h3>
                 <div class="form-group">
-                    <label>遊戲代碼 (例如：GAME001)</label>
-                    <input id="game-code" type="text" placeholder="請輸入遊戲代碼">
+                    <label for="game-code">遊戲代碼 *</label>
+                    <input type="text" id="game-code" placeholder="例如：GAME001">
                 </div>
                 <div class="form-group">
-                    <label>遊戲名稱</label>
-                    <input id="game-name" type="text" placeholder="請輸入遊戲名稱">
+                    <label for="game-name">遊戲名稱 *</label>
+                    <input type="text" id="game-name" placeholder="例如：闖關遊戲1">
                 </div>
                 <div class="form-group">
-                    <label>最高分數</label>
-                    <input id="game-max-score" type="number" placeholder="請輸入最高分數" min="0">
+                    <label for="game-max-score">最高分數</label>
+                    <input type="number" id="game-max-score" placeholder="預設：0" min="0">
                 </div>
                 <div class="form-group">
-                    <label>默認分數</label>
-                    <input id="game-default-score" type="number" placeholder="請輸入默認分數" min="0">
+                    <label for="game-default-score">預設分數</label>
+                    <input type="number" id="game-default-score" placeholder="預設：0" min="0">
                 </div>
                 <button class="btn-submit" onclick="addNewGame()">新增遊戲</button>
             </div>
 
-            <!-- CSV批量導入遊戲 -->
-            <h3 style="margin: 30px 0 15px 0;">批量導入遊戲 (CSV)</h3>
             <div class="batch-form">
+                <h3>📤 批量導入遊戲 (CSV)</h3>
                 <div class="form-group">
-                    <label>選擇CSV文件</label>
+                    <label for="game-csv-file">選擇CSV文件</label>
                     <input type="file" id="game-csv-file" class="file-input" accept=".csv">
-                    <div class="csv-template">
-                        CSV格式範例：<br>
-                        game_code,game_name,max_score,default_score<br>
-                        GAME001,測試遊戲1,1000,500<br>
-                        GAME002,測試遊戲2,2000,1000
-                    </div>
                 </div>
-                <button class="btn-batch" onclick="importGamesFromCSV()">批量導入遊戲</button>
-                <div id="game-batch-result" class="batch-result"></div>
+                <button class="btn-batch" onclick="importGamesFromCSV()">批量導入</button>
+                <div id="game-batch-result" class="result-box"></div>
             </div>
 
-            <div id="game-msg" class="msg-box"></div>
-            <div id="games-list" class="loading">加載遊戲列表中...</div>
+            <h3>遊戲列表</h3>
+            <div id="games-list" class="data-container"></div>
         </div>
 
-        <!-- 用戶管理標籤 -->
-        <div id="users" class="tab-content">
-            <h2>用戶管理</h2>
+        <!-- 用戶管理 -->
+        <div id="user-management" class="tab-content">
+            <h2>👥 用戶管理</h2>
+            <div id="user-msg" class="msg-box"></div>
             
-            <!-- 單個新增用戶 -->
-            <h3 style="margin-bottom: 15px;">新增單個用戶</h3>
             <div class="add-form">
+                <h3>新增單個用戶</h3>
                 <div class="form-group">
-                    <label>用戶名</label>
-                    <input id="user-username" type="text" placeholder="請輸入用戶名">
+                    <label for="user-username">用戶名 *</label>
+                    <input type="text" id="user-username" placeholder="例如：user001">
                 </div>
                 <button class="btn-submit" onclick="addNewUser()">新增用戶</button>
             </div>
 
-            <!-- CSV批量導入用戶 -->
-            <h3 style="margin: 30px 0 15px 0;">批量導入用戶 (CSV)</h3>
             <div class="batch-form">
+                <h3>📤 批量導入用戶 (CSV)</h3>
                 <div class="form-group">
-                    <label>選擇CSV文件</label>
+                    <label for="user-csv-file">選擇CSV文件</label>
                     <input type="file" id="user-csv-file" class="file-input" accept=".csv">
-                    <div class="csv-template">
-                        CSV格式範例：<br>
-                        username<br>
-                        user001<br>
-                        user002<br>
-                        user003
-                    </div>
                 </div>
-                <button class="btn-batch" onclick="importUsersFromCSV()">批量導入用戶</button>
-                <div id="user-batch-result" class="batch-result"></div>
+                <button class="btn-batch" onclick="importUsersFromCSV()">批量導入</button>
+                <div id="user-batch-result" class="result-box"></div>
             </div>
 
-            <div id="user-msg" class="msg-box"></div>
-            <div id="users-list" class="loading">加載用戶列表中...</div>
+            <h3>用戶列表</h3>
+            <div id="users-list" class="data-container"></div>
         </div>
 
-        <!-- 遊戲紀錄標籤 (新增篩選功能) -->
-        <div id="records" class="tab-content">
-            <h2>遊戲紀錄管理</h2>
-            
-            <!-- 篩選表單 -->
+        <!-- 紀錄管理 -->
+        <div id="record-management" class="tab-content">
+            <h2>📜 遊戲紀錄管理</h2>
             <div class="filter-form">
-                <h3 style="margin-bottom: 15px;">篩選與排序</h3>
+                <h3>🔍 過濾紀錄</h3>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>用戶名篩選</label>
-                        <input type="text" id="filter-username" placeholder="輸入用戶名關鍵字">
+                        <label for="filter-username">用戶名</label>
+                        <input type="text" id="filter-username" placeholder="輸入用戶名過濾">
                     </div>
                     <div class="form-group">
-                        <label>遊戲名篩選</label>
-                        <input type="text" id="filter-gamename" placeholder="輸入遊戲名關鍵字">
+                        <label for="filter-gamecode">遊戲代碼</label>
+                        <input type="text" id="filter-gamecode" placeholder="輸入遊戲代碼過濾">
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>分數範圍 (最小值)</label>
-                        <input type="number" id="filter-score-min" placeholder="0" min="0">
-                    </div>
-                    <div class="form-group">
-                        <label>分數範圍 (最大值)</label>
-                        <input type="number" id="filter-score-max" placeholder="9999" min="0">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>排序方式</label>
-                        <select id="sort-by">
-                            <option value="scanned_at_desc">時間 (最新在前)</option>
-                            <option value="scanned_at_asc">時間 (最舊在前)</option>
-                            <option value="score_desc">分數 (從高到低)</option>
-                            <option value="score_asc">分數 (從低到高)</option>
-                            <option value="username_asc">用戶名 (A-Z)</option>
-                            <option value="gamename_asc">遊戲名 (A-Z)</option>
-                        </select>
-                    </div>
-                </div>
-                <button class="btn-submit" onclick="filterRecords()">應用篩選與排序</button>
-                <button class="btn-submit" onclick="resetFilter()" style="margin-left: 10px;">重置篩選條件</button>
+                <button class="btn-submit" onclick="filterRecords()">查詢紀錄</button>
             </div>
 
-            <div id="records-list" class="loading">加載遊戲紀錄中...</div>
-        </div>
-
-        <!-- 數據管理標籤 (修改為刪除所有紀錄) -->
-        <div id="data-management" class="tab-content">
-            <h2>系統數據管理</h2>
-            <div class="warning-box">
-                <strong>⚠️ 警告：</strong> 以下操作將刪除系統內所有遊戲紀錄，請謹慎操作！刪除後將確保管理員帳號存在。
-            </div>
-            
-            <button class="btn-danger" onclick="confirmDeleteAllRecords()">刪除所有遊戲紀錄</button>
-            <div id="data-msg" class="msg-box"></div>
-            <div id="data-status" class="loading">數據狀態：正常</div>
-        </div>
-
-        <!-- 數據導出標籤 (新增) -->
-        <div id="data-export" class="tab-content">
-            <h2>數據導出 (CSV)</h2>
             <div class="export-form">
-                <div class="export-item">
-                    <h3>用戶總分統計數據</h3>
-                    <p>導出所有用戶的總分、遊戲次數等統計信息</p>
-                    <button class="btn-export export-btn" onclick="exportUserTotalScores()">導出CSV文件</button>
-                </div>
-                <div class="export-item">
-                    <h3>遊戲管理數據</h3>
-                    <p>導出所有遊戲的基本信息</p>
-                    <button class="btn-export export-btn" onclick="exportGames()">導出CSV文件</button>
-                </div>
-                <div class="export-item">
-                    <h3>用戶管理數據</h3>
-                    <p>導出所有用戶的基本信息</p>
-                    <button class="btn-export export-btn" onclick="exportUsers()">導出CSV文件</button>
-                </div>
-                <div class="export-item">
-                    <h3>遊戲紀錄數據</h3>
-                    <p>導出所有遊戲紀錄的詳細信息</p>
-                    <button class="btn-export export-btn" onclick="exportGameRecords()">導出CSV文件</button>
-                </div>
-                <div id="export-result" class="export-result"></div>
+                <h3>📥 匯出紀錄</h3>
+                <button class="btn-export" onclick="exportAllRecords()">匯出所有紀錄</button>
+                <button class="btn-export" onclick="exportFilteredRecords()">匯出過濾後紀錄</button>
+            </div>
+
+            <div id="records-list" class="data-container"></div>
+        </div>
+
+        <!-- 數據管理 -->
+        <div id="data-management" class="tab-content">
+            <h2>🗂️ 數據管理</h2>
+            <div id="data-msg" class="msg-box"></div>
+            
+            <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #dc2626;">⚠️ 危險操作</h3>
+                <p>以下操作將永久刪除數據，請謹慎操作！</p>
+                <button class="btn-danger" onclick="confirmDeleteAllRecords()">🗑️ 刪除所有遊戲紀錄</button>
+            </div>
+
+            <div class="export-form">
+                <h3>📥 完整數據匯出</h3>
+                <button class="btn-export" onclick="exportAllData()">匯出所有數據 (CSV)</button>
             </div>
         </div>
     </div>
 
-    <!-- JS加載 -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/config.js"></script>
-    <script src="js/auth.js"></script>
     <script>
-        // 全局變量：存儲原始遊戲紀錄數據
-        let allGameRecords = [];
+        // 全局Supabase實例 (單例模式 - 解決多實例警告)
+        let supabaseClient = null;
         
-        // 頁面加載時檢查管理員權限
+        // 初始化Supabase
+        function initSupabase() {
+            if (supabaseClient) return supabaseClient;
+            
+            // 替換為你的Supabase URL和Key
+            const SUPABASE_URL = "https://vphihqysgdhdnuszybib.supabase.co";
+            const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwaGlocXlzZ2RoZG51c3p5YmliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTAyNzc4MDcsImV4cCI6MjAyNTg1MzgwN30.XXXX"; // 替換為真實Key
+            
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            return supabaseClient;
+        }
+
+        // 頁面加載初始化
         window.onload = async function() {
-            if (!checkAdmin()) return;
-            await window.dbManager.init();
+            // 初始化Supabase
+            initSupabase();
+            
+            // 綁定全局DB管理器
+            window.dbManager = {
+                client: supabaseClient,
+                async init() {
+                    try {
+                        const { data, error } = await this.client.from('users').select('id').limit(1);
+                        return !error;
+                    } catch (err) {
+                        console.error("DB Init Error:", err);
+                        return false;
+                    }
+                }
+            };
+
+            // 加載初始數據
+            updateDataStatus();
             loadDashboardStats();
             loadUserTotalScoresList();
+            loadGamesList();
+            loadUsersList();
+            loadRecordsList();
         };
-
-        // 管理員登出
-        function adminLogout() {
-            localStorage.removeItem('qrGameUser');
-            window.currentUser = null;
-            alert("✅ 管理員已成功登出！");
-            window.location.href = "admin-login.html";
-        }
 
         // 切換標籤
         function switchTab(tabId) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            document.querySelector(`.tab-btn[onclick="switchTab('${tabId}')"]`).classList.add('active');
-            document.getElementById(tabId).classList.add('active');
+            // 隱藏所有標籤
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
             
-            if (tabId === 'games' && document.getElementById('games-list').classList.contains('loading')) {
-                loadGamesList();
-            }
-            if (tabId === 'users' && document.getElementById('users-list').classList.contains('loading')) {
-                loadUsersList();
-            }
-            if (tabId === 'records' && document.getElementById('records-list').classList.contains('loading')) {
-                loadRecordsList();
-            }
-            if (tabId === 'user-scores' && document.getElementById('user-scores-list').classList.contains('loading')) {
-                loadUserTotalScoresList();
-            }
-            if (tabId === 'data-management') {
-                updateDataStatus();
-            }
+            // 顯示當前標籤
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
         }
 
         // 顯示消息
-        function showMessage(elementId, text, isSuccess = true) {
-            const msgBox = document.getElementById(elementId);
-            msgBox.textContent = text;
-            msgBox.className = `msg-box ${isSuccess ? 'success-msg' : 'error-msg'}`;
-            msgBox.style.display = 'block';
+        function showMessage(elementId, message, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            element.className = `msg-box ${isSuccess ? 'success-msg' : 'error-msg'}`;
+            element.textContent = message;
+            
+            // 3秒後隱藏
             setTimeout(() => {
-                msgBox.style.display = 'none';
+                element.style.display = 'none';
             }, 3000);
         }
 
-        // 顯示批量/導出結果
-        function showResult(elementId, text, isSuccess = true) {
-            const resultBox = document.getElementById(elementId);
-            resultBox.textContent = text;
-            resultBox.className = `${elementId.includes('export') ? 'export-result' : 'batch-result'} ${isSuccess ? 'success-result' : 'error-result'}`;
-            resultBox.style.display = 'block';
-            setTimeout(() => {
-                resultBox.style.display = 'none';
-            }, 5000);
+        // 顯示結果
+        function showResult(elementId, message, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            element.className = `result-box ${isSuccess ? 'success-msg' : 'error-msg'}`;
+            element.textContent = message;
+        }
+
+        // 登出
+        function logout() {
+            if (confirm('確定要登出嗎？')) {
+                window.location.href = 'login.html';
+            }
         }
 
         // 解析CSV文件
-        function parseCSV(file) {
+        async function parseCSV(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
+                reader.readAsText(file, 'UTF-8');
+                
                 reader.onload = function(e) {
-                    const text = e.target.result;
-                    const lines = text.trim().split('\n');
+                    const content = e.target.result;
+                    const lines = content.split('\n').filter(line => line.trim());
                     
-                    // 移除空白行
-                    const validLines = lines.filter(line => line.trim() !== '');
-                    
-                    if (validLines.length === 0) {
-                        reject("CSV文件為空");
+                    if (lines.length === 0) {
+                        reject(new Error('CSV文件為空'));
                         return;
                     }
-
-                    // 解析標題行
-                    const headers = validLines[0].split(',').map(header => header.trim());
+                    
+                    // 解析標題
+                    const headers = lines[0].split(',').map(header => header.trim().toLowerCase());
+                    
+                    // 解析行
                     const rows = [];
-
-                    // 解析數據行
-                    for (let i = 1; i < validLines.length; i++) {
-                        const line = validLines[i].trim();
-                        if (line === '') continue;
-                        
-                        const values = line.split(',').map(value => value.trim());
+                    for (let i = 1; i < lines.length; i++) {
+                        const values = lines[i].split(',');
                         const row = {};
                         
                         headers.forEach((header, index) => {
-                            row[header] = values[index] || '';
+                            row[header] = values[index] ? values[index].trim() : '';
                         });
                         
                         rows.push(row);
                     }
-
+                    
                     resolve({ headers, rows });
                 };
                 
                 reader.onerror = function() {
-                    reject("讀取CSV文件失敗");
+                    reject(new Error('無法讀取CSV文件'));
                 };
-                
-                reader.readAsText(file);
             });
         }
 
@@ -432,82 +382,81 @@
             }
         }
 
-// 完整修复：删除所有游戏记录 + 时区正确 + 强制删除生效
-async function confirmDeleteAllRecords() {
-    if (!confirm('⚠️ 確定要刪除所有遊戲紀錄嗎？此操作不可撤銷！')) {
-        return;
-    }
+        // 修正：刪除所有遊戲紀錄 (解決404 + 時區問題)
+        async function confirmDeleteAllRecords() {
+            if (!confirm('⚠️ 確定要刪除所有遊戲紀錄嗎？此操作不可撤銷！')) {
+                return;
+            }
 
-    const dataMsg = document.getElementById('data-msg');
-    const dataStatus = document.getElementById('data-status');
-    
-    try {
-        const initOk = await window.dbManager.init();
-        if (!initOk) {
-            showMessage('data-msg', '❌ 資料庫連接失敗', false);
-            return;
+            const dataMsg = document.getElementById('data-msg');
+            const dataStatus = document.getElementById('data-status');
+            
+            try {
+                const initOk = await window.dbManager.init();
+                if (!initOk) {
+                    showMessage('data-msg', '❌ 資料庫連接失敗', false);
+                    return;
+                }
+
+                dataStatus.innerHTML = '<div class="loading">正在清除所有數據...</div>';
+
+                // 1. 刪除遊戲紀錄 (可靠刪除)
+                await window.dbManager.client
+                    .from('game_records')
+                    .delete()
+                    .neq('id', ''); // 刪除所有記錄 (避免gt判斷錯誤)
+
+                // 2. 安全刪除user_total_scores (先檢查表是否存在)
+                try {
+                    await window.dbManager.client
+                        .from('user_total_scores')
+                        .delete()
+                        .neq('id', '');
+                } catch (err) {
+                    // 如果表不存在，跳過錯誤
+                    if (!err.message.includes('Could not find the table')) {
+                        throw err;
+                    }
+                    console.log("user_total_scores table not found, skipping delete");
+                }
+
+                // 3. 插入正確時區的時間 (UTC+8)
+                const now = new Date();
+                // 計算UTC+8時間 (解決時區偏差)
+                const utc8Time = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+                const isoString = utc8Time.toISOString().slice(0, 19).replace('T', ' ');
+
+                // 4. 重新插入默認管理員 (帶正確時區)
+                const adminCheck = await window.dbManager.client
+                    .from('admins')
+                    .select('id')
+                    .eq('username', 'admin');
+
+                if (!adminCheck.data || adminCheck.data.length === 0) {
+                    await window.dbManager.client
+                        .from('admins')
+                        .insert([{
+                            username: 'admin',
+                            password: 'admin123',
+                            created_at: isoString
+                        }]);
+                }
+
+                // 成功提示
+                showMessage('data-msg', '✅ 所有數據已清空！時間已修正為東八區', true);
+
+                // 刷新頁面數據
+                updateDataStatus();
+                loadDashboardStats();
+                loadUserTotalScoresList();
+                loadRecordsList();
+
+            } catch (err) {
+                console.error("刪除錯誤：", err);
+                showMessage('data-msg', `❌ 失敗：${err.message}`, false);
+                updateDataStatus();
+            }
         }
-
-        dataStatus.innerHTML = '<div class="loading">正在清除所有數據...</div>';
-
-        // ==============================================
-        // ✅ 修复 1：强制删除所有记录（真正生效）
-        // ==============================================
-        // 删除游戏记录
-        await window.dbManager.client
-            .from('game_records')
-            .delete()
-            .gt('id', '00000000-0000-0000-0000-000000000000')
-            .throwOnError();
-
-        // 删除用户总分（如果有）
-        await window.dbManager.client
-            .from('user_total_scores')
-            .delete()
-            .gt('id', '00000000-0000-0000-0000-000000000000')
-            .throwOnError();
-
-        // ==============================================
-        // ✅ 修复 2：插入当前正确时区的时间（东八区）
-        // ==============================================
-        const now = new Date();
-        const utc8 = new Date(now.getTime() + (8 * 60 * 60 * 1000)).toISOString();
-
-        // ==============================================
-        // ✅ 修复 3：重新插入默认管理员
-        // ==============================================
-        const adminCheck = await window.dbManager.client
-            .from('admins')
-            .select('id')
-            .eq('username', 'admin');
-
-        if (!adminCheck.data || adminCheck.data.length === 0) {
-            await window.dbManager.client
-                .from('admins')
-                .insert([{
-                    username: 'admin',
-                    password: 'admin123',
-                    created_at: utc8
-                }]);
-        }
-
-        // ==============================================
-        // ✅ 成功提示
-        // ==============================================
-        showMessage('data-msg', '✅ 所有數據已清空！時間已修正為東八區', true);
-
-        // 刷新页面数据
-        updateDataStatus();
-        loadDashboardStats();
-        loadUserTotalScoresList();
-        loadRecordsList();
-
-    } catch (err) {
-        console.error("刪除錯誤：", err);
-        showMessage('data-msg', `❌ 失敗：${err.message}`, false);
-        updateDataStatus();
-    }
-}
 
         // 加載儀表板統計
         async function loadDashboardStats() {
@@ -640,6 +589,371 @@ async function confirmDeleteAllRecords() {
             }
         }
 
+        // 加載遊戲列表
+        async function loadGamesList() {
+            const gamesList = document.getElementById('games-list');
+            
+            try {
+                const initOk = await window.dbManager.init();
+                if (!initOk) {
+                    gamesList.innerHTML = '<div class="error-msg" style="display:block">❌ 無法加載數據：資料庫連接失敗</div>';
+                    return;
+                }
+
+                const { data: games } = await window.dbManager.client
+                    .from('games')
+                    .select('*')
+                    .order('game_code');
+                
+                if (!games || games.length === 0) {
+                    gamesList.innerHTML = '<div class="loading">暫無遊戲數據</div>';
+                    return;
+                }
+
+                let tableHTML = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>遊戲代碼</th>
+                                <th>遊戲名稱</th>
+                                <th>最高分數</th>
+                                <th>預設分數</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                games.forEach(game => {
+                    tableHTML += `
+                        <tr>
+                            <td>${game.game_code}</td>
+                            <td>${game.game_name}</td>
+                            <td>${game.max_score || 0}</td>
+                            <td>${game.default_score || 0}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHTML += `
+                        </tbody>
+                    </table>
+                `;
+
+                gamesList.innerHTML = tableHTML;
+
+            } catch (err) {
+                gamesList.innerHTML = `<div class="error-msg" style="display:block">❌ 加載失敗：${err.message}</div>`;
+                console.error("Load Games Error:", err);
+            }
+        }
+
+        // 加載用戶列表
+        async function loadUsersList() {
+            const usersList = document.getElementById('users-list');
+            
+            try {
+                const initOk = await window.dbManager.init();
+                if (!initOk) {
+                    usersList.innerHTML = '<div class="error-msg" style="display:block">❌ 無法加載數據：資料庫連接失敗</div>';
+                    return;
+                }
+
+                const { data: users } = await window.dbManager.client
+                    .from('users')
+                    .select('*')
+                    .order('username');
+                
+                if (!users || users.length === 0) {
+                    usersList.innerHTML = '<div class="loading">暫無用戶數據</div>';
+                    return;
+                }
+
+                let tableHTML = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>用戶ID</th>
+                                <th>用戶名</th>
+                                <th>創建時間</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                users.forEach(user => {
+                    // 修正時區顯示
+                    let createdAt = user.created_at || '未知';
+                    if (createdAt !== '未知') {
+                        const date = new Date(createdAt);
+                        // 轉換為UTC+8
+                        date.setHours(date.getHours() + 8);
+                        createdAt = date.toLocaleString('zh-TW');
+                    }
+
+                    tableHTML += `
+                        <tr>
+                            <td>${user.id}</td>
+                            <td>${user.username}</td>
+                            <td>${createdAt}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHTML += `
+                        </tbody>
+                    </table>
+                `;
+
+                usersList.innerHTML = tableHTML;
+
+            } catch (err) {
+                usersList.innerHTML = `<div class="error-msg" style="display:block">❌ 加載失敗：${err.message}</div>`;
+                console.error("Load Users Error:", err);
+            }
+        }
+
+        // 加載紀錄列表
+        async function loadRecordsList(filter = {}) {
+            const recordsList = document.getElementById('records-list');
+            
+            try {
+                const initOk = await window.dbManager.init();
+                if (!initOk) {
+                    recordsList.innerHTML = '<div class="error-msg" style="display:block">❌ 無法加載數據：資料庫連接失敗</div>';
+                    return;
+                }
+
+                let query = window.dbManager.client
+                    .from('game_records')
+                    .select(`
+                        id, 
+                        score, 
+                        created_at, 
+                        users(username), 
+                        games(game_name, game_code)
+                    `)
+                    .order('created_at', { ascending: false });
+
+                // 應用過濾條件
+                if (filter.username) {
+                    query = query.eq('users.username', filter.username);
+                }
+                if (filter.gamecode) {
+                    query = query.eq('games.game_code', filter.gamecode);
+                }
+
+                const { data: records } = await query;
+                
+                if (!records || records.length === 0) {
+                    recordsList.innerHTML = '<div class="loading">暫無遊戲紀錄</div>';
+                    return;
+                }
+
+                let tableHTML = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>紀錄ID</th>
+                                <th>用戶名</th>
+                                <th>遊戲名稱</th>
+                                <th>遊戲代碼</th>
+                                <th>分數</th>
+                                <th>創建時間</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                records.forEach(record => {
+                    // 修正時區顯示
+                    let createdAt = record.created_at || '未知';
+                    if (createdAt !== '未知') {
+                        const date = new Date(createdAt);
+                        date.setHours(date.getHours() + 8);
+                        createdAt = date.toLocaleString('zh-TW');
+                    }
+
+                    tableHTML += `
+                        <tr>
+                            <td>${record.id}</td>
+                            <td>${record.users?.username || '未知'}</td>
+                            <td>${record.games?.game_name || '未知'}</td>
+                            <td>${record.games?.game_code || '未知'}</td>
+                            <td>${record.score || 0}</td>
+                            <td>${createdAt}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHTML += `
+                        </tbody>
+                    </table>
+                `;
+
+                recordsList.innerHTML = tableHTML;
+
+            } catch (err) {
+                recordsList.innerHTML = `<div class="error-msg" style="display:block">❌ 加載失敗：${err.message}</div>`;
+                console.error("Load Records Error:", err);
+            }
+        }
+
+        // 過濾紀錄
+        function filterRecords() {
+            const username = document.getElementById('filter-username').value.trim();
+            const gamecode = document.getElementById('filter-gamecode').value.trim();
+            
+            loadRecordsList({
+                username: username || undefined,
+                gamecode: gamecode || undefined
+            });
+        }
+
+        // 匯出所有紀錄
+        async function exportAllRecords() {
+            await exportRecords({});
+        }
+
+        // 匯出過濾後紀錄
+        async function exportFilteredRecords() {
+            const username = document.getElementById('filter-username').value.trim();
+            const gamecode = document.getElementById('filter-gamecode').value.trim();
+            
+            await exportRecords({
+                username: username || undefined,
+                gamecode: gamecode || undefined
+            });
+        }
+
+        // 匯出紀錄
+        async function exportRecords(filter = {}) {
+            try {
+                const initOk = await window.dbManager.init();
+                if (!initOk) {
+                    showMessage('data-msg', '❌ 資料庫連接失敗', false);
+                    return;
+                }
+
+                let query = window.dbManager.client
+                    .from('game_records')
+                    .select(`
+                        id, 
+                        score, 
+                        created_at, 
+                        users(username), 
+                        games(game_name, game_code)
+                    `)
+                    .order('created_at', { ascending: false });
+
+                if (filter.username) {
+                    query = query.eq('users.username', filter.username);
+                }
+                if (filter.gamecode) {
+                    query = query.eq('games.game_code', filter.gamecode);
+                }
+
+                const { data: records } = await query;
+                
+                if (!records || records.length === 0) {
+                    showMessage('data-msg', '❌ 沒有可匯出的紀錄', false);
+                    return;
+                }
+
+                // 生成CSV內容
+                let csvContent = "紀錄ID,用戶名,遊戲名稱,遊戲代碼,分數,創建時間\n";
+                
+                records.forEach(record => {
+                    // 修正時區
+                    let createdAt = record.created_at || '未知';
+                    if (createdAt !== '未知') {
+                        const date = new Date(createdAt);
+                        date.setHours(date.getHours() + 8);
+                        createdAt = date.toLocaleString('zh-TW');
+                    }
+
+                    const row = [
+                        record.id,
+                        record.users?.username || '未知',
+                        record.games?.game_name || '未知',
+                        record.games?.game_code || '未知',
+                        record.score || 0,
+                        createdAt
+                    ].map(field => `"${field}"`).join(',');
+                    
+                    csvContent += row + "\n";
+                });
+
+                // 下載CSV
+                const fileName = `遊戲紀錄_${new Date().toLocaleString('zh-TW').replace(/[/: ]/g, '-')}.csv`;
+                downloadCSV(csvContent, fileName);
+
+                showMessage('data-msg', '✅ 紀錄匯出成功！', true);
+
+            } catch (err) {
+                console.error("Export Records Error:", err);
+                showMessage('data-msg', `❌ 匯出失敗：${err.message}`, false);
+            }
+        }
+
+        // 匯出所有數據
+        async function exportAllData() {
+            try {
+                const initOk = await window.dbManager.init();
+                if (!initOk) {
+                    showMessage('data-msg', '❌ 資料庫連接失敗', false);
+                    return;
+                }
+
+                // 获取所有数据
+                const [users, games, records] = await Promise.all([
+                    window.dbManager.client.from('users').select('*').order('username'),
+                    window.dbManager.client.from('games').select('*').order('game_code'),
+                    window.dbManager.client.from('game_records').select('*').order('created_at')
+                ]);
+
+                // 生成CSV内容
+                let csvContent = "=== 用戶數據 ===\n";
+                csvContent += "用戶ID,用戶名,創建時間\n";
+                users.data.forEach(user => {
+                    let createdAt = user.created_at || '未知';
+                    if (createdAt !== '未知') {
+                        const date = new Date(createdAt);
+                        date.setHours(date.getHours() + 8);
+                        createdAt = date.toLocaleString('zh-TW');
+                    }
+                    csvContent += `"${user.id}","${user.username}","${createdAt}"\n`;
+                });
+
+                csvContent += "\n=== 遊戲數據 ===\n";
+                csvContent += "遊戲ID,遊戲代碼,遊戲名稱,最高分數,預設分數\n";
+                games.data.forEach(game => {
+                    csvContent += `"${game.id}","${game.game_code}","${game.game_name}","${game.max_score || 0}","${game.default_score || 0}"\n`;
+                });
+
+                csvContent += "\n=== 遊戲紀錄 ===\n";
+                csvContent += "紀錄ID,用戶ID,遊戲ID,分數,創建時間\n";
+                records.data.forEach(record => {
+                    let createdAt = record.created_at || '未知';
+                    if (createdAt !== '未知') {
+                        const date = new Date(createdAt);
+                        date.setHours(date.getHours() + 8);
+                        createdAt = date.toLocaleString('zh-TW');
+                    }
+                    csvContent += `"${record.id}","${record.user_id}","${record.game_id}","${record.score || 0}","${createdAt}"\n`;
+                });
+
+                // 下载CSV
+                const fileName = `完整數據_${new Date().toLocaleString('zh-TW').replace(/[/: ]/g, '-')}.csv`;
+                downloadCSV(csvContent, fileName);
+
+                showMessage('data-msg', '✅ 所有數據匯出成功！', true);
+
+            } catch (err) {
+                console.error("Export All Data Error:", err);
+                showMessage('data-msg', `❌ 匯出失敗：${err.message}`, false);
+            }
+        }
+
         // 新增單個遊戲
         async function addNewGame() {
             const gameCode = document.getElementById('game-code').value.trim();
@@ -663,13 +977,19 @@ async function confirmDeleteAllRecords() {
             }
 
             try {
+                // 插入帶正確時區的數據
+                const now = new Date();
+                const utc8Time = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+                const isoString = utc8Time.toISOString().slice(0, 19).replace('T', ' ');
+
                 const { error } = await window.dbManager.client
                     .from('games')
                     .insert([{
                         game_code: gameCode,
                         game_name: gameName,
                         max_score: maxScore,
-                        default_score: defaultScore
+                        default_score: defaultScore,
+                        created_at: isoString // 新增時區修正的時間戳
                     }]);
 
                 if (error) throw new Error(error.message);
@@ -722,6 +1042,9 @@ async function confirmDeleteAllRecords() {
                 // 準備導入數據
                 const gamesToImport = [];
                 const errors = [];
+                const now = new Date();
+                const utc8Time = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+                const isoString = utc8Time.toISOString().slice(0, 19).replace('T', ' ');
 
                 rows.forEach((row, index) => {
                     const rowNum = index + 2; // 標題行+當前行
@@ -744,7 +1067,8 @@ async function confirmDeleteAllRecords() {
                         game_code: row.game_code,
                         game_name: row.game_name,
                         max_score: maxScore,
-                        default_score: defaultScore
+                        default_score: defaultScore,
+                        created_at: isoString // 統一時區
                     });
                 });
 
@@ -800,9 +1124,17 @@ async function confirmDeleteAllRecords() {
             }
 
             try {
+                // 插入帶正確時區的數據
+                const now = new Date();
+                const utc8Time = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+                const isoString = utc8Time.toISOString().slice(0, 19).replace('T', ' ');
+
                 const { error } = await window.dbManager.client
                     .from('users')
-                    .insert([{ username: username }]);
+                    .insert([{ 
+                        username: username,
+                        created_at: isoString // 新增時區修正的時間戳
+                    }]);
 
                 if (error) throw new Error(error.message);
 
@@ -849,6 +1181,9 @@ async function confirmDeleteAllRecords() {
                 const usersToImport = [];
                 const errors = [];
                 const usernameSet = new Set(); // 避免重複用戶名
+                const now = new Date();
+                const utc8Time = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+                const isoString = utc8Time.toISOString().slice(0, 19).replace('T', ' ');
 
                 rows.forEach((row, index) => {
                     const rowNum = index + 2;
@@ -864,7 +1199,10 @@ async function confirmDeleteAllRecords() {
                     }
                     
                     usernameSet.add(row.username);
-                    usersToImport.push({ username: row.username });
+                    usersToImport.push({ 
+                        username: row.username,
+                        created_at: isoString // 統一時區
+                    });
                 });
 
                 // 顯示驗證錯誤
@@ -896,491 +1234,10 @@ async function confirmDeleteAllRecords() {
                 // 更新列表
                 loadUsersList();
                 loadDashboardStats();
-                loadUserTotalScoresList();
 
             } catch (err) {
                 showResult('user-batch-result', `❌ 導入失敗：${err.message}`, false);
                 console.error("Import Users Error:", err);
-            }
-        }
-
-        // 加載遊戲列表
-        async function loadGamesList() {
-            const gamesList = document.getElementById('games-list');
-            
-            try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) {
-                    gamesList.innerHTML = '<div class="error-msg" style="display:block">❌ 無法加載數據：資料庫連接失敗</div>';
-                    return;
-                }
-
-                const { data } = await window.dbManager.client
-                    .from('games')
-                    .select('*')
-                    .order('game_code');
-
-                if (!data || data.length === 0) {
-                    gamesList.innerHTML = '<div class="loading">暫無遊戲數據</div>';
-                    return;
-                }
-
-                let tableHTML = `
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>遊戲代碼</th>
-                                <th>遊戲名稱</th>
-                                <th>最高分數</th>
-                                <th>默認分數</th>
-                                <th>創建時間</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-
-                data.forEach(game => {
-                    const createTime = new Date(game.created_at).toLocaleString('zh-TW');
-                    tableHTML += `
-                        <tr>
-                            <td>${game.game_code}</td>
-                            <td>${game.game_name}</td>
-                            <td>${game.max_score}</td>
-                            <td>${game.default_score}</td>
-                            <td>${createTime}</td>
-                        </tr>
-                    `;
-                });
-
-                tableHTML += `
-                        </tbody>
-                    </table>
-                `;
-
-                gamesList.innerHTML = tableHTML;
-
-            } catch (err) {
-                gamesList.innerHTML = `<div class="error-msg" style="display:block">❌ 加載失敗：${err.message}</div>`;
-                console.error("Load Games Error:", err);
-            }
-        }
-
-        // 加載用戶列表
-        async function loadUsersList() {
-            const usersList = document.getElementById('users-list');
-            
-            try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) {
-                    usersList.innerHTML = '<div class="error-msg" style="display:block">❌ 無法加載數據：資料庫連接失敗</div>';
-                    return;
-                }
-
-                const { data } = await window.dbManager.client
-                    .from('users')
-                    .select('*')
-                    .order('username');
-
-                if (!data || data.length === 0) {
-                    usersList.innerHTML = '<div class="loading">暫無用戶數據</div>';
-                    return;
-                }
-
-                let tableHTML = `
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>用戶ID</th>
-                                <th>用戶名</th>
-                                <th>創建時間</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-
-                data.forEach(user => {
-                    const createTime = new Date(user.created_at).toLocaleString('zh-TW');
-                    tableHTML += `
-                        <tr>
-                            <td>${user.id}</td>
-                            <td>${user.username}</td>
-                            <td>${createTime}</td>
-                        </tr>
-                    `;
-                });
-
-                tableHTML += `
-                        </tbody>
-                    </table>
-                `;
-
-                usersList.innerHTML = tableHTML;
-
-            } catch (err) {
-                usersList.innerHTML = `<div class="error-msg" style="display:block">❌ 加載失敗：${err.message}</div>`;
-                console.error("Load Users Error:", err);
-            }
-        }
-
-        // 加載遊戲紀錄 (新增：存儲原始數據)
-        async function loadRecordsList() {
-            const recordsList = document.getElementById('records-list');
-            
-            try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) {
-                    recordsList.innerHTML = '<div class="error-msg" style="display:block">❌ 無法加載數據：資料庫連接失敗</div>';
-                    return;
-                }
-
-                const { data } = await window.dbManager.client
-                    .from('game_records')
-                    .select(`
-                        *,
-                        users(username),
-                        games(game_name, game_code)
-                    `)
-                    .order('scanned_at', { ascending: false });
-
-                // 存儲原始數據
-                allGameRecords = data || [];
-
-                if (!data || data.length === 0) {
-                    recordsList.innerHTML = '<div class="loading">暫無遊戲紀錄</div>';
-                    return;
-                }
-
-                // 渲染表格
-                renderRecordsTable(data);
-
-            } catch (err) {
-                recordsList.innerHTML = `<div class="error-msg" style="display:block">❌ 加載失敗：${err.message}</div>`;
-                console.error("Load Records Error:", err);
-            }
-        }
-
-        // 渲染遊戲紀錄表格
-        function renderRecordsTable(records) {
-            const recordsList = document.getElementById('records-list');
-            
-            if (!records || records.length === 0) {
-                recordsList.innerHTML = '<div class="loading">沒有符合條件的遊戲紀錄</div>';
-                return;
-            }
-
-            let tableHTML = `
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th onclick="sortRecords('username')">用戶名</th>
-                            <th onclick="sortRecords('gamename')">遊戲名稱</th>
-                            <th onclick="sortRecords('gamecode')">遊戲代碼</th>
-                            <th onclick="sortRecords('score')">分數</th>
-                            <th onclick="sortRecords('time')">掃描時間</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-
-            records.forEach(record => {
-                const scanTime = new Date(record.scanned_at).toLocaleString('zh-TW');
-                tableHTML += `
-                    <tr>
-                        <td>${record.users?.username || '未知用戶'}</td>
-                        <td>${record.games?.game_name || '未知遊戲'}</td>
-                        <td>${record.games?.game_code || '未知代碼'}</td>
-                        <td>${record.score}</td>
-                        <td>${scanTime}</td>
-                    </tr>
-                `;
-            });
-
-            tableHTML += `
-                    </tbody>
-                </table>
-            `;
-
-            recordsList.innerHTML = tableHTML;
-        }
-
-        // 篩選遊戲紀錄
-        function filterRecords() {
-            if (allGameRecords.length === 0) {
-                showResult('export-result', '❌ 沒有可用的遊戲紀錄數據', false);
-                return;
-            }
-
-            // 获取筛选条件
-            const usernameFilter = document.getElementById('filter-username').value.trim().toLowerCase();
-            const gamenameFilter = document.getElementById('filter-gamename').value.trim().toLowerCase();
-            const scoreMin = parseInt(document.getElementById('filter-score-min').value) || 0;
-            const scoreMax = parseInt(document.getElementById('filter-score-max').value) || 999999;
-            const sortBy = document.getElementById('sort-by').value;
-
-            // 应用筛选
-            let filteredRecords = [...allGameRecords];
-            
-            // 用户名筛选
-            if (usernameFilter) {
-                filteredRecords = filteredRecords.filter(record => 
-                    (record.users?.username || '').toLowerCase().includes(usernameFilter)
-                );
-            }
-
-            // 游戏名筛选
-            if (gamenameFilter) {
-                filteredRecords = filteredRecords.filter(record => 
-                    (record.games?.game_name || '').toLowerCase().includes(gamenameFilter)
-                );
-            }
-
-            // 分数范围筛选
-            filteredRecords = filteredRecords.filter(record => 
-                record.score >= scoreMin && record.score <= scoreMax
-            );
-
-            // 应用排序
-            switch (sortBy) {
-                case 'scanned_at_desc':
-                    filteredRecords.sort((a, b) => new Date(b.scanned_at) - new Date(a.scanned_at));
-                    break;
-                case 'scanned_at_asc':
-                    filteredRecords.sort((a, b) => new Date(a.scanned_at) - new Date(b.scanned_at));
-                    break;
-                case 'score_desc':
-                    filteredRecords.sort((a, b) => b.score - a.score);
-                    break;
-                case 'score_asc':
-                    filteredRecords.sort((a, b) => a.score - b.score);
-                    break;
-                case 'username_asc':
-                    filteredRecords.sort((a, b) => 
-                        (a.users?.username || '').localeCompare(b.users?.username || '')
-                    );
-                    break;
-                case 'gamename_asc':
-                    filteredRecords.sort((a, b) => 
-                        (a.games?.game_name || '').localeCompare(b.games?.game_name || '')
-                    );
-                    break;
-            }
-
-            // 渲染筛选后的表格
-            renderRecordsTable(filteredRecords);
-            showResult('export-result', `✅ 篩選完成，共找到 ${filteredRecords.length} 條紀錄`, true);
-        }
-
-        // 重置筛选条件
-        function resetFilter() {
-            document.getElementById('filter-username').value = '';
-            document.getElementById('filter-gamename').value = '';
-            document.getElementById('filter-score-min').value = '';
-            document.getElementById('filter-score-max').value = '';
-            document.getElementById('sort-by').value = 'scanned_at_desc';
-            
-            // 重新渲染原始数据
-            renderRecordsTable(allGameRecords);
-            showResult('export-result', '✅ 篩選條件已重置', true);
-        }
-
-        // 点击表头排序
-        function sortRecords(sortType) {
-            const sortMap = {
-                'username': 'username_asc',
-                'gamename': 'gamename_asc',
-                'gamecode': 'gamename_asc',
-                'score': 'score_desc',
-                'time': 'scanned_at_desc'
-            };
-            
-            document.getElementById('sort-by').value = sortMap[sortType];
-            filterRecords();
-        }
-
-        // 導出用戶總分統計CSV
-        async function exportUserTotalScores() {
-            try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) {
-                    showResult('export-result', '❌ 資料庫連接失敗', false);
-                    return;
-                }
-
-                // 获取用户总分数据
-                const { data: users } = await window.dbManager.client
-                    .from('users')
-                    .select('id, username');
-                
-                if (!users || users.length === 0) {
-                    showResult('export-result', '❌ 沒有可用的用戶數據', false);
-                    return;
-                }
-
-                // 构建CSV内容
-                let csvContent = "排名,用戶名,總分數,參與遊戲次數,最後參與遊戲,遊戲代碼\n";
-                const userTotalScores = [];
-
-                for (const user of users) {
-                    const { data: records } = await window.dbManager.client
-                        .from('game_records')
-                        .select('score, games(game_name, game_code)')
-                        .eq('user_id', user.id);
-                    
-                    let totalScore = 0;
-                    let gameCount = 0;
-                    let lastGameName = '無遊戲紀錄';
-                    let lastGameCode = '-';
-
-                    if (records && records.length > 0) {
-                        totalScore = records.reduce((sum, record) => sum + record.score, 0);
-                        gameCount = records.length;
-                        const lastRecord = records[records.length - 1];
-                        lastGameName = lastRecord.games?.game_name || '未知遊戲';
-                        lastGameCode = lastRecord.games?.game_code || '未知代碼';
-                    }
-
-                    userTotalScores.push({
-                        username: user.username,
-                        total_score: totalScore,
-                        game_count: gameCount,
-                        last_game_name: lastGameName,
-                        last_game_code: lastGameCode
-                    });
-                }
-
-                // 排序并生成CSV
-                userTotalScores.sort((a, b) => b.total_score - a.total_score);
-                userTotalScores.forEach((item, index) => {
-                    csvContent += `${index + 1},${item.username},${item.total_score},${item.game_count},${item.last_game_name},${item.last_game_code}\n`;
-                });
-
-                // 下载CSV
-                const fileName = `用戶總分統計_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
-                downloadCSV(csvContent, fileName);
-                
-                showResult('export-result', `✅ 成功導出 ${userTotalScores.length} 個用戶的總分統計數據`, true);
-
-            } catch (err) {
-                showResult('export-result', `❌ 導出失敗：${err.message}`, false);
-                console.error("Export User Total Scores Error:", err);
-            }
-        }
-
-        // 導出遊戲管理CSV
-        async function exportGames() {
-            try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) {
-                    showResult('export-result', '❌ 資料庫連接失敗', false);
-                    return;
-                }
-
-                const { data: games } = await window.dbManager.client
-                    .from('games')
-                    .select('*')
-                    .order('game_code');
-                
-                if (!games || games.length === 0) {
-                    showResult('export-result', '❌ 沒有可用的遊戲數據', false);
-                    return;
-                }
-
-                // 构建CSV内容
-                let csvContent = "遊戲代碼,遊戲名稱,最高分數,默認分數,創建時間\n";
-                games.forEach(game => {
-                    const createTime = new Date(game.created_at).toLocaleString('zh-TW');
-                    csvContent += `${game.game_code},${game.game_name},${game.max_score},${game.default_score},${createTime}\n`;
-                });
-
-                // 下载CSV
-                const fileName = `遊戲管理數據_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
-                downloadCSV(csvContent, fileName);
-                
-                showResult('export-result', `✅ 成功導出 ${games.length} 個遊戲的數據`, true);
-
-            } catch (err) {
-                showResult('export-result', `❌ 導出失敗：${err.message}`, false);
-                console.error("Export Games Error:", err);
-            }
-        }
-
-        // 導出用戶管理CSV
-        async function exportUsers() {
-            try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) {
-                    showResult('export-result', '❌ 資料庫連接失敗', false);
-                    return;
-                }
-
-                const { data: users } = await window.dbManager.client
-                    .from('users')
-                    .select('*')
-                    .order('username');
-                
-                if (!users || users.length === 0) {
-                    showResult('export-result', '❌ 沒有可用的用戶數據', false);
-                    return;
-                }
-
-                // 构建CSV内容
-                let csvContent = "用戶ID,用戶名,創建時間\n";
-                users.forEach(user => {
-                    const createTime = new Date(user.created_at).toLocaleString('zh-TW');
-                    csvContent += `${user.id},${user.username},${createTime}\n`;
-                });
-
-                // 下载CSV
-                const fileName = `用戶管理數據_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
-                downloadCSV(csvContent, fileName);
-                
-                showResult('export-result', `✅ 成功導出 ${users.length} 個用戶的數據`, true);
-
-            } catch (err) {
-                showResult('export-result', `❌ 導出失敗：${err.message}`, false);
-                console.error("Export Users Error:", err);
-            }
-        }
-
-        // 導出遊戲紀錄CSV
-        async function exportGameRecords() {
-            try {
-                const initOk = await window.dbManager.init();
-                if (!initOk) {
-                    showResult('export-result', '❌ 資料庫連接失敗', false);
-                    return;
-                }
-
-                const { data: records } = await window.dbManager.client
-                    .from('game_records')
-                    .select(`
-                        *,
-                        users(username),
-                        games(game_name, game_code)
-                    `)
-                    .order('scanned_at', { ascending: false });
-                
-                if (!records || records.length === 0) {
-                    showResult('export-result', '❌ 沒有可用的遊戲紀錄數據', false);
-                    return;
-                }
-
-                // 构建CSV内容
-                let csvContent = "用戶名,遊戲名稱,遊戲代碼,分數,掃描時間\n";
-                records.forEach(record => {
-                    const scanTime = new Date(record.scanned_at).toLocaleString('zh-TW');
-                    csvContent += `${record.users?.username || '未知用戶'},${record.games?.game_name || '未知遊戲'},${record.games?.game_code || '未知代碼'},${record.score},${scanTime}\n`;
-                });
-
-                // 下载CSV
-                const fileName = `遊戲紀錄數據_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
-                downloadCSV(csvContent, fileName);
-                
-                showResult('export-result', `✅ 成功導出 ${records.length} 條遊戲紀錄數據`, true);
-
-            } catch (err) {
-                showResult('export-result', `❌ 導出失敗：${err.message}`, false);
-                console.error("Export Game Records Error:", err);
             }
         }
     </script>
