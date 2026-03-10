@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理員後台 - QR碼遊戲系統</title>
+    <title>管理員後台 - QR碼項目系統</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Microsoft JhengHei', sans-serif; background: #f8fafc; color: #334155; }
@@ -64,9 +64,9 @@
 
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('user-scores')">用戶總分統計</button>
-            <button class="tab-btn" onclick="switchTab('games')">遊戲管理</button>
+            <button class="tab-btn" onclick="switchTab('games')">項目管理</button>
             <button class="tab-btn" onclick="switchTab('users')">用戶管理</button>
-            <button class="tab-btn" onclick="switchTab('records')">遊戲紀錄</button>
+            <button class="tab-btn" onclick="switchTab('records')">項目紀錄</button>
             <button class="tab-btn" onclick="switchTab('data-management')">數據管理</button>
             <button class="tab-btn" onclick="switchTab('data-export')">數據導出</button>
         </div>
@@ -80,11 +80,11 @@
                     <div id="total-users" class="value">0</div>
                 </div>
                 <div class="stat-item">
-                    <h3>總遊戲數</h3>
+                    <h3>總項目數</h3>
                     <div id="total-games" class="value">0</div>
                 </div>
                 <div class="stat-item">
-                    <h3>總遊戲紀錄數</h3>
+                    <h3>總項目紀錄數</h3>
                     <div id="total-records" class="value">0</div>
                 </div>
                 <div class="stat-item">
@@ -97,20 +97,20 @@
             <div id="user-scores-list" class="loading">加載用戶總分數據中...</div>
         </div>
 
-        <!-- 遊戲管理標籤 -->
+        <!-- 項目管理標籤 -->
         <div id="games" class="tab-content">
-            <h2>遊戲管理</h2>
+            <h2>項目管理</h2>
             
-            <!-- 單個新增遊戲 -->
-            <h3 style="margin-bottom: 15px;">新增單個遊戲</h3>
+            <!-- 單個新增項目 -->
+            <h3 style="margin-bottom: 15px;">新增單個項目</h3>
             <div class="add-form">
                 <div class="form-group">
-                    <label>遊戲代碼 (例如：GAME001)</label>
-                    <input id="game-code" type="text" placeholder="請輸入遊戲代碼">
+                    <label>項目代碼 (例如：GAME001)</label>
+                    <input id="game-code" type="text" placeholder="請輸入項目代碼">
                 </div>
                 <div class="form-group">
-                    <label>遊戲名稱</label>
-                    <input id="game-name" type="text" placeholder="請輸入遊戲名稱">
+                    <label>項目名稱</label>
+                    <input id="game-name" type="text" placeholder="請輸入項目名稱">
                 </div>
                 <div class="form-group">
                     <label>最高分數</label>
@@ -120,11 +120,11 @@
                     <label>默認分數</label>
                     <input id="game-default-score" type="number" placeholder="請輸入默認分數" min="0">
                 </div>
-                <button class="btn-submit" onclick="addNewGame()">新增遊戲</button>
+                <button class="btn-submit" onclick="addNewGame()">新增項目</button>
             </div>
 
-            <!-- CSV批量導入遊戲 -->
-            <h3 style="margin: 30px 0 15px 0;">批量導入遊戲 (CSV)</h3>
+            <!-- CSV批量導入項目 -->
+            <h3 style="margin: 30px 0 15px 0;">批量導入項目 (CSV)</h3>
             <div class="batch-form">
                 <div class="form-group">
                     <label>選擇CSV文件</label>
@@ -132,16 +132,16 @@
                     <div class="csv-template">
                         CSV格式範例：<br>
                         game_code,game_name,max_score,default_score<br>
-                        GAME001,測試遊戲1,1000,500<br>
-                        GAME002,測試遊戲2,2000,1000
+                        GAME001,測試項目1,1000,500<br>
+                        GAME002,測試項目2,2000,1000
                     </div>
                 </div>
-                <button class="btn-batch" onclick="importGamesFromCSV()">批量導入遊戲</button>
+                <button class="btn-batch" onclick="importGamesFromCSV()">批量導入項目</button>
                 <div id="game-batch-result" class="batch-result"></div>
             </div>
 
             <div id="game-msg" class="msg-box"></div>
-            <div id="games-list" class="loading">加載遊戲列表中...</div>
+            <div id="games-list" class="loading">加載項目列表中...</div>
         </div>
 
         <!-- 用戶管理標籤 -->
@@ -180,9 +180,9 @@
             <div id="users-list" class="loading">加載用戶列表中...</div>
         </div>
 
-        <!-- 遊戲紀錄標籤 (新增篩選功能) -->
+        <!-- 項目紀錄標籤 (新增篩選功能) -->
         <div id="records" class="tab-content">
-            <h2>遊戲紀錄管理</h2>
+            <h2>項目紀錄管理</h2>
             
             <!-- 篩選表單 -->
             <div class="filter-form">
@@ -193,8 +193,8 @@
                         <input type="text" id="filter-username" placeholder="輸入用戶名關鍵字">
                     </div>
                     <div class="form-group">
-                        <label>遊戲名篩選</label>
-                        <input type="text" id="filter-gamename" placeholder="輸入遊戲名關鍵字">
+                        <label>項目名篩選</label>
+                        <input type="text" id="filter-gamename" placeholder="輸入項目名關鍵字">
                     </div>
                 </div>
                 <div class="form-row">
@@ -216,7 +216,7 @@
                             <option value="score_desc">分數 (從高到低)</option>
                             <option value="score_asc">分數 (從低到高)</option>
                             <option value="username_asc">用戶名 (A-Z)</option>
-                            <option value="gamename_asc">遊戲名 (A-Z)</option>
+                            <option value="gamename_asc">項目名 (A-Z)</option>
                         </select>
                     </div>
                 </div>
@@ -224,17 +224,17 @@
                 <button class="btn-submit" onclick="resetFilter()" style="margin-left: 10px;">重置篩選條件</button>
             </div>
 
-            <div id="records-list" class="loading">加載遊戲紀錄中...</div>
+            <div id="records-list" class="loading">加載項目紀錄中...</div>
         </div>
 
         <!-- 數據管理標籤 (修改為刪除所有紀錄) -->
         <div id="data-management" class="tab-content">
             <h2>系統數據管理</h2>
             <div class="warning-box">
-                <strong>⚠️ 警告：</strong> 以下操作將刪除系統內所有遊戲紀錄，請謹慎操作！刪除後將確保管理員帳號存在。
+                <strong>⚠️ 警告：</strong> 以下操作將刪除系統內所有項目紀錄，請謹慎操作！刪除後將確保管理員帳號存在。
             </div>
             
-            <button class="btn-danger" onclick="confirmDeleteAllRecords()">刪除所有遊戲紀錄</button>
+            <button class="btn-danger" onclick="confirmDeleteAllRecords()">刪除所有項目紀錄</button>
             <div id="data-msg" class="msg-box"></div>
             <div id="data-status" class="loading">數據狀態：正常</div>
         </div>
@@ -245,12 +245,12 @@
             <div class="export-form">
                 <div class="export-item">
                     <h3>用戶總分統計數據</h3>
-                    <p>導出所有用戶的總分、遊戲次數等統計信息</p>
+                    <p>導出所有用戶的總分、項目次數等統計信息</p>
                     <button class="btn-export export-btn" onclick="exportUserTotalScores()">導出CSV文件</button>
                 </div>
                 <div class="export-item">
-                    <h3>遊戲管理數據</h3>
-                    <p>導出所有遊戲的基本信息</p>
+                    <h3>項目管理數據</h3>
+                    <p>導出所有項目的基本信息</p>
                     <button class="btn-export export-btn" onclick="exportGames()">導出CSV文件</button>
                 </div>
                 <div class="export-item">
@@ -259,8 +259,8 @@
                     <button class="btn-export export-btn" onclick="exportUsers()">導出CSV文件</button>
                 </div>
                 <div class="export-item">
-                    <h3>遊戲紀錄數據</h3>
-                    <p>導出所有遊戲紀錄的詳細信息</p>
+                    <h3>項目紀錄數據</h3>
+                    <p>導出所有項目紀錄的詳細信息</p>
                     <button class="btn-export export-btn" onclick="exportGameRecords()">導出CSV文件</button>
                 </div>
                 <div id="export-result" class="export-result"></div>
@@ -273,7 +273,7 @@
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
     <script>
-        // 全局變量：存儲原始遊戲紀錄數據
+        // 全局變量：存儲原始項目紀錄數據
         let allGameRecords = [];
         
         // 頁面加載時檢查管理員權限
@@ -423,8 +423,8 @@
                 dataStatus.innerHTML = `
                     <div>📊 當前數據狀態：</div>
                     <div>• 用戶數量：${usersCount}</div>
-                    <div>• 遊戲數量：${gamesCount}</div>
-                    <div>• 遊戲紀錄：${recordsCount}</div>
+                    <div>• 項目數量：${gamesCount}</div>
+                    <div>• 項目紀錄：${recordsCount}</div>
                 `;
             } catch (err) {
                 dataStatus.innerHTML = `<div class="error-msg" style="display:block">❌ 獲取數據狀態失敗：${err.message}</div>`;
@@ -434,7 +434,7 @@
 
 // 完整修复：删除所有游戏记录 + 时区正确 + 强制删除生效
 async function confirmDeleteAllRecords() {
-    if (!confirm('⚠️ 確定要刪除所有遊戲紀錄嗎？此操作不可撤銷！')) {
+    if (!confirm('⚠️ 確定要刪除所有項目紀錄嗎？此操作不可撤銷！')) {
         return;
     }
 
@@ -580,14 +580,14 @@ async function confirmDeleteAllRecords() {
                     
                     let totalScore = 0;
                     let gameCount = 0;
-                    let lastGameName = '無遊戲紀錄';
+                    let lastGameName = '無項目紀錄';
                     let lastGameCode = '-';
 
                     if (records && records.length > 0) {
                         totalScore = records.reduce((sum, record) => sum + record.score, 0);
                         gameCount = records.length;
                         const lastRecord = records[records.length - 1];
-                        lastGameName = lastRecord.games?.game_name || '未知遊戲';
+                        lastGameName = lastRecord.games?.game_name || '未知項目';
                         lastGameCode = lastRecord.games?.game_code || '未知代碼';
                     }
 
@@ -610,9 +610,9 @@ async function confirmDeleteAllRecords() {
                                 <th>排名</th>
                                 <th>用戶名</th>
                                 <th>總分數</th>
-                                <th>參與遊戲次數</th>
-                                <th>最後參與遊戲</th>
-                                <th>遊戲代碼</th>
+                                <th>參與項目次數</th>
+                                <th>最後參與項目</th>
+                                <th>項目代碼</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -644,7 +644,7 @@ async function confirmDeleteAllRecords() {
             }
         }
 
-        // 新增單個遊戲
+        // 新增單個項目
         async function addNewGame() {
             const gameCode = document.getElementById('game-code').value.trim();
             const gameName = document.getElementById('game-name').value.trim();
@@ -652,11 +652,11 @@ async function confirmDeleteAllRecords() {
             const defaultScore = parseInt(document.getElementById('game-default-score').value) || 0;
 
             if (!gameCode) {
-                showMessage('game-msg', '❌ 請輸入遊戲代碼！', false);
+                showMessage('game-msg', '❌ 請輸入項目代碼！', false);
                 return;
             }
             if (!gameName) {
-                showMessage('game-msg', '❌ 請輸入遊戲名稱！', false);
+                showMessage('game-msg', '❌ 請輸入項目名稱！', false);
                 return;
             }
 
@@ -684,7 +684,7 @@ async function confirmDeleteAllRecords() {
                 document.getElementById('game-max-score').value = '';
                 document.getElementById('game-default-score').value = '';
 
-                showMessage('game-msg', '✅ 遊戲新增成功！');
+                showMessage('game-msg', '✅ 項目新增成功！');
                 loadGamesList();
                 loadDashboardStats();
                 loadUserTotalScoresList();
@@ -695,7 +695,7 @@ async function confirmDeleteAllRecords() {
             }
         }
 
-        // 批量導入遊戲
+        // 批量導入項目
         async function importGamesFromCSV() {
             const fileInput = document.getElementById('game-csv-file');
             const file = fileInput.files[0];
@@ -732,11 +732,11 @@ async function confirmDeleteAllRecords() {
                     
                     // 驗證必填欄位
                     if (!row.game_code) {
-                        errors.push(`第${rowNum}行：遊戲代碼為空`);
+                        errors.push(`第${rowNum}行：項目代碼為空`);
                         return;
                     }
                     if (!row.game_name) {
-                        errors.push(`第${rowNum}行：遊戲名稱為空`);
+                        errors.push(`第${rowNum}行：項目名稱為空`);
                         return;
                     }
                     
@@ -773,7 +773,7 @@ async function confirmDeleteAllRecords() {
                 if (error) throw new Error(error.message);
 
                 // 顯示成功消息
-                showResult('game-batch-result', `✅ 成功導入 ${gamesToImport.length} 個遊戲`, true);
+                showResult('game-batch-result', `✅ 成功導入 ${gamesToImport.length} 個項目`, true);
                 
                 // 清空文件選擇
                 fileInput.value = '';
@@ -908,7 +908,7 @@ async function confirmDeleteAllRecords() {
             }
         }
 
-        // 加載遊戲列表
+        // 加載項目列表
         async function loadGamesList() {
             const gamesList = document.getElementById('games-list');
             
@@ -925,7 +925,7 @@ async function confirmDeleteAllRecords() {
                     .order('game_code');
 
                 if (!data || data.length === 0) {
-                    gamesList.innerHTML = '<div class="loading">暫無遊戲數據</div>';
+                    gamesList.innerHTML = '<div class="loading">暫無項目數據</div>';
                     return;
                 }
 
@@ -933,8 +933,8 @@ async function confirmDeleteAllRecords() {
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>遊戲代碼</th>
-                                <th>遊戲名稱</th>
+                                <th>項目代碼</th>
+                                <th>項目名稱</th>
                                 <th>最高分數</th>
                                 <th>默認分數</th>
                                 <th>創建時間</th>
@@ -1026,7 +1026,7 @@ async function confirmDeleteAllRecords() {
             }
         }
 
-        // 加載遊戲紀錄 (新增：存儲原始數據)
+        // 加載項目紀錄 (新增：存儲原始數據)
         async function loadRecordsList() {
             const recordsList = document.getElementById('records-list');
             
@@ -1050,7 +1050,7 @@ async function confirmDeleteAllRecords() {
                 allGameRecords = data || [];
 
                 if (!data || data.length === 0) {
-                    recordsList.innerHTML = '<div class="loading">暫無遊戲紀錄</div>';
+                    recordsList.innerHTML = '<div class="loading">暫無項目紀錄</div>';
                     return;
                 }
 
@@ -1063,12 +1063,12 @@ async function confirmDeleteAllRecords() {
             }
         }
 
-        // 渲染遊戲紀錄表格
+        // 渲染項目紀錄表格
         function renderRecordsTable(records) {
             const recordsList = document.getElementById('records-list');
             
             if (!records || records.length === 0) {
-                recordsList.innerHTML = '<div class="loading">沒有符合條件的遊戲紀錄</div>';
+                recordsList.innerHTML = '<div class="loading">沒有符合條件的項目紀錄</div>';
                 return;
             }
 
@@ -1077,8 +1077,8 @@ async function confirmDeleteAllRecords() {
                     <thead>
                         <tr>
                             <th onclick="sortRecords('username')">用戶名</th>
-                            <th onclick="sortRecords('gamename')">遊戲名稱</th>
-                            <th onclick="sortRecords('gamecode')">遊戲代碼</th>
+                            <th onclick="sortRecords('gamename')">項目名稱</th>
+                            <th onclick="sortRecords('gamecode')">項目代碼</th>
                             <th onclick="sortRecords('score')">分數</th>
                             <th onclick="sortRecords('time')">掃描時間</th>
                         </tr>
@@ -1091,7 +1091,7 @@ async function confirmDeleteAllRecords() {
                 tableHTML += `
                     <tr>
                         <td>${record.users?.username || '未知用戶'}</td>
-                        <td>${record.games?.game_name || '未知遊戲'}</td>
+                        <td>${record.games?.game_name || '未知項目'}</td>
                         <td>${record.games?.game_code || '未知代碼'}</td>
                         <td>${record.score}</td>
                         <td>${scanTime}</td>
@@ -1107,10 +1107,10 @@ async function confirmDeleteAllRecords() {
             recordsList.innerHTML = tableHTML;
         }
 
-        // 篩選遊戲紀錄
+        // 篩選項目紀錄
         function filterRecords() {
             if (allGameRecords.length === 0) {
-                showResult('export-result', '❌ 沒有可用的遊戲紀錄數據', false);
+                showResult('export-result', '❌ 沒有可用的項目紀錄數據', false);
                 return;
             }
 
@@ -1221,7 +1221,7 @@ async function confirmDeleteAllRecords() {
                 }
 
                 // 构建CSV内容
-                let csvContent = "排名,用戶名,總分數,參與遊戲次數,最後參與遊戲,遊戲代碼\n";
+                let csvContent = "排名,用戶名,總分數,參與項目次數,最後參與項目,項目代碼\n";
                 const userTotalScores = [];
 
                 for (const user of users) {
@@ -1232,14 +1232,14 @@ async function confirmDeleteAllRecords() {
                     
                     let totalScore = 0;
                     let gameCount = 0;
-                    let lastGameName = '無遊戲紀錄';
+                    let lastGameName = '無項目紀錄';
                     let lastGameCode = '-';
 
                     if (records && records.length > 0) {
                         totalScore = records.reduce((sum, record) => sum + record.score, 0);
                         gameCount = records.length;
                         const lastRecord = records[records.length - 1];
-                        lastGameName = lastRecord.games?.game_name || '未知遊戲';
+                        lastGameName = lastRecord.games?.game_name || '未知項目';
                         lastGameCode = lastRecord.games?.game_code || '未知代碼';
                     }
 
@@ -1270,7 +1270,7 @@ async function confirmDeleteAllRecords() {
             }
         }
 
-        // 導出遊戲管理CSV
+        // 導出項目管理CSV
         async function exportGames() {
             try {
                 const initOk = await window.dbManager.init();
@@ -1285,22 +1285,22 @@ async function confirmDeleteAllRecords() {
                     .order('game_code');
                 
                 if (!games || games.length === 0) {
-                    showResult('export-result', '❌ 沒有可用的遊戲數據', false);
+                    showResult('export-result', '❌ 沒有可用的項目數據', false);
                     return;
                 }
 
                 // 构建CSV内容
-                let csvContent = "遊戲代碼,遊戲名稱,最高分數,默認分數,創建時間\n";
+                let csvContent = "項目代碼,項目名稱,最高分數,默認分數,創建時間\n";
                 games.forEach(game => {
                     const createTime = new Date(game.created_at).toLocaleString('zh-TW');
                     csvContent += `${game.game_code},${game.game_name},${game.max_score},${game.default_score},${createTime}\n`;
                 });
 
                 // 下载CSV
-                const fileName = `遊戲管理數據_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
+                const fileName = `項目管理數據_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
                 downloadCSV(csvContent, fileName);
                 
-                showResult('export-result', `✅ 成功導出 ${games.length} 個遊戲的數據`, true);
+                showResult('export-result', `✅ 成功導出 ${games.length} 個項目的數據`, true);
 
             } catch (err) {
                 showResult('export-result', `❌ 導出失敗：${err.message}`, false);
@@ -1346,7 +1346,7 @@ async function confirmDeleteAllRecords() {
             }
         }
 
-        // 導出遊戲紀錄CSV
+        // 導出項目紀錄CSV
         async function exportGameRecords() {
             try {
                 const initOk = await window.dbManager.init();
@@ -1365,22 +1365,22 @@ async function confirmDeleteAllRecords() {
                     .order('scanned_at', { ascending: false });
                 
                 if (!records || records.length === 0) {
-                    showResult('export-result', '❌ 沒有可用的遊戲紀錄數據', false);
+                    showResult('export-result', '❌ 沒有可用的項目紀錄數據', false);
                     return;
                 }
 
                 // 构建CSV内容
-                let csvContent = "用戶名,遊戲名稱,遊戲代碼,分數,掃描時間\n";
+                let csvContent = "用戶名,項目名稱,項目代碼,分數,掃描時間\n";
                 records.forEach(record => {
                     const scanTime = new Date(record.scanned_at).toLocaleString('zh-TW');
-                    csvContent += `${record.users?.username || '未知用戶'},${record.games?.game_name || '未知遊戲'},${record.games?.game_code || '未知代碼'},${record.score},${scanTime}\n`;
+                    csvContent += `${record.users?.username || '未知用戶'},${record.games?.game_name || '未知項目'},${record.games?.game_code || '未知代碼'},${record.score},${scanTime}\n`;
                 });
 
                 // 下载CSV
-                const fileName = `遊戲紀錄數據_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
+                const fileName = `項目紀錄數據_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
                 downloadCSV(csvContent, fileName);
                 
-                showResult('export-result', `✅ 成功導出 ${records.length} 條遊戲紀錄數據`, true);
+                showResult('export-result', `✅ 成功導出 ${records.length} 條項目紀錄數據`, true);
 
             } catch (err) {
                 showResult('export-result', `❌ 導出失敗：${err.message}`, false);
