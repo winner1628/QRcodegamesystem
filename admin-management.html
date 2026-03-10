@@ -407,18 +407,15 @@
                     .neq('id', ''); // 刪除所有記錄 (避免gt判斷錯誤)
 
                 // 2. 安全刪除user_total_scores (先檢查表是否存在)
-                try {
+
                     await window.dbManager.client
-                        .from('user_total_scores')
+                        .from('users')
                         .delete()
                         .neq('id', '');
-                } catch (err) {
-                    // 如果表不存在，跳過錯誤
-                    if (!err.message.includes('Could not find the table')) {
-                        throw err;
-                    }
-                    console.log("user_total_scores table not found, skipping delete");
-                }
+                    await window.dbManager.client
+                        .from('games')
+                        .delete()
+                        .neq('id', '');
 
                 // 3. 插入正確時區的時間 (UTC+8)
                 const now = new Date();
