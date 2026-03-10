@@ -208,11 +208,11 @@
                     }
 
                     // Validate game code
-                    if (!gameCode.startsWith('GAME')) {
-                        updateStatus(`QR碼格式錯誤：${qrContent}\n正確格式：GAME001 或 GAME001:800`, "error");
-                        isScanningProcessing = false; // 重置標誌
-                        return;
-                    }
+                    //if (!gameCode.startsWith('GAME')) {
+                    //    updateStatus(`QR碼格式錯誤：${qrContent}\n正確格式：GAME001 或 GAME001:800`, "error");
+                     //   isScanningProcessing = false; // 重置標誌
+                     //   return;
+                    //}
 
                     updateStatus(`識別到遊戲：${gameCode}，分數：${score}，正在保存...`, "success");
                     
