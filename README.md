@@ -1,4 +1,4 @@
-# QR碼遊戲系統 - 使用說明文件
+# QR碼項目系統 - 使用說明文件
 **版本**：1.0  
 **語言**：繁體中文  
 **技術棧**：HTML/CSS/JavaScript + Supabase (PostgreSQL)  
@@ -13,18 +13,18 @@ https://winner1628.github.io/QRcodegamesystem/admin-login.html
 QR code generator:
 https://winner1628.github.io/QRcodegamesystem/qr-generator.html
 
-所有用戶名和遊戲代碼，自動生成對應的 QR Code，每個 QR Code 下方顯示對應的名稱 / 代碼，並提供下載和列印功能。
+所有用戶名和項目代碼，自動生成對應的 QR Code，每個 QR Code 下方顯示對應的名稱 / 代碼，並提供下載和列印功能。
 這個頁面會包含以下核心功能：
 自動連接 Supabase 資料庫
 讀取所有用戶名並生成 QR Code（用於用戶登入）
-讀取所有遊戲代碼並生成 QR Code（用於掃描遊戲）
+讀取所有項目代碼並生成 QR Code（用於掃描項目）
 每個 QR Code 下方顯示對應文字，方便識別
 提供單個 QR Code 下載按鈕
 提供批量列印所有 QR Code 的功能
 
 
 ## 📋 系統概述
-本系統是一個基於Web的QR碼遊戲分數記錄系統，用戶可透過手動輸入用戶名或掃描QR碼登入，並掃描遊戲QR碼自動記錄遊戲分數，同時提供遊戲紀錄查詢與分數統計功能。
+本系統是一個基於Web的QR碼項目分數記錄系統，用戶可透過手動輸入用戶名或掃描QR碼登入，並掃描項目QR碼自動記錄項目分數，同時提供項目紀錄查詢與分數統計功能。
 
 ## 🛠️ 環境準備
 ### 1. 前置條件
@@ -61,17 +61,17 @@ CREATE TABLE users (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 遊戲表
+-- 項目表
 CREATE TABLE games (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   game_code VARCHAR(20) UNIQUE NOT NULL,  -- 例如：GAME001
-  game_name VARCHAR(100) NOT NULL,        -- 遊戲名稱
-  max_score INTEGER DEFAULT 1000,         -- 遊戲最高分數
+  game_name VARCHAR(100) NOT NULL,        -- 項目名稱
+  max_score INTEGER DEFAULT 1000,         -- 項目最高分數
   default_score INTEGER DEFAULT 500,      -- 預設分數
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 遊戲紀錄表
+-- 項目紀錄表
 CREATE TABLE game_records (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
@@ -85,9 +85,9 @@ CREATE INDEX idx_game_records_user_id ON game_records(user_id);
 CREATE INDEX idx_game_records_scanned_at ON game_records(scanned_at);
 ```
 
-### 3. 插入範例遊戲數據
+### 3. 插入範例項目數據
 ```sql
--- 插入範例遊戲
+-- 插入範例項目
 INSERT INTO games (game_code, game_name, max_score, default_score) VALUES
 ('GAME001', '闖關遊戲1', 1000, 500),
 ('GAME002', '闖關遊戲2', 800, 400),
@@ -102,7 +102,7 @@ ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE games ENABLE ROW LEVEL SECURITY;
 ALTER TABLE game_records ENABLE ROW LEVEL SECURITY;
 
--- 允許所有使用者讀取遊戲資料
+-- 允許所有使用者讀取項目資料
 CREATE POLICY "Allow read access to games" ON games
   FOR SELECT USING (true);
 
@@ -155,19 +155,19 @@ window.dbManager = {
 3. 掃描僅包含用戶名的QR碼（如：`user001`）
 4. 系統自動填入用戶名並完成登入
 
-### 2. 掃描遊戲QR碼
+### 2. 掃描項目QR碼
 1. 登入後進入 `scan.html` 頁面
 2. 點擊「開啟掃描器」按鈕啟動相機（需授予相機權限）
-3. 掃描遊戲QR碼，支援兩種格式：
-   - 基礎格式：`GAME001`（使用遊戲預設分數）
+3. 掃描項目QR碼，支援兩種格式：
+   - 基礎格式：`GAME001`（使用項目預設分數）
    - 自定分數：`GAME001:800`（自定義分數800）
-4. 掃描成功後自動保存紀錄，並更新遊戲統計
+4. 掃描成功後自動保存紀錄，並更新項目統計
 5. 可隨時點擊「關閉掃描器」停止掃描
 
-### 3. 查看遊戲紀錄
+### 3. 查看項目紀錄
 1. 在 `scan.html` 頁面右側可查看：
    - 總分數統計
-   - 所有遊戲紀錄（包含遊戲名稱、分數、掃描時間）
+   - 所有項目紀錄（包含項目名稱、分數、掃描時間）
    - 紀錄按時間倒序排列（最新的在前）
 
 ### 4. 登出系統
@@ -179,10 +179,10 @@ window.dbManager = {
 - 內容：僅包含用戶名（如：`user001`、`player123`）
 - 格式要求：僅允許字母、數字、底線（`^[a-zA-Z0-9_]+$`）
 
-### 2. 遊戲用QR碼
+### 2. 項目用QR碼
 | 格式類型 | 範例 | 說明 |
 |----------|------|------|
-| 基礎格式 | `GAME001` | 使用遊戲預設分數 |
+| 基礎格式 | `GAME001` | 使用項目預設分數 |
 | 自定分數 | `GAME001:800` | 自定義分數800 |
 
 ## ❗ 常見問題
@@ -201,8 +201,8 @@ window.dbManager = {
 - 確認QR碼清晰，無模糊或反光
 - 確認相機對焦正常
 
-### 4. 無法保存遊戲紀錄
-- 確認遊戲代碼存在於 `games` 資料表中
+### 4. 無法保存項目紀錄
+- 確認項目代碼存在於 `games` 資料表中
 - 檢查Supabase RLS政策是否配置正確
 - 檢查控制台錯誤資訊
 
@@ -214,9 +214,9 @@ window.dbManager = {
 5. 定期備份Supabase資料庫，避免資料遺失
 
 ## 🎯 功能擴充建議
-1. 新增管理後台，用於新增/編輯遊戲資訊
+1. 新增管理後台，用於新增/編輯項目資訊
 2. 新增分數排行榜功能
 3. 支援多語言切換
 4. 新增用戶頭像與個人資料設定
-5. 匯出遊戲紀錄為Excel/PDF
+5. 匯出項目紀錄為Excel/PDF
 6. 新增掃描歷史記錄篩選功能
