@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR碼掃描 - QR碼遊戲系統</title>
+    <title>QR碼掃描 - QR碼項目系統</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Microsoft JhengHei', sans-serif; background: #f8fafc; color: #334155; }
@@ -58,7 +58,7 @@
         <div class="main-content">
             <!-- Scan Area -->
             <div class="scan-box">
-                <h2>掃描遊戲QR碼</h2>
+                <h2>掃描項目QR碼</h2>
                 <p>請掃描格式為「GAME001」或「GAME001:800」的QR碼</p>
                 
                 <button id="scanBtn" class="btn-toggle-scan" onclick="toggleScanner()">開啟掃描器</button>
@@ -68,7 +68,7 @@
 
             <!-- Stats Area -->
             <div class="stats-box">
-                <h3>我的遊戲紀錄</h3>
+                <h3>我的項目紀錄</h3>
                 <div class="total-score" id="totalScore">總分：0</div>
                 <div class="records-list" id="recordsList">
                     <div class="no-records">加載中...</div>
@@ -214,7 +214,7 @@
                      //   return;
                     //}
 
-                    updateStatus(`識別到遊戲：${gameCode}，分數：${score}，正在保存...`, "success");
+                    updateStatus(`識別到項目：${gameCode}，分數：${score}，正在保存...`, "success");
                     
                     // Save record
                     await saveGameRecord(gameCode, score);
@@ -224,7 +224,7 @@
                     scanBtn.disabled = false;
                     scanBtn.textContent = "開啟掃描器";
                     
-                    updateStatus(`✅ 掃描完成！遊戲：${gameCode}，分數：${score}`, "success");
+                    updateStatus(`✅ 掃描完成！項目：${gameCode}，分數：${score}`, "success");
                     
                     // Refresh stats
                     await loadUserStats();
@@ -248,10 +248,10 @@
                     .eq('game_code', gameCode)
                     .single();
 
-                if (error) throw new Error(`遊戲 ${gameCode} 不存在`);
+                if (error) throw new Error(`項目 ${gameCode} 不存在`);
                 return data;
             } catch (err) {
-                console.error("獲取遊戲分數失敗：", err);
+                console.error("獲取項目分數失敗：", err);
                 return null;
             }
         }
@@ -266,7 +266,7 @@
                     .eq('game_code', gameCode)
                     .single();
 
-                if (gameError) throw new Error(`遊戲不存在：${gameCode}`);
+                if (gameError) throw new Error(`項目不存在：${gameCode}`);
 
                 // Insert record
                 const { error: recordError } = await window.dbManager.client
@@ -296,7 +296,7 @@
 
                 // Update records list
                 if (records.length === 0) {
-                    recordsListEl.innerHTML = '<div class="no-records">暫無遊戲紀錄</div>';
+                    recordsListEl.innerHTML = '<div class="no-records">暫無項目紀錄</div>';
                     return;
                 }
 
