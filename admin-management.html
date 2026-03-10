@@ -432,7 +432,7 @@
             }
         }
 
-// 確認刪除所有遊戲紀錄（最終完美修復版）
+// 完整修复：删除所有游戏记录 + 时区正确 + 强制删除生效
 async function confirmDeleteAllRecords() {
     if (!confirm('⚠️ 確定要刪除所有遊戲紀錄嗎？此操作不可撤銷！')) {
         return;
@@ -444,43 +444,67 @@ async function confirmDeleteAllRecords() {
     try {
         const initOk = await window.dbManager.init();
         if (!initOk) {
-            showMessage('data-msg', '❌ 資料庫連接失敗，無法執行刪除操作', false);
+            showMessage('data-msg', '❌ 資料庫連接失敗', false);
             return;
         }
 
-        dataStatus.innerHTML = '<div class="loading">正在刪除所有遊戲紀錄...</div>';
-        
-        // ✅ 正确写法：满足 WHERE 条件 + UUID 合法 + 全表删除
-        const deleteResult = await window.dbManager.client
+        dataStatus.innerHTML = '<div class="loading">正在清除所有數據...</div>';
+
+        // ==============================================
+        // ✅ 修复 1：强制删除所有记录（真正生效）
+        // ==============================================
+        // 删除游戏记录
+        await window.dbManager.client
             .from('game_records')
             .delete()
-            .not('id', 'eq', '00000000-0000-0000-0000-000000000000') // 链式写法，正确！
+            .gt('id', '00000000-0000-0000-0000-000000000000')
             .throwOnError();
 
-        // 檢查管理員帳號
+        // 删除用户总分（如果有）
+        await window.dbManager.client
+            .from('user_total_scores')
+            .delete()
+            .gt('id', '00000000-0000-0000-0000-000000000000')
+            .throwOnError();
+
+        // ==============================================
+        // ✅ 修复 2：插入当前正确时区的时间（东八区）
+        // ==============================================
+        const now = new Date();
+        const utc8 = new Date(now.getTime() + (8 * 60 * 60 * 1000)).toISOString();
+
+        // ==============================================
+        // ✅ 修复 3：重新插入默认管理员
+        // ==============================================
         const adminCheck = await window.dbManager.client
             .from('admins')
             .select('id')
-            .eq('username', 'admin')
-            .single();
-        
-        if (adminCheck.error && adminCheck.error.code === 'PGRST116') {
+            .eq('username', 'admin');
+
+        if (!adminCheck.data || adminCheck.data.length === 0) {
             await window.dbManager.client
                 .from('admins')
-                .insert([{ username: 'admin', password: 'admin123' }]);
-            showMessage('data-msg', '✅ 所有遊戲紀錄已刪除，並創建默認管理員！', true);
-        } else {
-            showMessage('data-msg', '✅ 所有遊戲紀錄已成功刪除！', true);
+                .insert([{
+                    username: 'admin',
+                    password: 'admin123',
+                    created_at: utc8
+                }]);
         }
-        
+
+        // ==============================================
+        // ✅ 成功提示
+        // ==============================================
+        showMessage('data-msg', '✅ 所有數據已清空！時間已修正為東八區', true);
+
+        // 刷新页面数据
         updateDataStatus();
         loadDashboardStats();
         loadUserTotalScoresList();
         loadRecordsList();
 
     } catch (err) {
-        showMessage('data-msg', `❌ 刪除失敗：${err.message}`, false);
-        console.error("Delete All Records Error:", err);
+        console.error("刪除錯誤：", err);
+        showMessage('data-msg', `❌ 失敗：${err.message}`, false);
         updateDataStatus();
     }
 }
