@@ -89,9 +89,9 @@ CREATE INDEX idx_game_records_scanned_at ON game_records(scanned_at);
 ```sql
 -- 插入範例項目
 INSERT INTO games (game_code, game_name, max_score, default_score) VALUES
-('GAME001', '闖關遊戲1', 1000, 500),
-('GAME002', '闖關遊戲2', 800, 400),
-('GAME003', '闖關遊戲3', 1200, 600);
+('GAME001', '闖關項目1', 1000, 500),
+('GAME002', '闖關項目2', 800, 400),
+('GAME003', '闖關項目3', 1200, 600);
 ```
 
 ### 4. 設定Row Level Security (RLS)
