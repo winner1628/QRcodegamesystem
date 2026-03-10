@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>用戶仪表盘 - QR碼遊戲系統</title>
+    <title>用戶仪表盘 - QR碼項目系統</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
@@ -79,7 +79,7 @@
                 <div class="flex items-center">
                     <div class="flex-shrink-0 flex items-center">
                         <i class="fa fa-qrcode text-2xl mr-3 text-primary"></i>
-                        <span class="text-xl font-bold">QR碼遊戲系統</span>
+                        <span class="text-xl font-bold">QR碼項目系統</span>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
@@ -130,7 +130,7 @@
                         <p id="todayScore" class="text-2xl font-bold text-primary">0</p>
                     </div>
                     <div class="text-center p-4 bg-gray-50 rounded-lg">
-                        <p class="text-sm text-gray-600">今日遊戲</p>
+                        <p class="text-sm text-gray-600">今日項目</p>
                         <p id="todayGames" class="text-2xl font-bold text-primary">0</p>
                     </div>
                     <div class="text-center p-4 bg-gray-50 rounded-lg">
@@ -216,7 +216,7 @@
                         <form id="manualEntryForm">
                             <div class="mb-4">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    遊戲ID
+                                    項目ID
                                 </label>
                                 <input type="text" id="manualGameId" required
                                     class="input-focus w-full px-4 py-2 border border-gray-300 rounded-lg text-sm"
@@ -246,7 +246,7 @@
             <div class="p-6 border-b border-gray-200">
                 <h3 class="text-lg font-semibold flex items-center">
                     <i class="fa fa-history mr-2 text-primary"></i>
-                    最近遊戲記錄
+                    最近項目記錄
                 </h3>
             </div>
             <div class="p-6">
@@ -255,7 +255,7 @@
                         <thead>
                             <tr>
                                 <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">時間</th>
-                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">遊戲名稱</th>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">項目名稱</th>
                                 <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">分數</th>
                                 <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">記錄者</th>
                                 <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">狀態</th>
@@ -265,7 +265,7 @@
                             <!-- 游戏记录将通过JavaScript动态填充 -->
                             <tr>
                                 <td colspan="5" class="px-6 py-4 text-center text-gray-500">
-                                    暫無遊戲記錄
+                                    暫無項目記錄
                                 </td>
                             </tr>
                         </tbody>
@@ -317,7 +317,7 @@
                 <i class="fa fa-check text-4xl text-success"></i>
             </div>
             <h3 class="text-xl font-bold mb-2">掃描成功！</h3>
-            <p id="scanSuccessGame" class="text-gray-600 mb-2">遊戲: 測試遊戲</p>
+            <p id="scanSuccessGame" class="text-gray-600 mb-2">項目: 測試項目</p>
             <p id="scanSuccessScore" class="text-2xl font-bold text-primary mb-4">分數: 100</p>
             <p id="scanSuccessTotal" class="text-sm text-gray-500 mb-6">總分: 500</p>
             <button id="closeSuccessModal" class="btn-hover bg-primary text-white px-6 py-3 rounded-lg font-medium">
@@ -447,7 +447,7 @@
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td colspan="5" class="px-6 py-4 text-center text-gray-500">
-                            暫無遊戲記錄
+                            暫無項目記錄
                         </td>
                     `;
                     tableBody.appendChild(row);
@@ -456,7 +456,7 @@
                 
                 records.forEach(record => {
                     const row = document.createElement('tr');
-                    const gameName = record.games ? record.games.name : '未知遊戲';
+                    const gameName = record.games ? record.games.name : '未知項目';
                     const time = new Date(record.created_at).toLocaleString('zh-TW');
                     
                     row.innerHTML = `
@@ -590,7 +590,7 @@
                 console.log('掃描成功:', data);
                 
                 // 更新界面显示
-                document.getElementById('scanSuccessGame').textContent = `遊戲: ${data.game.name}`;
+                document.getElementById('scanSuccessGame').textContent = `項目: ${data.game.name}`;
                 document.getElementById('scanSuccessScore').textContent = `分數: ${data.score}`;
                 document.getElementById('scanSuccessTotal').textContent = `總分: ${data.totalScore}`;
                 
@@ -747,7 +747,7 @@
                 
                 // 验证输入
                 if (!gameId || !score) {
-                    showToast('warning', '提示', '請填寫完整的遊戲信息');
+                    showToast('warning', '提示', '請填寫完整的項目信息');
                     return;
                 }
                 
